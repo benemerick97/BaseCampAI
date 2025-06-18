@@ -7,6 +7,7 @@ interface Agent {
   key: string;
   name: string;
   description: string;
+  type: string;
 }
 
 const Agents = () => {
@@ -23,6 +24,7 @@ const Agents = () => {
     name: "",
     description: "",
     prompt: "",
+    type: "prompt", // Default to 'prompt'
   });
 
   const headers: Record<string, string> | undefined = orgId
@@ -64,11 +66,18 @@ const Agents = () => {
           description: form.description,
           prompt: form.prompt,
           filter: { agent_id: form.agent_key },
+          type: form.type,
         }),
       });
 
       if (res.ok) {
-        setForm({ agent_key: "", name: "", description: "", prompt: "" });
+        setForm({
+          agent_key: "",
+          name: "",
+          description: "",
+          prompt: "",
+          type: "prompt",
+        });
         setShowForm(false);
         setEditingKey(null);
         await fetchAgents();
@@ -101,6 +110,7 @@ const Agents = () => {
         name: fullAgent.name,
         description: fullAgent.description,
         prompt: fullAgent.prompt,
+        type: fullAgent.type || "prompt",
       });
 
       setEditingKey(agent.key);
@@ -136,7 +146,13 @@ const Agents = () => {
   };
 
   const handleCancelForm = () => {
-    setForm({ agent_key: "", name: "", description: "", prompt: "" });
+    setForm({
+      agent_key: "",
+      name: "",
+      description: "",
+      prompt: "",
+      type: "prompt",
+    });
     setEditingKey(null);
     setShowForm(false);
   };
@@ -184,6 +200,14 @@ const Agents = () => {
             onChange={(e) => setForm({ ...form, prompt: e.target.value })}
             rows={4}
           />
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={form.type}
+            onChange={(e) => setForm({ ...form, type: e.target.value })}
+          >
+            <option value="prompt">Prompt Only</option>
+            <option value="retrieval">Retrieval</option>
+          </select>
           <button
             onClick={handleCreateOrUpdateAgent}
             disabled={loading}
@@ -213,6 +237,7 @@ const Agents = () => {
             >
               <h2 className="text-lg font-semibold text-gray-800">{agent.name}</h2>
               <p className="text-sm text-gray-500">{agent.description}</p>
+              <p className="text-xs text-gray-400 mt-1 uppercase">{agent.type}</p>
               <div className="flex gap-4 mt-3">
                 <button
                   onClick={() => handleEditClick(agent)}

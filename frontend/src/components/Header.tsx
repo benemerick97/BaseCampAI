@@ -1,7 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiUser, FiSettings } from "react-icons/fi";
+import { FiUser, FiSettings, FiChevronDown, FiBell } from "react-icons/fi";
 import logo from "../assets/logo/BASECAMP.svg";
 import { useAuth } from "../contexts/AuthContext";
+
+interface Organisation {
+  id: number;
+  name: string;
+}
 
 interface HeaderProps {
   onNavClick: (page: string) => void;
@@ -9,20 +14,87 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
-  const { user, logout } = useAuth();
-  const userName = user?.email?.split("@")[0] || "User";
+  const { user, logout, refetchUser } = useAuth();
+  const userName = user?.first_name || "User";
   const organisationName = user?.organisation?.name || "";
+  const organisationId = user?.organisation?.id;
+  const isSuperAdmin = user?.role === "super_admin";
 
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [showOrgDropdown, setShowOrgDropdown] = useState(false);
+  const [organisations, setOrganisations] = useState<Organisation[]>([]);
+  const orgDropdownRef = useRef<HTMLDivElement>(null);
+  const accountDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
+  // Fetch organisations for super admin
+  useEffect(() => {
+    const fetchOrganisations = async () => {
+      if (!isSuperAdmin) return;
+
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("https://basecampai.ngrok.io/superadmin/organisations", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch organisations");
+        }
+
+        const data = await response.json();
+        setOrganisations(data);
+      } catch (error) {
+        console.error("Error loading organisations:", error);
+      }
+    };
+
+    fetchOrganisations();
+  }, [isSuperAdmin]);
+
+  // Merge current org into list if it's not already there
+  const mergedOrganisations = organisations.some((o) => o.id === organisationId)
+    ? organisations
+    : organisationId && organisationName
+    ? [{ id: organisationId, name: organisationName }, ...organisations]
+    : organisations;
+
+  // Handle organisation change
+  const onChangeOrganisation = async (org: Organisation) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("https://basecampai.ngrok.io/superadmin/switch-org", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ org_id: org.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to switch organisation");
+      }
+
+      await refetchUser(); // Refresh user context
+      setShowOrgDropdown(false);
+    } catch (error) {
+      console.error("Error switching organisation:", error);
+    }
+  };
+
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target as Node)) {
+        setShowAccountDropdown(false);
+      }
+      if (orgDropdownRef.current && !orgDropdownRef.current.contains(event.target as Node)) {
+        setShowOrgDropdown(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -34,21 +106,65 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         <img src={logo} alt="Basecamp Logo" className="h-full object-contain" />
       </div>
 
-      {/* Centered Text */}
+      {/* Welcome */}
       <div className="absolute left-1/2 transform -translate-x-1/2 text-xl font-semibold">
         Welcome back {userName}!
       </div>
 
-      {/* Settings + Account */}
-      <div className="flex gap-4 items-center h-full py-1 relative" ref={dropdownRef}>
-        {/* Organisation name */}
+      {/* Right Controls */}
+      <div className="flex gap-4 items-center h-full py-1 relative">
+        {/* Organisation Dropdown */}
         {organisationName && (
-          <span className="text-sm text-gray-600 font-medium truncate max-w-[150px]">
-            {organisationName}
-          </span>
+          <div className="relative" ref={orgDropdownRef}>
+            <button
+              onClick={() => isSuperAdmin && setShowOrgDropdown((prev) => !prev)}
+              className="flex items-center text-sm text-gray-600 font-medium max-w-[220px] truncate hover:text-gray-800"
+            >
+              {organisationName}
+              {isSuperAdmin && <FiChevronDown className="ml-1 text-xs" />}
+            </button>
+
+            {isSuperAdmin && showOrgDropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden border border-gray-200">
+                {mergedOrganisations.length > 0 ? (
+                  mergedOrganisations.map((org, index) => {
+                    const isFirst = index === 0;
+                    const isLast = index === mergedOrganisations.length - 1;
+                    const isCurrent = org.id === organisationId;
+
+                    return (
+                      <button
+                        key={org.id}
+                        onClick={() => onChangeOrganisation(org)}
+                        className={`block w-full text-left px-4 py-2 text-sm ${
+                          isCurrent ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-700"
+                        } hover:bg-blue-100 transition-all duration-150 ${
+                          isFirst ? "rounded-t-lg" : ""
+                        } ${isLast ? "rounded-b-lg" : ""}`}
+                      >
+                        <span className="flex items-center justify-between">
+                          {org.name}
+                          {isCurrent && <span className="text-blue-600 text-xs ml-2">✓</span>}
+                        </span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="px-4 py-2 text-sm text-gray-500">No organisations found</div>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Settings Button */}
+        <button
+          title="Settings"
+          onClick={() => onNavClick("placeholder")}
+          className={`p-2 ${activePage === "placeholder" ? "text-blue-600" : "text-gray-600"}`}
+        >
+          <FiBell className="text-base" />
+        </button>
         <button
           title="Settings"
           onClick={() => onNavClick("settings")}
@@ -58,17 +174,24 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         </button>
 
         {/* Account Dropdown */}
-        <div className="relative">
+        <div className="relative" ref={accountDropdownRef}>
           <button
             title="Account"
-            onClick={() => setShowDropdown((prev) => !prev)}
+            onClick={() => setShowAccountDropdown((prev) => !prev)}
             className={`p-2 ${activePage === "account" ? "text-blue-600" : "text-gray-600"}`}
           >
             <FiUser className="text-base" />
           </button>
 
-          {showDropdown && (
+          {showAccountDropdown && (
             <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-md z-50">
+              <button
+                title="Account"
+                onClick={() => onNavClick("account")}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                Account
+              </button>
               <button
                 onClick={logout}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

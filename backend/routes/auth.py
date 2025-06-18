@@ -1,3 +1,5 @@
+#backend/routes/auth.py
+
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -41,21 +43,24 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
 
     print("✅ Login successful")
 
+    # ✅ FIX: Store user ID in 'sub' claim
     access_token = create_access_token(
-        data={"sub": user.email, "role": user.role},
+        data={"sub": str(user.id)},
         expires_delta=timedelta(minutes=60)
     )
 
     return {
-    "access_token": access_token,
-    "token_type": "bearer",
-    "user": {
-        "id": user.id,
-        "email": user.email,
-        "role": user.role,
-        "organisation": {
-            "id": user.organisation.id,
-            "name": user.organisation.name
-        } if user.organisation else None
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "organisation": {
+                "id": user.organisation.id,
+                "name": user.organisation.name
+            } if user.organisation else None
+        }
     }
-}

@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Header, HTTPException, status, Path
+# backend/routes/agents.py
+
+from fastapi import APIRouter, Header, HTTPException, status, Path, Depends
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 
 from agents.agent_store import agent_store
+from agents.agent_service import delete_agent as db_delete_agent
+from databases.database import get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -14,6 +19,7 @@ class AgentDefinition(BaseModel):
     description: str
     prompt: str
     filter: Dict
+    type: str  # NEW: "prompt", "retrieval", "system"
 
 
 # 📤 Response model
@@ -21,6 +27,7 @@ class AgentSummary(BaseModel):
     key: str
     name: str
     description: str
+    type: str
 
 
 # 🚀 Register a new agent
@@ -45,7 +52,8 @@ def register_agent(
             name=defn.name,
             description=defn.description,
             prompt=defn.prompt,
-            filter=defn.filter
+            filter=defn.filter,
+            type=defn.type
         )
         return {"status": "success", "agent_key": defn.agent_key}
     except Exception as e:
@@ -61,7 +69,12 @@ def list_agents(x_org_id: Optional[str] = Header(None)):
     agents = agent_store.list_agents(x_org_id)
 
     agent_list = [
-        AgentSummary(key=key, name=config["name"], description=config["description"])
+        AgentSummary(
+            key=key,
+            name=config["name"],
+            description=config["description"],
+            type=config["type"]
+        )
         for key, config in agents.items()
     ]
 
@@ -88,7 +101,8 @@ def update_agent(
             name=defn.name,
             description=defn.description,
             prompt=defn.prompt,
-            filter=defn.filter
+            filter=defn.filter,
+            type=defn.type
         )
         return {"status": "updated", "agent_key": agent_key}
     except Exception as e:
@@ -111,20 +125,22 @@ def get_agent(agent_key: str, x_org_id: Optional[str] = Header(None)):
         "description": config["description"],
         "prompt": config["prompt"],
         "filter": config["filter"],
+        "type": config["type"]
     }
 
 
 # 🗑️ Delete an agent
 @router.delete("/agents/{agent_key}")
-def delete_agent(agent_key: str, x_org_id: Optional[str] = Header(None)):
+def delete_agent(
+    agent_key: str,
+    x_org_id: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
     if not x_org_id:
         raise HTTPException(status_code=400, detail="Missing 'x-org-id' header.")
 
-    if not agent_store.has_agent(x_org_id, agent_key):
+    deleted = db_delete_agent(db, int(x_org_id), agent_key)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Agent not found.")
 
-    try:
-        del agent_store.agents[x_org_id][agent_key]
-        return {"status": "deleted", "agent_key": agent_key}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"status": "deleted", "agent_key": agent_key}

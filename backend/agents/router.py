@@ -1,7 +1,7 @@
 # backend/agents/router.py
 
 import os
-from typing import Dict, Union
+from typing import Dict
 from dotenv import load_dotenv
 
 from langchain_core.runnables import Runnable
@@ -25,11 +25,17 @@ def build_router_chain(org_id: str, history: list[dict] = None) -> Dict[str, Run
             continue
 
         try:
+            agent_type = config.get("type", "retrieval")
+            use_memory = False  # Default
+
+            # Optional logic: in future, you could set use_memory=True for specific agent types
+
             chain = build_agent_chain(
                 agent_key=agent_key,
                 org_id=org_id,
                 history=history,
-                use_memory=False  # ✅ force document-based response
+                use_memory=use_memory,
+                agent_type=agent_type  # ✅ pass agent type
             )
 
             if hasattr(chain, "ainvoke") and hasattr(chain, "astream"):

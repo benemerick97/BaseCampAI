@@ -13,6 +13,7 @@ from services.clarification_handler import (
     get_clarifier_chain,
 )
 from utils.logger import logger
+from utils.prompt_logger import log_prompt  # ✅ New: Logging function
 
 load_dotenv()
 
@@ -76,9 +77,14 @@ async def handle_supervised_stream(
     ]
 
     evaluations = await asyncio.gather(*evaluation_tasks)
-    relevant_agents = [r for r in evaluations if r]
 
-    # Step 4: Decide which chain to use
+    # ✅ Step 4: Log all agents regardless of score
+    await log_prompt(org_id, session_id, user_input, evaluations)
+
+    # ✅ Step 5: Filter relevant agents (score >= 0.7)
+    relevant_agents = [r for r in evaluations if r["score"] >= 0.7]
+
+    # Step 6: Decide routing strategy
     if not relevant_agents:
         destination_key = "general_knowledge_bot"
         chain = destination_chains.get(destination_key)
@@ -98,7 +104,7 @@ async def handle_supervised_stream(
         state["last_agent"] = "multi_summary"
         return
 
-    # Step 5: Run the selected agent chain
+    # Step 7: Run the selected agent chain
     try:
         payload = {"input": user_input}
         full_response = ""
@@ -117,7 +123,7 @@ async def handle_supervised_stream(
             )
             yield full_response
 
-        # Step 6: Record response
+        # Step 8: Save response
         history.append({"role": "assistant", "content": full_response})
         state["last_agent"] = destination_key
         state["followup_expected"] = destination_key == "general_knowledge_bot"

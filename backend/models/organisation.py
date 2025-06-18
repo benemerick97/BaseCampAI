@@ -11,3 +11,5 @@ class Organisation(Base):
     name = Column(String, unique=True, nullable=False)
 
     users = relationship("User", back_populates="organisation")
+    agents = relationship("Agent", back_populates="organisation", cascade="all, delete")
+

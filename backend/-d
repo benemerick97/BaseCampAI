@@ -1,0 +1,2 @@
+{"detail":[{"type":"missing","loc":["body"],"msg":"Field required","input":null}]}--_curl_--"email": "benemerick97@.com"
+--_curl_-- "password": "pass"

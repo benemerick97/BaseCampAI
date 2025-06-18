@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { FiUpload, FiPlus, FiEdit3 } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
 
 interface KnowledgeProps {
@@ -19,16 +20,11 @@ const Knowledge = ({ onNavClick }: KnowledgeProps) => {
 
   const [files, setFiles] = useState<FileMeta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [previewToken, setPreviewToken] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const headers: Record<string, string> | undefined = orgId
     ? { "x-org-id": orgId }
     : undefined;
-
-  const getFileExtension = (filename: string): string =>
-    filename.split(".").pop()?.toLowerCase() || "";
 
   const fetchFiles = async () => {
     if (!headers) return;
@@ -47,47 +43,6 @@ const Knowledge = ({ onNavClick }: KnowledgeProps) => {
     }
   };
 
-  const fetchPreview = async (filename: string) => {
-    if (!headers) return;
-    try {
-      const res = await fetch(`${BACKEND_URL}/files/preview/${filename}`, {
-        method: "GET",
-        headers,
-      });
-      if (!res.ok) throw new Error("Preview fetch failed");
-      const text = await res.text();
-      setFilePreview(text);
-    } catch (err) {
-      console.error("Preview error:", err);
-      setFilePreview("Unable to load preview.");
-    }
-  };
-
-  const fetchPreviewToken = async (filename: string) => {
-    if (!headers) return;
-    try {
-      const res = await fetch(`${BACKEND_URL}/files/token/${filename}`, {
-        method: "GET",
-        headers,
-      });
-      if (!res.ok) throw new Error("Token fetch failed");
-      const data = await res.json();
-      setPreviewToken(data.token);
-    } catch (err) {
-      console.error("Token fetch error:", err);
-      setPreviewToken(null);
-    }
-  };
-
-  const handleFileSelect = (filename: string) => {
-    setSelectedFile(filename);
-    setFilePreview(null);
-    setPreviewToken(null);
-
-    const ext = getFileExtension(filename);
-    ext === "pdf" ? fetchPreviewToken(filename) : fetchPreview(filename);
-  };
-
   const handleDelete = async (filename: string) => {
     if (!headers) return;
     try {
@@ -96,11 +51,6 @@ const Knowledge = ({ onNavClick }: KnowledgeProps) => {
         headers,
       });
       setFiles((prev) => prev.filter((f) => f.filename !== filename));
-      if (selectedFile === filename) {
-        setSelectedFile(null);
-        setFilePreview(null);
-        setPreviewToken(null);
-      }
     } catch (err) {
       console.error("Delete failed:", err);
     }
@@ -110,85 +60,83 @@ const Knowledge = ({ onNavClick }: KnowledgeProps) => {
     fetchFiles();
   }, [orgId]);
 
+  const filteredFiles = files.filter((file) =>
+    file.filename.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="flex h-full w-full relative">
-      {/* Upload Button */}
-      <div className="absolute top-4 right-4 z-10">
-        <button
-          onClick={() => onNavClick("upload")}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-        >
-          Upload
-        </button>
+    <div className="p-6">
+      {/* Header + Buttons */}
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+        <div className="flex items-end gap-2">
+          <h3 className="text-2xl font-semibold leading-tight">Knowledge Base</h3>
+          <span className="text-sm text-gray-600">
+            (1 - {filteredFiles.length} of {filteredFiles.length})
+          </span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onNavClick("upload")} 
+            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700">
+            <FiPlus size={16} />
+            Upload
+          </button>
+        </div>
       </div>
 
-      {/* File List Panel */}
-      <div className="w-1/3 border-r p-6 overflow-y-auto">
-        <h2 className="text-xl font-semibold mb-4">Knowledge Base</h2>
-        {loading ? (
-          <p className="text-gray-500">Loading...</p>
-        ) : files.length === 0 ? (
-          <div className="text-center text-gray-500">
-            <div className="text-3xl mb-2">📄</div>
-            <p>No files found</p>
-            <p className="text-sm mt-1">
-              Files uploaded with OpenAI API will appear here.
-            </p>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {files.map((file) => (
-              <li
-                key={file.filename}
-                className={`p-3 border rounded cursor-pointer flex justify-between items-center ${
-                  selectedFile === file.filename ? "bg-blue-50" : "hover:bg-gray-100"
-                }`}
-                onClick={() => handleFileSelect(file.filename)}
-              >
-                <div>
-                  <span className="truncate font-medium">{file.filename}</span>
-                  <div className="text-xs text-gray-500">{file.chunks_indexed} chunks</div>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(file.filename);
-                  }}
-                  className="text-red-600 text-sm hover:underline"
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* Search & Filter */}
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="Search all files"
+          className="border px-3 py-2 rounded w-full max-w-sm text-sm"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button className="text-sm text-blue-600 font-medium">+ Add filter</button>
       </div>
 
-      {/* Preview Panel */}
-      <div className="w-2/3 p-6 overflow-y-auto">
-        {selectedFile ? (
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Preview: {selectedFile}</h2>
-            {getFileExtension(selectedFile) === "pdf" ? (
-              previewToken ? (
-                <iframe
-                  src={`${BACKEND_URL}/files/preview/raw?token=${previewToken}`}
-                  className="w-full h-[75vh] border rounded"
-                  title="PDF Preview"
-                />
-              ) : (
-                <p className="text-gray-500">Loading preview...</p>
-              )
-            ) : (
-              <pre className="bg-gray-100 p-4 rounded text-sm whitespace-pre-wrap max-h-[70vh] overflow-y-auto">
-                {filePreview || "Loading preview..."}
-              </pre>
-            )}
-          </div>
-        ) : (
-          <p className="text-gray-500">Select a file to view details.</p>
-        )}
-      </div>
+      {/* Table or Empty State */}
+      {loading ? (
+        <p className="text-gray-500">Loading files...</p>
+      ) : filteredFiles.length === 0 ? (
+        <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
+          <p className="text-lg font-medium">No files found</p>
+          <p className="text-sm mt-1">Uploaded files will appear here.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border border-gray-300 rounded-lg bg-white">
+            <thead className="bg-gray-100 text-left text-gray-600 font-medium border-b border-gray-300">
+              <tr>
+                <th className="px-4 py-2 border-r border-gray-200">Filename</th>
+                <th className="px-4 py-2 border-r border-gray-200">Chunks</th>
+                <th className="px-4 py-2 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredFiles.map((file) => (
+                <tr key={file.filename} className="border-t hover:bg-gray-50">
+                  <td className="px-4 py-3 border-r border-gray-100 font-medium text-gray-900">
+                    {file.filename}
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+                    {file.chunks_indexed}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => handleDelete(file.filename)}
+                      className="bg-red-600 text-white px-3 py-1.5 rounded text-xs hover:bg-red-700"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

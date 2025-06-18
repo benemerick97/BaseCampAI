@@ -7,6 +7,8 @@ import {
   FiSidebar,
   FiUsers,
   FiFolder,
+  FiBookOpen,
+  FiClipboard,
 } from "react-icons/fi";
 import clsx from "clsx"; // Optional for cleaner conditional classNames
 
@@ -22,6 +24,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage }) => {
     { key: "chat", icon: <FiMessageCircle />, label: "Chat" },
     { key: "agents", icon: <FiGrid/>, label: "Agents" },
     { key: "projects", icon: <FiFolder/>, label: "Projects" },
+    { key: "learn", icon: <FiBookOpen />, label: "Learn" },
+    { key: "work", icon: <FiClipboard />, label: "Work" },
     { key: "upload", icon: <FiUpload />, label: "Upload" },
     { key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
     { key: "organisation", icon: <FiUsers />, label: "Organisation" },
