@@ -3,6 +3,8 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from models.base import Base
+from models.work.site import Site
+
 
 class Organisation(Base):
     __tablename__ = "organisations"
@@ -12,4 +14,6 @@ class Organisation(Base):
 
     users = relationship("User", back_populates="organisation")
     agents = relationship("Agent", back_populates="organisation", cascade="all, delete")
+    sites = relationship("Site", back_populates="organisation", cascade="all, delete-orphan")
 
+ 

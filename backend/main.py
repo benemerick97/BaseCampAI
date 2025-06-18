@@ -11,6 +11,7 @@ from routes.agents import router as agents_router
 from routes.lms import router as lms_router
 from routes.users import router as users_router
 from routes.superadmin import router as superadmin_router
+from routes.work import router as sites_router
 
 
 # 🧠 Ensure both models are imported BEFORE creating metadata
@@ -41,6 +42,7 @@ app.include_router(agents_router)  # ✅ added here
 app.include_router(lms_router)
 app.include_router(users_router)
 app.include_router(superadmin_router)
+app.include_router(sites_router)
 
 @app.get("/")
 async def root():

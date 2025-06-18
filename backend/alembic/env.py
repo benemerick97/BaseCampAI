@@ -20,6 +20,7 @@ from models.base import Base
 import models.user
 import models.organisation
 import models.agent
+import models.work.site
 
 # Alembic Config object
 config = context.config
