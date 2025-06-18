@@ -11,7 +11,7 @@ class UserUpdate(BaseModel):
     last_name: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ✅ Used for returning basic user details (optional if you want a full schema)
@@ -24,4 +24,4 @@ class UserOut(BaseModel):
     organisation: Optional[OrganisationOut]
     
     class Config:
-        orm_mode = True
+        from_attributes = True

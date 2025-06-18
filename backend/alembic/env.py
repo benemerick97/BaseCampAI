@@ -1,11 +1,14 @@
+#backend/alembic/env.py
+
 from logging.config import fileConfig
 import os
 import sys
 
 from dotenv import load_dotenv
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+# Load .env from the project root
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, create_engine
 from sqlalchemy import pool
 from alembic import context
 
@@ -43,8 +46,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    from sqlalchemy import create_engine
-
+    # Get the database URL from environment
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         raise ValueError("DATABASE_URL not found in environment variables")
