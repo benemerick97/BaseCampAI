@@ -1,0 +1,193 @@
+import React, { useState, useEffect } from "react";
+import { FiPlus } from "react-icons/fi";
+
+export interface EntityListPageProps<T> {
+  title: string;
+  entityType: string;
+  items: T[];
+  onAdd: (form: any) => Promise<void>; // can be add or update depending on formData.id
+  onFetch: () => Promise<void>;
+  onSelect: (id: number) => void;
+  renderRow: (
+    item: T,
+    openDropdown: number | null,
+    setDropdownOpen: (id: number | null) => void,
+    openEditModal: (item: any) => void
+  ) => React.ReactNode;
+  columns: string[];
+  modalFields: {
+    label: string;
+    key: string;
+    type?: string;
+  }[];
+  addButtonLabel?: string;
+  showSearchBar?: boolean;
+  onSearch?: (term: string) => void;
+}
+
+export default function EntityListPage<T>({
+  title,
+  entityType,
+  items,
+  onAdd,
+  onFetch,
+  onSelect,
+  renderRow,
+  columns,
+  modalFields,
+  addButtonLabel = "Add",
+  showSearchBar = true,
+  onSearch,
+}: EntityListPageProps<T>) {
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    onFetch();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onAdd(formData);
+    setFormData({});
+    setShowModal(false);
+    onFetch();
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    if (onSearch) onSearch(e.target.value);
+  };
+
+  const openEditModal = (item: any) => {
+    setFormData(item);
+    setShowModal(true);
+  };
+
+  return (
+    <div className="p-6 relative">
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded shadow max-w-md w-full relative">
+            <h2 className="text-xl font-semibold mb-4">
+              {formData.id ? "Edit" : "Add New"} {title.slice(0, -1)}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {modalFields.map(({ label, key, type = "text" }) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium">{label}</label>
+                  <input
+                    type={type}
+                    value={formData[key] || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [key]: e.target.value })
+                    }
+                    required
+                    className="w-full px-3 py-2 border rounded"
+                  />
+                </div>
+              ))}
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+                  onClick={() => {
+                    setShowModal(false);
+                    setFormData({});
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  {formData.id ? "Update" : "Create"} {title.slice(0, -1)}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+        <div className="flex items-end gap-2">
+          <h3 className="text-2xl font-semibold leading-tight">{title}</h3>
+          <span className="text-sm text-gray-600">
+            (1 - {items.length} of {items.length})
+          </span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setFormData({});
+              setShowModal(true);
+            }}
+            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
+          >
+            <FiPlus size={16} />
+            {addButtonLabel} {title.slice(0, -1)}
+          </button>
+        </div>
+      </div>
+
+      {/* Search + Filter */}
+      {showSearchBar && (
+        <div className="mb-4 flex items-center gap-2">
+          <input
+            type="text"
+            placeholder={`Search all ${entityType}`}
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="border px-3 py-2 rounded w-full max-w-sm text-sm"
+          />
+          <button className="text-sm text-blue-600 font-medium hover:underline">
+            + Add filter
+          </button>
+        </div>
+      )}
+
+      {/* Table */}
+      {items.length === 0 ? (
+        <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
+          <p className="text-lg font-medium">No {title.toLowerCase()} added yet</p>
+          <p className="text-sm mt-1">
+            Click "{addButtonLabel} {title.slice(0, -1)}" to create your first.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border border-gray-300 rounded-lg bg-white">
+            <thead className="bg-gray-100 text-left text-gray-600 font-medium border-b border-gray-300">
+              <tr>
+                {columns.map((col, index) => (
+                  <th
+                    key={index}
+                    className="px-4 py-2 border-r border-gray-200 whitespace-nowrap"
+                  >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item: any) => (
+                <tr
+                  key={item.id}
+                  className="border-t hover:bg-gray-50 cursor-pointer relative"
+                  onClick={() => onSelect(item.id)}
+                >
+                  {renderRow(item, dropdownOpen, setDropdownOpen, openEditModal)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { FiUpload, FiPlus, FiEdit3 } from "react-icons/fi";
+import { FiUpload, FiPlus } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
+import Modal from "../components/Modal"; // ✅ adjust path if needed
+import FileUpload from "../components/FileUpload";
 
 interface KnowledgeProps {
   onNavClick: (page: string) => void;
@@ -21,6 +23,7 @@ const Knowledge = ({ onNavClick }: KnowledgeProps) => {
   const [files, setFiles] = useState<FileMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const headers: Record<string, string> | undefined = orgId
     ? { "x-org-id": orgId }
@@ -76,8 +79,9 @@ const Knowledge = ({ onNavClick }: KnowledgeProps) => {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => onNavClick("upload")} 
-            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700">
+            onClick={() => setShowUploadModal(true)}
+            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
+          >
             <FiPlus size={16} />
             Upload
           </button>
@@ -137,6 +141,20 @@ const Knowledge = ({ onNavClick }: KnowledgeProps) => {
           </table>
         </div>
       )}
+
+      {/* Upload Modal */}
+      <Modal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        title="Upload File"
+      >
+        <FileUpload
+          onUploadComplete={() => {
+            setShowUploadModal(false);
+            fetchFiles();
+          }}
+        />
+      </Modal>
     </div>
   );
 };

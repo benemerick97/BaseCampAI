@@ -21,6 +21,8 @@ import models.user
 import models.organisation
 import models.agent
 import models.work.site
+import models.work.custom_field_value
+import models.work.custom_field
 
 # Alembic Config object
 config = context.config
