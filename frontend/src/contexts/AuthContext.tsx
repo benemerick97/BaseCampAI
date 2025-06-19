@@ -1,5 +1,3 @@
-// src/contexts/AuthContext.tsx
-
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 
@@ -21,26 +19,29 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null; // ✅ Added
   setUser: (user: User | null) => void;
   login: (email: string, password: string, onSuccess?: () => void) => Promise<void>;
   logout: () => void;
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isUser: boolean;
-  refetchUser: () => Promise<void>; // ✅ Add this
+  refetchUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null); // ✅ Added
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const savedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    if (token && storedUser) {
+    if (savedToken && storedUser) {
       setUser(JSON.parse(storedUser));
+      setToken(savedToken);
     }
   }, []);
 
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
+      setToken(data.access_token); // ✅ Set token
       if (onSuccess) onSuccess();
     }
   };
@@ -65,17 +67,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    setToken(null); // ✅ Clear token
   };
 
   const refetchUser = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    const storedToken = localStorage.getItem("token");
+    if (!storedToken) return;
 
     try {
       const response = await fetch("https://basecampai.ngrok.io/me", {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${storedToken}`,
         },
       });
 
@@ -99,13 +102,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        token, // ✅ Provide it to context
         setUser,
         login,
         logout,
         isSuperAdmin,
         isAdmin,
         isUser,
-        refetchUser, // ✅ Provided here
+        refetchUser,
       }}
     >
       {children}

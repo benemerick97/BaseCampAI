@@ -11,9 +11,11 @@ from routes.agents import router as agents_router
 from routes.lms import router as lms_router
 from routes.users import router as users_router
 from routes.superadmin import router as superadmin_router
-from routes.work import router as sites_router
+from routes.work.sites import router as sites_router
 from routes.work.custom_fields import router as custom_fields_router
 from routes.work.custom_field_values import router as custom_field_values_router
+from routes.work.assets import router as asset_router
+
 
 
 # 🧠 Ensure both models are imported BEFORE creating metadata
@@ -40,13 +42,14 @@ app.include_router(chat_router)
 app.include_router(upload_router)
 app.include_router(auth_router)
 app.include_router(files_router)
-app.include_router(agents_router)  # ✅ added here
+app.include_router(agents_router) 
 app.include_router(lms_router)
 app.include_router(users_router)
 app.include_router(superadmin_router)
 app.include_router(sites_router)
 app.include_router(custom_fields_router)
 app.include_router(custom_field_values_router)
+app.include_router(asset_router)
 
 @app.get("/")
 async def root():

@@ -16,4 +16,4 @@ class Organisation(Base):
     agents = relationship("Agent", back_populates="organisation", cascade="all, delete")
     sites = relationship("Site", back_populates="organisation", cascade="all, delete-orphan")
 
- 
+    assets = relationship("Asset", back_populates="organisation", cascade="all, delete")

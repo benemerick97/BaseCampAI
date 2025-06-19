@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
 import EntityListPage from "./EntityListPage";
 import SiteRow from "./SiteRow";
+import EntityModal from "../Work/EntityModal";
 
 interface SiteItem {
   id: number;
@@ -22,12 +23,8 @@ export default function Sites({ setMainPage }: SiteProps) {
   const { setSelectedEntity } = useSelectedEntity();
 
   const [sites, setSites] = useState<SiteItem[]>([]);
-
-  useEffect(() => {
-    const handleClickOutside = () => setDropdownOpen(null);
-    window.addEventListener("click", handleClickOutside);
-    return () => window.removeEventListener("click", handleClickOutside);
-  }, []);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
   const fetchSites = async () => {
     try {
@@ -39,6 +36,10 @@ export default function Sites({ setMainPage }: SiteProps) {
       console.error("Error fetching sites:", error);
     }
   };
+
+  useEffect(() => {
+    fetchSites();
+  }, []);
 
   const handleAddOrEditSite = async (form: any) => {
     if (form.id) {
@@ -54,6 +55,8 @@ export default function Sites({ setMainPage }: SiteProps) {
         organisation_id: user?.organisation?.id,
       });
     }
+    setShowModal(false);
+    setFormData({});
     fetchSites();
   };
 
@@ -70,38 +73,62 @@ export default function Sites({ setMainPage }: SiteProps) {
     setMainPage("sitedetails");
   };
 
+  const handleAddClick = () => {
+    setFormData({});
+    setShowModal(true);
+  };
+
+  const handleEditClick = (item: SiteItem) => {
+    setFormData(item);
+    setShowModal(true);
+  };
+
   const renderRow = (
     site: SiteItem,
     _openDropdown: number | null,
     _setOpenDropdown: (id: number | null) => void,
-    openEditModal: (item: SiteItem) => void
+    _openEditModal: (item: SiteItem) => void
   ) => {
     return (
       <SiteRow
         site={site}
         onSelect={handleSelect}
-        onEdit={openEditModal}
+        onEdit={handleEditClick}
         onDelete={handleDelete}
       />
     );
   };
 
   return (
-    <EntityListPage<SiteItem>
-      title="Sites"
-      entityType="site"
-      items={sites}
-      onAdd={handleAddOrEditSite}
-      onFetch={fetchSites}
-      onSelect={handleSelect}
-      renderRow={renderRow}
-      columns={["Site Name", "Location", "Date Created", "Status", "Actions"]}
-      modalFields={[
-        { label: "Site Name", key: "name" },
-        { label: "Location", key: "location" },
-      ]}
-      addButtonLabel="Add"
-      showSearchBar={true}
-    />
+    <>
+      <EntityListPage<SiteItem>
+        title="Sites"
+        entityType="site"
+        items={sites}
+        onFetch={fetchSites}
+        onSelect={handleSelect}
+        renderRow={renderRow}
+        columns={["Site Name", "Location", "Date Created", "Status", "Actions"]}
+        addButtonLabel="Add"
+        showSearchBar={true}
+        onAddClick={handleAddClick}
+      />
+
+      <EntityModal
+        title="Site"
+        visible={showModal}
+        onClose={() => {
+          setFormData({});
+          setShowModal(false);
+        }}
+        onSubmit={handleAddOrEditSite}
+        formData={formData}
+        setFormData={setFormData}
+        fields={[
+          { label: "Site Name", key: "name" },
+          { label: "Location", key: "location" },
+        ]}
+      />
+    </>
   );
 }

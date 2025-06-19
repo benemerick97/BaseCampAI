@@ -14,3 +14,6 @@ class Site(Base):
 
     organisation_id = Column(Integer, ForeignKey("organisations.id"), nullable=False)
     organisation = relationship("Organisation", back_populates="sites")
+
+    assets = relationship("Asset", back_populates="site", cascade="all, delete")
+

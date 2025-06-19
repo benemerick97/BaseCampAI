@@ -5,7 +5,6 @@ export interface EntityListPageProps<T> {
   title: string;
   entityType: string;
   items: T[];
-  onAdd: (form: any) => Promise<void>; // can be add or update depending on formData.id
   onFetch: () => Promise<void>;
   onSelect: (id: number) => void;
   renderRow: (
@@ -15,32 +14,25 @@ export interface EntityListPageProps<T> {
     openEditModal: (item: any) => void
   ) => React.ReactNode;
   columns: string[];
-  modalFields: {
-    label: string;
-    key: string;
-    type?: string;
-  }[];
   addButtonLabel?: string;
   showSearchBar?: boolean;
   onSearch?: (term: string) => void;
+  onAddClick?: () => void; // ✅ new prop for modal control
 }
 
 export default function EntityListPage<T>({
   title,
   entityType,
   items,
-  onAdd,
   onFetch,
   onSelect,
   renderRow,
   columns,
-  modalFields,
   addButtonLabel = "Add",
   showSearchBar = true,
   onSearch,
+  onAddClick,
 }: EntityListPageProps<T>) {
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -48,71 +40,13 @@ export default function EntityListPage<T>({
     onFetch();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onAdd(formData);
-    setFormData({});
-    setShowModal(false);
-    onFetch();
-  };
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     if (onSearch) onSearch(e.target.value);
   };
 
-  const openEditModal = (item: any) => {
-    setFormData(item);
-    setShowModal(true);
-  };
-
   return (
     <div className="p-6 relative">
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow max-w-md w-full relative">
-            <h2 className="text-xl font-semibold mb-4">
-              {formData.id ? "Edit" : "Add New"} {title.slice(0, -1)}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {modalFields.map(({ label, key, type = "text" }) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium">{label}</label>
-                  <input
-                    type={type}
-                    value={formData[key] || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, [key]: e.target.value })
-                    }
-                    required
-                    className="w-full px-3 py-2 border rounded"
-                  />
-                </div>
-              ))}
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
-                  onClick={() => {
-                    setShowModal(false);
-                    setFormData({});
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {formData.id ? "Update" : "Create"} {title.slice(0, -1)}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
         <div className="flex items-end gap-2">
@@ -123,10 +57,7 @@ export default function EntityListPage<T>({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              setFormData({});
-              setShowModal(true);
-            }}
+            onClick={() => onAddClick && onAddClick()}
             className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
           >
             <FiPlus size={16} />
@@ -181,7 +112,7 @@ export default function EntityListPage<T>({
                   className="border-t hover:bg-gray-50 cursor-pointer relative"
                   onClick={() => onSelect(item.id)}
                 >
-                  {renderRow(item, dropdownOpen, setDropdownOpen, openEditModal)}
+                  {renderRow(item, dropdownOpen, setDropdownOpen, () => {})}
                 </tr>
               ))}
             </tbody>

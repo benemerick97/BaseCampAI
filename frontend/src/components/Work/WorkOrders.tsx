@@ -1,89 +1,167 @@
-import React from "react";
-import { FiPlus, FiEdit3, FiUpload } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "../../contexts/AuthContext";
+import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
+import EntityListPage from "./EntityListPage";
+import WorkOrderRow from "./WorkOrderRow";
+import EntityModal from "./EntityModal"; 
 
-interface WorkOrderItem {
+interface WorkOrder {
+  id: number;
   title: string;
   description: string;
-  date: string;
+  status: string;
+  asset_id: number;
+  asset_name: string;
+  start_date: string;
+  due_date: string;
+  category: string;
+  organisation_id: number;
 }
 
-interface WorkOrderProps {
+interface Asset {
+  id: number;
+  name: string;
+}
+
+interface WorkOrdersProps {
   setMainPage: (page: string) => void;
 }
 
-const workOrders: WorkOrderItem[] = [
-];
+export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
+  const { user } = useAuth();
+  const { setSelectedEntity } = useSelectedEntity();
 
-export default function WorkOrders({ setMainPage }: WorkOrderProps) {
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState<Partial<WorkOrder>>({});
+
+  const fetchWorkOrders = async () => {
+    try {
+      const res = await axios.get("https://basecampai.ngrok.io/workorders/", {
+        params: { organisation_id: user?.organisation?.id },
+      });
+      setWorkOrders(res.data);
+    } catch (err) {
+      console.error("Error fetching work orders:", err);
+    }
+  };
+
+  const fetchAssets = async () => {
+    try {
+      const res = await axios.get("https://basecampai.ngrok.io/assets/", {
+        params: { organisation_id: user?.organisation?.id },
+      });
+      setAssets(res.data);
+    } catch (err) {
+      console.error("Error fetching assets:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkOrders();
+    fetchAssets();
+  }, []);
+
+  const handleAddOrEdit = async (form: Partial<WorkOrder>) => {
+    const payload = {
+      ...form,
+      organisation_id: user?.organisation?.id,
+    };
+
+    if (form.id) {
+      await axios.put(`https://basecampai.ngrok.io/workorders/${form.id}`, payload);
+    } else {
+      await axios.post("https://basecampai.ngrok.io/workorders/", payload);
+    }
+
+    setShowModal(false);
+    setFormData({});
+    fetchWorkOrders();
+  };
+
+  const handleDelete = async (id: number) => {
+    if (confirm("Delete this work order?")) {
+      await axios.delete(`https://basecampai.ngrok.io/workorders/${id}`, {
+        params: { organisation_id: user?.organisation?.id },
+      });
+      fetchWorkOrders();
+    }
+  };
+
+  const handleSelect = (id: number) => {
+    setSelectedEntity({ type: "workorder", id });
+    setMainPage("workorderdetails");
+  };
+
+  const handleAddClick = () => {
+    setFormData({});
+    setShowModal(true);
+  };
+
+  const handleEditClick = (item: WorkOrder) => {
+    setFormData(item);
+    setShowModal(true);
+  };
+
+  const renderRow = (
+    workOrder: WorkOrder,
+    _openDropdown: number | null,
+    _setOpenDropdown: (id: number | null) => void,
+    _openEditModal: (item: WorkOrder) => void
+  ) => {
+    return (
+      <WorkOrderRow
+        workOrder={workOrder}
+        onClick={() => handleSelect(workOrder.id)}
+        onEdit={handleEditClick}
+        onDelete={handleDelete}
+      />
+    );
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
-        <div className="flex items-end gap-2">
-          <h3 className="text-2xl font-semibold leading-tight">Work Orders</h3>
-          <span className="text-sm text-gray-600">(1 - {workOrders.length} of {workOrders.length})</span>
-        </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-1 border border-blue-600 text-blue-600 px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-50">
-            <FiEdit3 size={16} />
-            Describe
-          </button>
-          <button className="flex items-center gap-1 border border-blue-600 text-blue-600 px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-50">
-            <FiUpload size={16} />
-            Upload
-          </button>
-          <button 
-            onClick={() => setMainPage("work_order_builder")}
-            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700">
-            <FiPlus size={16} />
-            Create Work Order
-          </button>
-        </div>
-      </div>
+    <>
+      <EntityListPage<WorkOrder>
+        title="Work Orders"
+        entityType="workorder"
+        items={workOrders}
+        onFetch={fetchWorkOrders}
+        onSelect={handleSelect}
+        renderRow={renderRow}
+        columns={["Title", "Description", "Status", "Asset", "Start Date", "Due Date", "Category", "Actions"]}
+        addButtonLabel="Add"
+        showSearchBar={true}
+        onAddClick={handleAddClick}
+      />
 
-      <div className="mb-4 flex items-center gap-2">
-        <input
-          type="text"
-          placeholder="Search all work orders"
-          className="border px-3 py-2 rounded w-full max-w-sm text-sm"
-        />
-        <button className="text-sm text-blue-600 font-medium">+ Add filter</button>
-      </div>
-
-      {workOrders.length === 0 ? (
-        <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
-          <p className="text-lg font-medium">No work orders created yet</p>
-          <p className="text-sm mt-1">Click "Create Work Order" to add your first one.</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm border border-gray-300 rounded-lg bg-white">
-            <thead className="bg-gray-100 text-left text-gray-600 font-medium border-b border-gray-300">
-              <tr>
-                <th className="px-4 py-2 border-r border-gray-200">Title</th>
-                <th className="px-4 py-2 border-r border-gray-200">Description</th>
-                <th className="px-4 py-2 border-r border-gray-200 whitespace-nowrap">Scheduled Date</th>
-                <th className="px-4 py-2 border-r border-gray-200">Assigned To</th>
-                <th className="px-4 py-2 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workOrders.map((order, index) => (
-                <tr key={index} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900">{order.title}</td>
-                  <td className="px-4 py-3 border-r border-gray-100 text-gray-700">{order.description}</td>
-                  <td className="px-4 py-3 border-r border-gray-100 text-gray-600">{order.date}</td>
-                  <td className="px-4 py-3 border-r border-gray-100 text-gray-600">Unassigned</td>
-                  <td className="px-4 py-3 text-right">
-                    <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      <EntityModal
+        title="Work Order"
+        visible={showModal}
+        onClose={() => {
+          setFormData({});
+          setShowModal(false);
+        }}
+        onSubmit={handleAddOrEdit}
+        formData={formData}
+        setFormData={setFormData}
+        fields={[
+          { label: "Title", key: "title" },
+          { label: "Description", key: "description" },
+          { label: "Status", key: "status" },
+          {
+            label: "Asset",
+            key: "asset_id",
+            type: "select",
+            options: assets.map((a) => ({ label: a.name, value: a.id })),
+          },
+          { label: "Start Date", key: "start_date", type: "date" },
+          { label: "Due Date", key: "due_date", type: "date" },
+          { label: "Category", key: "category" },
+        ]}
+      />
+    </>
   );
 }

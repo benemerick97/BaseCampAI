@@ -1,89 +1,168 @@
-import React from "react";
-import { FiPlus, FiEdit3, FiUpload } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "../../contexts/AuthContext";
+import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
+import EntityListPage from "./EntityListPage";
+import AssetRow from "./AssetRow";
+import EntityModal from "../Work/EntityModal"; // adjust path if needed
 
 interface AssetItem {
+  id: number;
   name: string;
-  type: string;
-  addedDate: string;
+  asset_type?: string;
+  serial_number?: string;
+  created_date: string;
+  site_id: number;
+  organisation_id: number;
+}
+
+interface SiteOption {
+  id: number;
+  name: string;
 }
 
 interface AssetProps {
   setMainPage: (page: string) => void;
 }
 
-const assets: AssetItem[] = [
-];
-
 export default function Assets({ setMainPage }: AssetProps) {
+  const { user } = useAuth();
+  const { setSelectedEntity } = useSelectedEntity();
+
+  const [assets, setAssets] = useState<AssetItem[]>([]);
+  const [sites, setSites] = useState<SiteOption[]>([]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState<Record<string, any>>({});
+
+  const fetchAssets = async () => {
+    try {
+      const response = await axios.get("https://basecampai.ngrok.io/assets/", {
+        params: { organisation_id: user?.organisation?.id },
+      });
+      setAssets(response.data);
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+    }
+  };
+
+  const fetchSites = async () => {
+    try {
+      const response = await axios.get("https://basecampai.ngrok.io/sites/", {
+        params: { organisation_id: user?.organisation?.id },
+      });
+      setSites(response.data);
+    } catch (error) {
+      console.error("Error fetching sites:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssets();
+    fetchSites();
+  }, []);
+
+  const handleAddOrEditAsset = async (form: any) => {
+    if (form.id) {
+      await axios.put(`https://basecampai.ngrok.io/assets/${form.id}`, {
+        name: form.name,
+        asset_type: form.asset_type,
+        serial_number: form.serial_number,
+        site_id: form.site_id,
+        organisation_id: user?.organisation?.id,
+      });
+    } else {
+      await axios.post("https://basecampai.ngrok.io/assets/", {
+        name: form.name,
+        asset_type: form.asset_type,
+        serial_number: form.serial_number,
+        site_id: form.site_id,
+        organisation_id: user?.organisation?.id,
+      });
+    }
+    setShowModal(false);
+    setFormData({});
+    fetchAssets();
+  };
+
+  const handleDelete = async (id: number) => {
+    const confirmed = confirm("Delete this asset?");
+    if (confirmed) {
+      await axios.delete(`https://basecampai.ngrok.io/assets/${id}`, {
+        params: { organisation_id: user?.organisation?.id },
+      });
+      fetchAssets();
+    }
+  };
+
+  const handleSelect = (id: number) => {
+    setSelectedEntity({ type: "asset", id });
+    setMainPage("assetdetails");
+  };
+
+  const handleAddClick = () => {
+    setFormData({});
+    setShowModal(true);
+  };
+
+  const handleEditClick = (item: AssetItem) => {
+    setFormData(item);
+    setShowModal(true);
+  };
+
+  const renderRow = (
+    asset: AssetItem,
+    _openDropdown: number | null,
+    _setOpenDropdown: (id: number | null) => void,
+    _openEditModal: (item: AssetItem) => void
+  ) => {
+    return (
+      <AssetRow
+        asset={asset}
+        onSelect={handleSelect}
+        onEdit={handleEditClick}
+        onDelete={handleDelete}
+      />
+    );
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
-        <div className="flex items-end gap-2">
-          <h3 className="text-2xl font-semibold leading-tight">Assets</h3>
-          <span className="text-sm text-gray-600">(1 - {assets.length} of {assets.length})</span>
-        </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-1 border border-blue-600 text-blue-600 px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-50">
-            <FiEdit3 size={16} />
-            Describe
-          </button>
-          <button className="flex items-center gap-1 border border-blue-600 text-blue-600 px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-50">
-            <FiUpload size={16} />
-            Upload
-          </button>
-          <button 
-            onClick={() => setMainPage("asset_creator")}
-            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700">
-            <FiPlus size={16} />
-            Add Asset
-          </button>
-        </div>
-      </div>
+    <>
+      <EntityListPage<AssetItem>
+        title="Assets"
+        entityType="asset"
+        items={assets}
+        onFetch={fetchAssets}
+        onSelect={handleSelect}
+        renderRow={renderRow}
+        columns={["Asset Name", "Type", "Serial Number", "Date Created", "Actions"]}
+        addButtonLabel="Add"
+        showSearchBar={true}
+        onAddClick={handleAddClick}
+      />
 
-      <div className="mb-4 flex items-center gap-2">
-        <input
-          type="text"
-          placeholder="Search all assets"
-          className="border px-3 py-2 rounded w-full max-w-sm text-sm"
-        />
-        <button className="text-sm text-blue-600 font-medium">+ Add filter</button>
-      </div>
-
-      {assets.length === 0 ? (
-        <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
-          <p className="text-lg font-medium">No assets added yet</p>
-          <p className="text-sm mt-1">Click "Add Asset" to register your first one.</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm border border-gray-300 rounded-lg bg-white">
-            <thead className="bg-gray-100 text-left text-gray-600 font-medium border-b border-gray-300">
-              <tr>
-                <th className="px-4 py-2 border-r border-gray-200">Asset Name</th>
-                <th className="px-4 py-2 border-r border-gray-200">Type</th>
-                <th className="px-4 py-2 border-r border-gray-200 whitespace-nowrap">Date Added</th>
-                <th className="px-4 py-2 border-r border-gray-200">Status</th>
-                <th className="px-4 py-2 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assets.map((asset, index) => (
-                <tr key={index} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900">{asset.name}</td>
-                  <td className="px-4 py-3 border-r border-gray-100 text-gray-700">{asset.type}</td>
-                  <td className="px-4 py-3 border-r border-gray-100 text-gray-600">{asset.addedDate}</td>
-                  <td className="px-4 py-3 border-r border-gray-100 text-gray-600">Active</td>
-                  <td className="px-4 py-3 text-right">
-                    <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      <EntityModal
+        title="Asset"
+        visible={showModal}
+        onClose={() => {
+          setFormData({});
+          setShowModal(false);
+        }}
+        onSubmit={handleAddOrEditAsset}
+        formData={formData}
+        setFormData={setFormData}
+        fields={[
+          { label: "Asset Name", key: "name" },
+          { label: "Type", key: "asset_type" },
+          { label: "Serial Number", key: "serial_number" },
+          {
+            label: "Site",
+            key: "site_id",
+            type: "select",
+            options: sites.map((site) => ({ label: site.name, value: site.id })),
+          },
+        ]}
+      />
+    </>
   );
 }

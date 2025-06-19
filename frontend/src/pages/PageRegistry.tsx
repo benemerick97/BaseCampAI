@@ -10,7 +10,7 @@ import Organisation from "../components/Organisation";
 import Projects from "../components/Projects";
 import Learn from "../components/LMS/Learn";
 import Account from "../components/Account";
-import WorkflowBuilder from "../components/Work/WorkflowBuilder";
+import WorkflowBuilderContainer from "../components/Work/Builder/WorkflowBuilderContainer";
 import Workflow from "../components/Work/Workflow";
 import WorkOrders from "../components/Work/WorkOrders";
 import Assets from "../components/Work/Assets";
@@ -19,6 +19,7 @@ import Tasks from "../components/Work/Tasks";
 import Content from "../components/Work/Content";
 import WorkProject from "../components/Work/Projects";
 import SiteDetails from "../components/Work/SiteDetails";
+import AssetDetails from "../components/Work/AssetDetails";
 
 export const PageRegistry: Record<
   string,
@@ -34,7 +35,7 @@ export const PageRegistry: Record<
   projects: Projects,
   learn: Learn,
   account: Account,
-  workflow_builder: WorkflowBuilder,
+  workflow_builder: WorkflowBuilderContainer,
   workflow: Workflow,
   workorders: WorkOrders,
   assets: Assets,
@@ -42,5 +43,6 @@ export const PageRegistry: Record<
   tasks: Tasks,
   content: Content,
   workproject: WorkProject,
-  sitedetails : SiteDetails
+  sitedetails : SiteDetails,
+  assetdetails : AssetDetails
 };
