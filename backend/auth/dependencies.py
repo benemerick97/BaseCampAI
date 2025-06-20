@@ -3,7 +3,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload  # ✅ import joinedload
 
 from models.user import User
 from databases.database import get_db  
@@ -27,8 +27,16 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == user_id).first()
+    # ✅ This now loads the organisation relationship with short_name
+    user = (
+        db.query(User)
+        .options(joinedload(User.organisation))
+        .filter(User.id == user_id)
+        .first()
+    )
+
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
     return user
+

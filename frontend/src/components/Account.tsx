@@ -32,10 +32,7 @@ const Account: React.FC = () => {
 
       if (response.ok) {
         const updatedUser = await response.json();
-        const fullUpdatedUser = { ...user, ...updatedUser };
-
-        localStorage.setItem("user", JSON.stringify(fullUpdatedUser));
-        setUser(fullUpdatedUser); // ✅ Trigger re-render in header
+        setUser({ ...user, ...updatedUser }); // ✅ Just update in memory
         setSuccess(true);
       }
     } catch (err) {

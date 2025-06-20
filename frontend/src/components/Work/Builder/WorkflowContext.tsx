@@ -26,7 +26,7 @@ export const useWorkflow = () => {
 
 export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [steps, setSteps] = useState<Step[]>([
-    { id: "start", label: "Start Workflow", inputType: "text" },
+    { id: "start", label: "Start Workflow", instructions: "", inputFields: [] },
   ]);
   const [nodes, setNodes, onNodesChange] = useNodesState([
     {

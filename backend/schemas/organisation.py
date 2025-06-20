@@ -6,6 +6,7 @@ class OrganisationOut(BaseModel):
 
     id: int
     name: str
+    short_name: str
 
     class Config:
         from_attributes = True

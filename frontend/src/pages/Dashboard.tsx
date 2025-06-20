@@ -19,7 +19,7 @@ const DashboardContent = () => {
   const handleNavClick = (page: string) => {
     setActiveTab(page);
 
-    if (!["projects", "learn", "work"].includes(page)) {
+    if (!["projects", "learn", "work", "organisation"].includes(page)) {
       setMainPage(page);
       setComponentKey((prev) => prev + 1);
     }
@@ -57,8 +57,8 @@ const DashboardContent = () => {
     <div className="flex flex-col w-screen h-screen bg-gray-100 overflow-hidden">
       <Header activePage={activeTab} onNavClick={handleNavClick} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar activePage={activeTab} onNavClick={handleNavClick} />
-        {["projects", "learn", "work"].includes(activeTab) && (
+        <Sidebar activePage={activeTab} onNavClick={handleNavClick} isAdmin={isAdmin} />
+        {["projects", "learn", "work", "organisation"].includes(activeTab) && (
           <SubSidebar activeTab={activeTab} setMainPage={setMainPage} />
         )}
         <Main>{renderPage()}</Main>

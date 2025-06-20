@@ -1,6 +1,8 @@
+//frontend/src/components/Work/Builder/CustomNode.tsx
+
 import React from "react";
 import { Handle } from "reactflow";
-import type { Position } from "reactflow";
+import { Position } from "reactflow";
 
 type CustomNodeProps = {
   data: {

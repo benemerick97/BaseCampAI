@@ -18,6 +18,8 @@ export default function Chat() {
 
   const { user } = useAuth();
 
+  const organisationShortName = user?.organisation?.short_name || "your company";
+
   const {
     suggestions,
     showSuggestions,
@@ -227,7 +229,7 @@ export default function Chat() {
       {!hasStarted ? (
         <div className="flex flex-col items-center justify-center flex-1 text-center">
           <h1 className="text-2xl font-semibold text-gray-800 mb-4">
-            Welcome to RTI's Basecamp. How can I help?
+            Welcome to {organisationShortName}'s Basecamp. How can I help?
           </h1>
           <div className="w-full max-w-3xl">
             {renderInputBar()}

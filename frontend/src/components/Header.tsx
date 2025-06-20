@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
-  const { user, logout, refetchUser } = useAuth();
+  const { user, role, setRoleOverride, logout, refetchUser } = useAuth();
   const userName = user?.first_name || "User";
   const organisationName = user?.organisation?.name || "";
   const organisationId = user?.organisation?.id;
@@ -22,9 +22,11 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
 
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const orgDropdownRef = useRef<HTMLDivElement>(null);
   const accountDropdownRef = useRef<HTMLDivElement>(null);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch organisations for super admin
   useEffect(() => {
@@ -39,9 +41,7 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
           },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch organisations");
-        }
+        if (!response.ok) throw new Error("Failed to fetch organisations");
 
         const data = await response.json();
         setOrganisations(data);
@@ -53,14 +53,12 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
     fetchOrganisations();
   }, [isSuperAdmin]);
 
-  // Merge current org into list if it's not already there
   const mergedOrganisations = organisations.some((o) => o.id === organisationId)
     ? organisations
     : organisationId && organisationName
     ? [{ id: organisationId, name: organisationName }, ...organisations]
     : organisations;
 
-  // Handle organisation change
   const onChangeOrganisation = async (org: Organisation) => {
     try {
       const token = localStorage.getItem("token");
@@ -73,25 +71,26 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         body: JSON.stringify({ org_id: org.id }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to switch organisation");
-      }
+      if (!response.ok) throw new Error("Failed to switch organisation");
 
-      await refetchUser(); // Refresh user context
+      await refetchUser();
       setShowOrgDropdown(false);
     } catch (error) {
       console.error("Error switching organisation:", error);
     }
   };
 
-  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(target)) {
         setShowAccountDropdown(false);
       }
-      if (orgDropdownRef.current && !orgDropdownRef.current.contains(event.target as Node)) {
+      if (orgDropdownRef.current && !orgDropdownRef.current.contains(target)) {
         setShowOrgDropdown(false);
+      }
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(target)) {
+        setShowRoleDropdown(false);
       }
     }
 
@@ -157,9 +156,45 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
           </div>
         )}
 
-        {/* Settings Button */}
+        {/* Role Dropdown for Super Admin */}
+        {isSuperAdmin && (
+          <div className="relative" ref={roleDropdownRef}>
+            <button
+              onClick={() => setShowRoleDropdown((prev) => !prev)}
+              className="flex items-center text-sm text-gray-600 font-medium hover:text-gray-800"
+            >
+              Role: {role}
+              <FiChevronDown className="ml-1 text-xs" />
+            </button>
+
+            {showRoleDropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden border border-gray-200">
+                {["super_admin", "admin", "user"].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => {
+                      setRoleOverride(
+                        r === "super_admin"
+                          ? null
+                          : r as "admin" | "user"
+                      );
+                      setShowRoleDropdown(false);
+                    }}
+                    className={`block w-full text-left px-4 py-2 text-sm ${
+                      role === r ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-700"
+                    } hover:bg-blue-100 transition-all duration-150`}
+                  >
+                    {r === "super_admin" ? "Reset to Super Admin" : `Switch to ${r}`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Notification and Settings */}
         <button
-          title="Settings"
+          title="Notifications"
           onClick={() => onNavClick("placeholder")}
           className={`p-2 ${activePage === "placeholder" ? "text-blue-600" : "text-gray-600"}`}
         >

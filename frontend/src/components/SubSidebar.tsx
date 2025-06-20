@@ -2,6 +2,7 @@ import React from "react";
 import ProjectsSidebar from "./subsidebars/ProjectsSidebar";
 import LearnSidebar from "./subsidebars/LearnSidebar";
 import WorkSidebar from "./subsidebars/WorkSidebar";
+import OrgSidebar from "./subsidebars/OrgSidebar";
 import DefaultSidebar from "./subsidebars/DefaultSidebar";
 
 interface SubSidebarProps {
@@ -18,6 +19,8 @@ const SubSidebar: React.FC<SubSidebarProps> = ({ activeTab, setMainPage }) => {
         return <LearnSidebar setMainPage={setMainPage} />;
       case "work":
         return <WorkSidebar setMainPage={setMainPage} />;
+      case "organisation":
+        return <OrgSidebar setMainPage={setMainPage} />;
       default:
         return <DefaultSidebar />;
     }

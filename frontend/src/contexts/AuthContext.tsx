@@ -1,13 +1,14 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 
-// Add Organisation interface
+// Organisation interface
 interface Organisation {
   id: number;
   name: string;
+  short_name?: string;
 }
 
-// Updated User interface with organisation
+// User interface
 interface User {
   id: number;
   email: string;
@@ -19,31 +20,47 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null; // ✅ Added
+  token: string | null;
   setUser: (user: User | null) => void;
   login: (email: string, password: string, onSuccess?: () => void) => Promise<void>;
   logout: () => void;
+  refetchUser: () => Promise<void>;
+  role: "super_admin" | "admin" | "user";
+  setRoleOverride: (role: "super_admin" | "admin" | "user" | null) => void;
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isUser: boolean;
-  refetchUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null); // ✅ Added
+  const [token, setToken] = useState<string | null>(null);
+  const [roleOverride, setRoleOverride] = useState<"super_admin" | "admin" | "user" | null>(null);
 
+  // Load token and role override on startup
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
+    const storedOverride = sessionStorage.getItem("roleOverride");
 
-    if (savedToken && storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (savedToken) {
       setToken(savedToken);
+      refetchUser(); // ✅ Always fetch fresh user data
+    }
+
+    if (storedOverride === "super_admin" || storedOverride === "admin" || storedOverride === "user") {
+      setRoleOverride(storedOverride);
     }
   }, []);
+
+  useEffect(() => {
+    if (roleOverride) {
+      sessionStorage.setItem("roleOverride", roleOverride);
+    } else {
+      sessionStorage.removeItem("roleOverride");
+    }
+  }, [roleOverride]);
 
   const login = async (email: string, password: string, onSuccess?: () => void) => {
     const response = await fetch("https://basecampai.ngrok.io/login", {
@@ -56,18 +73,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (data.access_token) {
       localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setUser(data.user);
-      setToken(data.access_token); // ✅ Set token
+      setToken(data.access_token);
+      setRoleOverride(null); // Reset override on login
+      await refetchUser(); // ✅ Immediately load full user (including organisation.short_name)
       if (onSuccess) onSuccess();
     }
   };
 
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("roleOverride");
     setUser(null);
-    setToken(null); // ✅ Clear token
+    setToken(null);
+    setRoleOverride(null);
   };
 
   const refetchUser = async () => {
@@ -84,7 +102,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem("user", JSON.stringify(data));
         setUser(data);
       } else {
         console.error("Failed to refetch user");
@@ -94,22 +111,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const isSuperAdmin = user?.role === "super_admin";
-  const isAdmin = user?.role === "admin" || isSuperAdmin;
-  const isUser = user?.role === "user";
+  const effectiveRole: "super_admin" | "admin" | "user" = roleOverride || user?.role || "user";
+
+  const isSuperAdmin = effectiveRole === "super_admin";
+  const isAdmin = effectiveRole === "admin" || effectiveRole === "super_admin";
+  const isUser = effectiveRole === "user";
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token, // ✅ Provide it to context
+        token,
         setUser,
         login,
         logout,
+        refetchUser,
+        role: effectiveRole,
+        setRoleOverride,
         isSuperAdmin,
         isAdmin,
         isUser,
-        refetchUser,
       }}
     >
       {children}

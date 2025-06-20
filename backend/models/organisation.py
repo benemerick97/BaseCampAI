@@ -11,6 +11,7 @@ class Organisation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
+    short_name = Column(String, unique=True, nullable=True)
 
     users = relationship("User", back_populates="organisation")
     agents = relationship("Agent", back_populates="organisation", cascade="all, delete")

@@ -1,7 +1,9 @@
+// frontend/src/components/Knowledge.tsx
+
 import { useState, useEffect } from "react";
 import { FiUpload, FiPlus } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
-import Modal from "../components/Modal"; // ✅ adjust path if needed
+import Modal from "../components/Modal"; 
 import FileUpload from "../components/FileUpload";
 
 interface KnowledgeProps {

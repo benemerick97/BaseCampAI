@@ -15,21 +15,27 @@ import clsx from "clsx"; // Optional for cleaner conditional classNames
 interface SidebarProps {
   onNavClick: (page: string) => void;
   activePage: string;
+  isAdmin: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin }) => {
   const [expanded, setExpanded] = useState(false);
 
   const navItems = [
     { key: "chat", icon: <FiMessageCircle />, label: "Chat" },
-    { key: "agents", icon: <FiGrid/>, label: "Agents" },
-    { key: "projects", icon: <FiFolder/>, label: "Projects" },
+    { key: "agents", icon: <FiGrid />, label: "Agents" },
+    { key: "projects", icon: <FiFolder />, label: "Projects" },
     { key: "learn", icon: <FiBookOpen />, label: "Learn" },
     { key: "work", icon: <FiClipboard />, label: "Work" },
     { key: "upload", icon: <FiUpload />, label: "Upload" },
     { key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
     { key: "organisation", icon: <FiUsers />, label: "Organisation" },
   ];
+
+  // Filter out "agents" if not admin
+  const visibleNavItems = navItems.filter(
+    (item) => isAdmin || item.key !== "agents"
+  );
 
   return (
     <aside
@@ -53,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage }) => {
 
       {/* Nav Items */}
       <div className="flex flex-col gap-2 px-2">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <button
             key={item.key}
             onClick={() => onNavClick(item.key)}
@@ -74,5 +80,3 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage }) => {
 };
 
 export default Sidebar;
-
-
