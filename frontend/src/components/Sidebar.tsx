@@ -10,15 +10,17 @@ import {
   FiBookOpen,
   FiClipboard,
 } from "react-icons/fi";
+import { GrUserAdmin } from "react-icons/gr";
 import clsx from "clsx"; // Optional for cleaner conditional classNames
 
 interface SidebarProps {
   onNavClick: (page: string) => void;
   activePage: string;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin, isSuperAdmin }) => {
   const [expanded, setExpanded] = useState(false);
 
   const navItems = [
@@ -30,12 +32,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin }) =>
     { key: "upload", icon: <FiUpload />, label: "Upload" },
     { key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
     { key: "organisation", icon: <FiUsers />, label: "Organisation" },
+    { key: "controlpanel", icon: <GrUserAdmin />, label: "Control Panel" },
   ];
 
-  // Filter out "agents" if not admin
-  const visibleNavItems = navItems.filter(
-    (item) => isAdmin || item.key !== "agents"
-  );
+  // Filter out "agents" if not admin or superadmin
+  const visibleNavItems = navItems.filter((item) => {
+  if (item.key === "agents" && !isAdmin) return false;
+  if (item.key === "controlpanel" && !isSuperAdmin) return false;
+  return true;
+});
+
 
   return (
     <aside

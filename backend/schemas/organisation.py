@@ -10,3 +10,7 @@ class OrganisationOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CreateOrgRequest(BaseModel):
+    name: str
+    short_name: str

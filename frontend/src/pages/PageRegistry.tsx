@@ -21,6 +21,7 @@ import WorkProject from "../components/Work/Projects";
 import SiteDetails from "../components/Work/SiteDetails";
 import AssetDetails from "../components/Work/AssetDetails";
 import UsersList from "../components/UsersList";
+import ControlPanel from "../components/AdminControls/ControlPanel";
 
 export const PageRegistry: Record<
   string,
@@ -46,5 +47,6 @@ export const PageRegistry: Record<
   workproject: WorkProject,
   sitedetails : SiteDetails,
   assetdetails : AssetDetails,
-  userslist : UsersList
+  userslist : UsersList,
+  controlpanel : ControlPanel,
 };

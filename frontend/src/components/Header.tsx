@@ -1,11 +1,15 @@
+// frontend/src/components/Header.tsx
+
 import React, { useState, useRef, useEffect } from "react";
 import { FiUser, FiSettings, FiChevronDown, FiBell } from "react-icons/fi";
 import logo from "../assets/logo/BASECAMP.svg";
 import { useAuth } from "../contexts/AuthContext";
+import { useOrganisations } from "../hooks/useOrganisations";
 
 interface Organisation {
   id: number;
   name: string;
+  short_name?: string;
 }
 
 interface HeaderProps {
@@ -23,41 +27,11 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-  const [organisations, setOrganisations] = useState<Organisation[]>([]);
+  const { organisations, refetch: refetchOrganisations } = useOrganisations(isSuperAdmin);
+
   const orgDropdownRef = useRef<HTMLDivElement>(null);
   const accountDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Fetch organisations for super admin
-  useEffect(() => {
-    const fetchOrganisations = async () => {
-      if (!isSuperAdmin) return;
-
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("https://basecampai.ngrok.io/superadmin/organisations", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch organisations");
-
-        const data = await response.json();
-        setOrganisations(data);
-      } catch (error) {
-        console.error("Error loading organisations:", error);
-      }
-    };
-
-    fetchOrganisations();
-  }, [isSuperAdmin]);
-
-  const mergedOrganisations = organisations.some((o) => o.id === organisationId)
-    ? organisations
-    : organisationId && organisationName
-    ? [{ id: organisationId, name: organisationName }, ...organisations]
-    : organisations;
 
   const onChangeOrganisation = async (org: Organisation) => {
     try {
@@ -77,6 +51,13 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
       setShowOrgDropdown(false);
     } catch (error) {
       console.error("Error switching organisation:", error);
+    }
+  };
+
+  const handleOrgDropdownToggle = async () => {
+    if (isSuperAdmin) {
+      setShowOrgDropdown((prev) => !prev);
+      await refetchOrganisations(); // ✅ Live refresh the org list
     }
   };
 
@@ -116,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         {organisationName && (
           <div className="relative" ref={orgDropdownRef}>
             <button
-              onClick={() => isSuperAdmin && setShowOrgDropdown((prev) => !prev)}
+              onClick={handleOrgDropdownToggle}
               className="flex items-center text-sm text-gray-600 font-medium max-w-[220px] truncate hover:text-gray-800"
             >
               {organisationName}
@@ -125,10 +106,10 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
 
             {isSuperAdmin && showOrgDropdown && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden border border-gray-200">
-                {mergedOrganisations.length > 0 ? (
-                  mergedOrganisations.map((org, index) => {
+                {organisations.length > 0 ? (
+                  organisations.map((org, index) => {
                     const isFirst = index === 0;
-                    const isLast = index === mergedOrganisations.length - 1;
+                    const isLast = index === organisations.length - 1;
                     const isCurrent = org.id === organisationId;
 
                     return (
@@ -174,9 +155,7 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
                     key={r}
                     onClick={() => {
                       setRoleOverride(
-                        r === "super_admin"
-                          ? null
-                          : r as "admin" | "user"
+                        r === "super_admin" ? null : (r as "admin" | "user")
                       );
                       setShowRoleDropdown(false);
                     }}

@@ -16,6 +16,9 @@ class UserCreate(BaseModel):
     class Config:
         from_attributes = True
 
+class SuperAdminUserCreate(UserCreate):
+    organisation_id: int
+
 
 class UserUpdate(BaseModel):
     first_name: Optional[str]

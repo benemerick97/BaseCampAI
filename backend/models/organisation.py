@@ -9,7 +9,7 @@ from models.work.site import Site
 class Organisation(Base):
     __tablename__ = "organisations"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)
     short_name = Column(String, unique=True, nullable=True)
 

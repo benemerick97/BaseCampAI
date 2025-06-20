@@ -57,7 +57,12 @@ const DashboardContent = () => {
     <div className="flex flex-col w-screen h-screen bg-gray-100 overflow-hidden">
       <Header activePage={activeTab} onNavClick={handleNavClick} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar activePage={activeTab} onNavClick={handleNavClick} isAdmin={isAdmin} />
+        <Sidebar
+          activePage={activeTab}
+          onNavClick={handleNavClick}
+          isAdmin={isAdmin}
+          isSuperAdmin={isSuperAdmin}
+        />
         {["projects", "learn", "work", "organisation"].includes(activeTab) && (
           <SubSidebar activeTab={activeTab} setMainPage={setMainPage} />
         )}
