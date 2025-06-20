@@ -2,7 +2,7 @@ import React from "react";
 
 interface EntityModalProps {
   title: string;
-  show: boolean;
+  visible: boolean;
   onClose: () => void;
   onSubmit: (formData: Record<string, any>) => void;
   formData: Record<string, any>;

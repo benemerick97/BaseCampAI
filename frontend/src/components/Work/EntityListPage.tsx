@@ -1,3 +1,5 @@
+// frontend/src/components/Work/EntityListPage.tsx
+
 import React, { useState, useEffect } from "react";
 import { FiPlus } from "react-icons/fi";
 

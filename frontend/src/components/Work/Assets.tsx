@@ -1,3 +1,5 @@
+// frontend/src/components/Work/Assets.tsx
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../contexts/AuthContext";
@@ -119,7 +121,7 @@ export default function Assets({ setMainPage }: AssetProps) {
     return (
       <AssetRow
         asset={asset}
-        onSelect={handleSelect}
+        onClick={() => handleSelect(asset.id)} 
         onEdit={handleEditClick}
         onDelete={handleDelete}
       />

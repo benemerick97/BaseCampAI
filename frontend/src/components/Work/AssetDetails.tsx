@@ -8,12 +8,14 @@ import {
   FiClipboard,
   FiMapPin,
   FiFolder,
+  FiRss,
 } from "react-icons/fi";
 import DetailsPage from "./DetailsPage";
 
 // Modular tabs
 import DetailsTab from "../Work/Tabs/DetailsTab";
 import EmptyTab from "../Work/Tabs/EmptyTab";
+import SensorsTab from "../Work/Tabs/IoTSensorsTab";
 
 interface AssetDetailsProps {
   setMainPage: (page: string) => void;
@@ -57,16 +59,16 @@ export default function AssetDetails({ setMainPage }: AssetDetailsProps) {
       content: <EmptyTab label="Projects" />,
     },
     {
-      key: "site",
-      label: "Site",
-      icon: <FiMapPin />,
-      content: <EmptyTab label="Associated Site" />,
-    },
-    {
       key: "files",
       label: "Files",
       icon: <FiFolder />,
       content: <EmptyTab label="Files" />,
+    },
+    {
+      key: "sensors",
+      label: "IoT Sensors",
+      icon: <FiRss />,
+      content: <SensorsTab />,
     },
   ];
 

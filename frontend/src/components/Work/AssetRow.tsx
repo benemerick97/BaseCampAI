@@ -1,3 +1,5 @@
+// frontend/src/components/Work/AssetRow.tsx
+
 import React, { useState, useEffect } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { createPortal } from "react-dom";
@@ -14,7 +16,7 @@ interface AssetItem {
 
 interface AssetRowProps {
   asset: AssetItem;
-  onClick: () => void; // 🔁 replaces onSelect
+  onClick: () => void;
   onEdit: (item: AssetItem) => void;
   onDelete: (id: number) => void;
 }
@@ -80,11 +82,13 @@ const AssetRow: React.FC<AssetRowProps> = ({ asset, onClick, onEdit, onDelete })
   };
 
   return (
-    <tr
-      className="cursor-pointer hover:bg-gray-50"
-      onClick={onClick} // ✅ row click for navigating to AssetDetails
-    >
-      <td className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900">{asset.name}</td>
+    <>
+      <td
+        className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900 cursor-pointer hover:bg-gray-50"
+        onClick={onClick}
+      >
+        {asset.name}
+      </td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">{asset.asset_type || "—"}</td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">{asset.serial_number || "—"}</td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-600">
@@ -92,14 +96,14 @@ const AssetRow: React.FC<AssetRowProps> = ({ asset, onClick, onEdit, onDelete })
       </td>
       <td
         className="px-4 py-3 border-r border-gray-100 text-right relative"
-        onClick={(e) => e.stopPropagation()} // ✅ prevent dropdown clicks from triggering row
+        onClick={(e) => e.stopPropagation()}
       >
         <button onClick={handleDropdownToggle} className="p-1 hover:bg-gray-100 rounded">
           <FiMoreHorizontal size={18} className="text-gray-600 hover:text-gray-800" />
         </button>
         {renderDropdown()}
       </td>
-    </tr>
+    </>
   );
 };
 
