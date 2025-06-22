@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { useNodesState, useEdgesState } from "reactflow";
 import type { Node, Edge } from "reactflow";
-import type { Step } from "./sharedTypes";
+import type { Step, StepGroup } from "./sharedTypes"; // ✅ also import StepGroup
 
 interface WorkflowContextType {
   steps: Step[];
@@ -14,6 +14,8 @@ interface WorkflowContextType {
   edges: Edge[];
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   onEdgesChange: ReturnType<typeof useEdgesState>[2];
+  groups: StepGroup[]; // ✅ NEW
+  setGroups: React.Dispatch<React.SetStateAction<StepGroup[]>>; // ✅ NEW
 }
 
 const WorkflowContext = createContext<WorkflowContextType | null>(null);
@@ -39,6 +41,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   ]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
+  const [groups, setGroups] = useState<StepGroup[]>([]); // ✅ NEW
+
   return (
     <WorkflowContext.Provider
       value={{
@@ -50,6 +54,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         edges,
         setEdges,
         onEdgesChange,
+        groups,
+        setGroups, // ✅ NEW
       }}
     >
       {children}

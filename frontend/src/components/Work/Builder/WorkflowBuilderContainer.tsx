@@ -1,13 +1,16 @@
 // frontend/src/components/Work/Builder/WorkflowBuilderContainer.tsx
 
-import React from "react";
 import { WorkflowProvider } from "./WorkflowContext";
 import WorkflowBuilder from "./WorkflowBuilder";
 
-export default function WorkflowBuilderContainer() {
+interface WorkflowBuilderContainerProps {
+  setMainPage: (page: string) => void;
+}
+
+export default function WorkflowBuilderContainer({ setMainPage }: WorkflowBuilderContainerProps) {
   return (
     <WorkflowProvider>
-      <WorkflowBuilder />
+      <WorkflowBuilder setMainPage={setMainPage} />
     </WorkflowProvider>
   );
 }

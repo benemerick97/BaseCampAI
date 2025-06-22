@@ -1,6 +1,5 @@
 // components/StepOptionsModal.tsx
 
-import React from "react";
 
 interface StepOptionsModalProps {
   isOpen: boolean;

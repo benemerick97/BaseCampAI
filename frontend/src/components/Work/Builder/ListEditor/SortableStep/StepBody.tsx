@@ -5,8 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import StepInstructions from "./StepInstructions";
 import InputFieldList from "./InputFieldList";
 import AddInputDropdown from "./AddInputDropdown";
-import { INPUT_TYPE_OPTIONS } from "../../../../constants/inputTypes";
-import type { InputField, InputType } from "../sharedTypes";
+import { INPUT_TYPE_OPTIONS } from "../../../../../constants/inputTypes";
+import type { InputField, InputType } from "../../sharedTypes";
 
 interface StepBodyProps {
   isExpanded: boolean;
@@ -34,9 +34,19 @@ export default function StepBody({
       prefix: "",
       suffix: "",
     };
-    const updatedFields = [...inputFields, newField];
-    onChangeInputFields(updatedFields);
+    onChangeInputFields([...inputFields, newField]);
     setDropdownOpen(false);
+  };
+
+  const handleUpdateField = (index: number, update: Partial<InputField>) => {
+    const updated = [...inputFields];
+    updated[index] = { ...updated[index], ...update };
+    onChangeInputFields(updated);
+  };
+
+  const handleRemoveField = (index: number) => {
+    const updated = inputFields.filter((_, i) => i !== index);
+    onChangeInputFields(updated);
   };
 
   useEffect(() => {
@@ -61,7 +71,7 @@ export default function StepBody({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.2, duration: 0.2 }}
+              transition={{ delay: 0.15, duration: 0.2 }}
             >
               {/* Instructions */}
               <StepInstructions
@@ -76,8 +86,12 @@ export default function StepBody({
                 </label>
                 <button
                   ref={dropdownButtonRef}
-                  onClick={() => setDropdownOpen((prev) => !prev)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDropdownOpen((prev) => !prev);
+                  }}
                   className="text-sm text-blue-600 hover:underline"
+                  aria-expanded={dropdownOpen}
                 >
                   + Add input
                 </button>
@@ -85,8 +99,10 @@ export default function StepBody({
 
               {/* Input Fields */}
               <InputFieldList
-                inputFields={inputFields}
-                onChangeInputFields={onChangeInputFields}
+                fields={inputFields}
+                onChange={onChangeInputFields}
+                onUpdateField={handleUpdateField}
+                onRemoveField={handleRemoveField}
               />
 
               {/* Dropdown */}

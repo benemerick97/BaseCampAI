@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import Modal from "../components/Modal";
 import CreateAgent from "../components/Forms/CreateAgent";
 import AgentCard from "../components/AgentCard";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiMoreHorizontal } from "react-icons/fi";
 
 const BACKEND_URL = "https://basecampai.ngrok.io";
 
@@ -22,6 +22,8 @@ const Agents = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [form, setForm] = useState({
     agent_key: "",
     name: "",
@@ -50,6 +52,12 @@ const Agents = () => {
   useEffect(() => {
     fetchAgents();
   }, [orgId]);
+
+  useEffect(() => {
+    const handleClickOutside = () => setDropdownOpen(null);
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
 
   const handleEditClick = async (agent: Agent) => {
     try {
@@ -128,6 +136,26 @@ const Agents = () => {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setViewMode("card")}
+            className={`px-3 py-1.5 text-sm rounded border ${
+              viewMode === "card"
+                ? "bg-blue-600 text-white"
+                : "border-blue-600 text-blue-600 hover:bg-blue-50"
+            }`}
+          >
+            Card View
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-1.5 text-sm rounded border ${
+              viewMode === "list"
+                ? "bg-blue-600 text-white"
+                : "border-blue-600 text-blue-600 hover:bg-blue-50"
+            }`}
+          >
+            List View
+          </button>
+          <button
             onClick={() => {
               setForm({
                 agent_key: "",
@@ -159,14 +187,14 @@ const Agents = () => {
         <button className="text-sm text-blue-600 font-medium">+ Add filter</button>
       </div>
 
-      {/* Agent List */}
+      {/* Agent Display */}
       <div className="relative border rounded-lg bg-white">
         {filteredAgents.length === 0 ? (
           <div className="text-center text-gray-500 py-10">
             <p className="text-lg font-medium">No agents found</p>
             <p className="text-sm mt-1">Click "Create Agent" to add your first one.</p>
           </div>
-        ) : (
+        ) : viewMode === "card" ? (
           <div className="max-h-[75vh] overflow-y-auto p-2 pr-3 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredAgents.map((agent) => (
@@ -179,9 +207,67 @@ const Agents = () => {
               ))}
             </div>
           </div>
+        ) : (
+          <div className="overflow-x-auto max-h-[75vh] overflow-y-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-100 text-left text-gray-600 font-medium border-b">
+                <tr>
+                  <th className="px-4 py-2">Name</th>
+                  <th className="px-4 py-2">Description</th>
+                  <th className="px-4 py-2">Type</th>
+                  <th className="px-4 py-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAgents.map((agent) => (
+                  <tr key={agent.key} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-2 font-semibold text-gray-900">{agent.name}</td>
+                    <td className="px-4 py-2 text-gray-700">{agent.description}</td>
+                    <td className="px-4 py-2 text-gray-600 uppercase">{agent.type}</td>
+                    <td className="px-4 py-2 text-right relative">
+                      <div className="inline-block text-left z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDropdownOpen((prev) => (prev === agent.key ? null : agent.key));
+                          }}
+                          className="p-2 rounded hover:bg-gray-100"
+                        >
+                          <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
+                        </button>
+                        {dropdownOpen === agent.key && (
+                          <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-50">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClick(agent);
+                                setDropdownOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAgent(agent.key);
+                                setDropdownOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-
 
       {/* Modal */}
       <Modal

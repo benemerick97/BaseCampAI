@@ -9,17 +9,20 @@ import {
   FiAlignLeft,
 } from "react-icons/fi";
 
-import type { InputType } from "../components/Work/Builder/sharedTypes";
-
-export const inputTypes: InputType[] = [
+// 1. Define the base types as a readonly tuple
+export const inputTypes = [
   "text",
   "date",
   "select",
   "number",
   "checkbox",
   "textarea",
-];
+] as const;
 
+// 2. Auto-derive the union type from the above array
+export type InputType = (typeof inputTypes)[number];
+
+// 3. Use the union to define metadata for each type
 export const INPUT_TYPE_OPTIONS: {
   type: InputType;
   label: string;

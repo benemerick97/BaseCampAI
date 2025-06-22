@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 import { RiDraggable } from "react-icons/ri";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
-import type { SortableStepProps } from "../sharedTypes";
+import type { SortableStepProps } from "../../sharedTypes";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
-interface StepHeaderProps extends Pick<
+export interface StepHeaderProps extends Pick<
   SortableStepProps,
+  | "id"
   | "label"
   | "onChangeLabel"
   | "onExpand"
@@ -17,11 +18,13 @@ interface StepHeaderProps extends Pick<
   | "menuOpen"
   | "toggleMenu"
 > {
-  listeners: SyntheticListenerMap | undefined;
+  listeners?: SyntheticListenerMap;
+  attributes?: Record<string, any>;
   isExpanded: boolean;
 }
 
 export default function StepHeader({
+  id,
   label,
   onChangeLabel,
   onExpand,
@@ -30,6 +33,7 @@ export default function StepHeader({
   menuOpen,
   toggleMenu,
   listeners,
+  attributes,
   isExpanded,
 }: StepHeaderProps) {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,17 +59,19 @@ export default function StepHeader({
       className="flex items-center px-4 py-3 rounded-md hover:bg-gray-50 border border-gray-200 transition group"
       onClick={onExpand}
     >
-      {/* Drag Handle (now on the left) */}
+      {/* Drag Handle */}
       <div
         {...listeners}
-        className="cursor-grab text-gray-400 hover:text-gray-600 px-2"
+        {...attributes}
         onClick={(e) => e.stopPropagation()}
+        className="flex items-center justify-center mr-2 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
         title="Drag to reorder"
+        tabIndex={-1}
       >
-        <RiDraggable size={24} />
+        <RiDraggable size={18} />
       </div>
 
-      {/* Expand/Collapse Toggle (moved to the right of drag) */}
+      {/* Expand/Collapse Toggle */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -73,6 +79,8 @@ export default function StepHeader({
         }}
         className="mr-2 text-gray-500 hover:text-gray-700 transition-transform"
         aria-label={isExpanded ? "Collapse step" : "Expand step"}
+        aria-controls={`step-body-${id}`}
+        aria-expanded={isExpanded}
       >
         {isExpanded ? (
           <IoIosArrowDown size={16} />
@@ -83,6 +91,8 @@ export default function StepHeader({
 
       {/* Editable Label */}
       <input
+        id={`step-label-${id}`}
+        aria-labelledby={`step-label-${id}`}
         className="flex-grow bg-transparent border-b border-transparent group-hover:border-gray-300 focus:border-blue-500 focus:outline-none text-sm font-medium text-gray-800 transition px-1 placeholder-gray-400"
         value={label}
         onChange={(e) => onChangeLabel(e.target.value)}
