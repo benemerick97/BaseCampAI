@@ -5,20 +5,20 @@ const ProjectsSidebar = ({ setMainPage }: { setMainPage: (page: string) => void 
   return (
     <>
       <h2 className="text-gray-800 font-semibold mb-4 flex items-center gap-2">
-        <FiFolder className="text-base" /> Projects
+        <FiFolder className="text-base" /> Workspaces
       </h2>
       <div className="flex flex-col gap-2 text-gray-700">
         <button className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
-          <FiFileText /> All Projects
+          <FiFileText /> All Workspaces
         </button>
         <button
           onClick={() => setMainPage("projects")}
           className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded"
         >
-          <FiPlay /> Test Project
+          <FiPlay /> Test Workspace
         </button>
         <button className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
-          <FiPlus /> Create Project
+          <FiPlus /> Create Workspace
         </button>
       </div>
       <hr className="my-4" />

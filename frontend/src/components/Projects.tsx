@@ -18,7 +18,7 @@ const Projects = () => {
       {/* Middle: Chat Panel */}
       <div className="flex-1 border-r border-gray-200 p-6 bg-white flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Project Assistant</h2>
+          <h2 className="text-lg font-semibold">Workspace Assistant</h2>
           <span className="text-sm text-gray-400">Alpha</span>
         </div>
 
@@ -30,15 +30,15 @@ const Projects = () => {
       {/* Right: Admin Panel */}
       <div className="w-[320px] p-6 bg-white flex flex-col justify-between">
         <div>
-          <h2 className="text-lg font-semibold mb-4">Project Settings</h2>
+          <h2 className="text-lg font-semibold mb-4">Workspace Settings</h2>
 
           <div className="mb-6">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-              Project Description
+              Workspace Description
             </label>
             <textarea
               id="description"
-              placeholder="Describe the purpose of this project..."
+              placeholder="Describe the purpose of this workspace..."
               className="w-full min-h-[100px] p-3 border border-gray-300 rounded-lg resize-none text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>

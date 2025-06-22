@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin, isSu
   const navItems = [
     { key: "chat", icon: <FiMessageCircle />, label: "Chat" },
     { key: "agents", icon: <FiGrid />, label: "Agents" },
-    { key: "projects", icon: <FiFolder />, label: "Projects" },
+    { key: "projects", icon: <FiFolder />, label: "Workspaces" },
     { key: "learn", icon: <FiBookOpen />, label: "Learn" },
     { key: "work", icon: <FiClipboard />, label: "Work" },
     { key: "upload", icon: <FiUpload />, label: "Upload" },
