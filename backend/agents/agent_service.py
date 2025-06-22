@@ -21,7 +21,7 @@ def register_agent(
         agent.name = name
         agent.description = description
         agent.prompt = prompt
-        agent.filter = json.dumps(filter_dict)
+        agent.filter = filter_dict
         agent.type = type
     else:
         # Create new agent
@@ -31,7 +31,7 @@ def register_agent(
             name=name,
             description=description,
             prompt=prompt,
-            filter=json.dumps(filter_dict),
+            filter=filter_dict,
             type=type,
         )
         db.add(agent)
@@ -45,7 +45,7 @@ def get_agent(db: Session, org_id: int, agent_key: str):
             "name": agent.name,
             "description": agent.description,
             "prompt": agent.prompt,
-            "filter": json.loads(agent.filter),
+            "filter": agent.filter,
             "type": agent.type,
         }
     return None
@@ -58,7 +58,7 @@ def list_agents(db: Session, org_id: int):
             "name": agent.name,
             "description": agent.description,
             "prompt": agent.prompt,
-            "filter": json.loads(agent.filter),
+            "filter": agent.filter,
             "type": agent.type,
         }
         for agent in agents

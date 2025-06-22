@@ -2,6 +2,7 @@
 
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 from models.base import Base
 
 class Agent(Base):
@@ -13,7 +14,7 @@ class Agent(Base):
     name = Column(String, nullable=False)
     description = Column(Text, nullable=False)
     prompt = Column(Text, nullable=False)
-    filter = Column(Text, nullable=False)  # JSON string
+    filter = Column(JSONB, nullable=False)
     type = Column(String, nullable=False)  # NEW: "prompt", "retrieval", or "system"
 
     organisation = relationship("Organisation", back_populates="agents")

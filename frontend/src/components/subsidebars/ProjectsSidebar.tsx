@@ -1,4 +1,3 @@
-import React from "react";
 import { FiFolder, FiPlus, FiFileText, FiPlay } from "react-icons/fi";
 
 const ProjectsSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) => {

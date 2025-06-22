@@ -1,6 +1,6 @@
 // frontend/src/components/Work/Builder/WorkflowBuilder.tsx
 
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -8,6 +8,7 @@ import ListEditor from "./ListEditor";
 import FlowEditor from "./FlowEditor";
 import { useWorkflow } from "./WorkflowContext";
 import type { InputField } from "./sharedTypes";
+import { FiPlus } from "react-icons/fi";
 
 export default function WorkflowBuilder() {
   const [mode, setMode] = useState<"list" | "flow">("list");
@@ -26,7 +27,7 @@ export default function WorkflowBuilder() {
 
   const addStep = () => {
     const id = `step-${stepIdCounter.current++}`;
-    const label = `Step ${steps.length}`;
+    const label = `Step ${steps.length + 1}`;
     const instructions = "";
     const inputFields: InputField[] = [];
 
@@ -64,68 +65,57 @@ export default function WorkflowBuilder() {
     });
   };
 
-  const updateStep = (
-    id: string,
-    updates: Partial<{
-      label: string;
-      instructions: string;
-      inputFields: InputField[];
-    }>
-  ) => {
-    setSteps((prev) =>
-      prev.map((step) => (step.id === id ? { ...step, ...updates } : step))
-    );
-    setNodes((prev) =>
-      prev.map((node) =>
-        node.id === id ? { ...node, data: { ...node.data, ...updates } } : node
-      )
-    );
-  };
-
-  const deleteStep = (id: string) => {
-    setSteps((prev) => prev.filter((step) => step.id !== id));
-    setNodes((prev) => prev.filter((node) => node.id !== id));
-    setEdges((prev) =>
-      prev.filter((edge) => edge.source !== id && edge.target !== id)
-    );
-  };
-
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <div className="w-[250px] p-5 border-r border-gray-200">
-        <h2 className="text-lg font-semibold mb-4">Workflow Builder</h2>
-        <button
-          onClick={addStep}
-          className="mb-2 w-full py-2 bg-blue-600 text-white rounded"
-        >
-          + Add Step
-        </button>
-        <button
-          onClick={() => setMode(mode === "list" ? "flow" : "list")}
-          className="w-full py-2 border rounded"
-        >
-          Switch to {mode === "list" ? "Flow View" : "List View"}
-        </button>
+    <div className="relative h-full flex flex-col">
+      {/* Header stays pinned inside the panel */}
+      <div className="h-[72px] px-6 py-4 border-b bg-white shadow-sm flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Workflow Builder</h2>
+        <div className="flex gap-3">
+          <button
+            onClick={addStep}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            <FiPlus className="text-lg" />
+            <span>Add Step</span>
+          </button>
+          <button
+            onClick={() => setMode(mode === "list" ? "flow" : "list")}
+            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+          >
+            Switch to {mode === "list" ? "Flow View" : "List View"}
+          </button>
+        </div>
       </div>
 
-      {/* Main Canvas */}
-      <div className="flex-1 p-5">
-        {mode === "flow" ? (
-          <ReactFlowProvider>
-            <FlowEditor
-              nodes={nodes}
-              setNodes={setNodes}
-              onNodesChange={onNodesChange}
-              edges={edges}
-              setEdges={setEdges}
-              onEdgesChange={onEdgesChange}
-            />
-          </ReactFlowProvider>
-        ) : (
-          <ListEditor />
-        )}
+      {/* Scrollable content area below the header */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+        <div className="max-w-4xl mx-auto">
+          {mode === "flow" ? (
+            <ReactFlowProvider>
+              <FlowEditor
+                nodes={nodes}
+                setNodes={setNodes}
+                onNodesChange={onNodesChange}
+                edges={edges}
+                setEdges={setEdges}
+                onEdgesChange={onEdgesChange}
+              />
+            </ReactFlowProvider>
+          ) : (
+            <ListEditor />
+          )}
+        </div>
       </div>
+
+      {/* Floating add button */}
+      <button
+        onClick={addStep}
+        title="Add a new step"
+        className="absolute bottom-6 right-6 flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all z-50"
+      >
+        <FiPlus className="text-lg" />
+        <span className="font-medium">Step</span>
+      </button>
     </div>
   );
 }

@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import Modal from "../components/Modal";
+import CreateAgent from "../components/Forms/CreateAgent";
+import AgentCard from "../components/AgentCard";
+import { FiPlus } from "react-icons/fi";
 
 const BACKEND_URL = "https://basecampai.ngrok.io";
 
@@ -12,24 +16,24 @@ interface Agent {
 
 const Agents = () => {
   const { user } = useAuth();
-  const orgId = user?.organisation?.id?.toString();
+  const orgId = user?.organisation?.id?.toString() || "";
 
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
   const [form, setForm] = useState({
     agent_key: "",
     name: "",
     description: "",
     prompt: "",
-    type: "prompt", // Default to 'prompt'
+    type: "prompt",
   });
 
-  const headers: Record<string, string> | undefined = orgId
-    ? { "x-org-id": orgId, "Content-Type": "application/json" }
-    : undefined;
+  const headers: Record<string, string> = {
+    "x-org-id": orgId,
+    "Content-Type": "application/json",
+  };
 
   const fetchAgents = async () => {
     if (!orgId) return;
@@ -47,55 +51,7 @@ const Agents = () => {
     fetchAgents();
   }, [orgId]);
 
-  const handleCreateOrUpdateAgent = async () => {
-    if (!orgId) return;
-    setLoading(true);
-
-    const method = editingKey ? "PUT" : "POST";
-    const url = editingKey
-      ? `${BACKEND_URL}/agents/${editingKey}`
-      : `${BACKEND_URL}/agents/register`;
-
-    try {
-      const res = await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify({
-          agent_key: form.agent_key,
-          name: form.name,
-          description: form.description,
-          prompt: form.prompt,
-          filter: { agent_id: form.agent_key },
-          type: form.type,
-        }),
-      });
-
-      if (res.ok) {
-        setForm({
-          agent_key: "",
-          name: "",
-          description: "",
-          prompt: "",
-          type: "prompt",
-        });
-        setShowForm(false);
-        setEditingKey(null);
-        await fetchAgents();
-      } else {
-        const err = await res.json();
-        alert("Error: " + err.detail);
-      }
-    } catch (err) {
-      console.error("Save agent failed:", err);
-      alert("Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleEditClick = async (agent: Agent) => {
-    if (!orgId) return;
-
     try {
       const res = await fetch(`${BACKEND_URL}/agents/${agent.key}`, {
         headers: { "x-org-id": orgId },
@@ -122,8 +78,6 @@ const Agents = () => {
   };
 
   const handleDeleteAgent = async (agentKey: string) => {
-    if (!orgId) return;
-
     const confirmed = confirm("Are you sure you want to delete this agent?");
     if (!confirmed) return;
 
@@ -157,105 +111,95 @@ const Agents = () => {
     setShowForm(false);
   };
 
-  return (
-    <div className="p-6 flex flex-col h-full">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Agents</h1>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            if (showForm) handleCancelForm();
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          {showForm ? "Cancel" : "Create Agent"}
-        </button>
-      </div>
+  const filteredAgents = agents.filter((agent) =>
+    agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    agent.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-      {showForm && (
-        <div className="space-y-3 mb-6">
-          <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="Agent Key"
-            value={form.agent_key}
-            onChange={(e) => setForm({ ...form, agent_key: e.target.value })}
-            disabled={!!editingKey}
-          />
-          <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="Agent Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-          <textarea
-            className="w-full border rounded px-3 py-2"
-            placeholder="Prompt"
-            value={form.prompt}
-            onChange={(e) => setForm({ ...form, prompt: e.target.value })}
-            rows={4}
-          />
-          <select
-            className="w-full border rounded px-3 py-2"
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value })}
-          >
-            <option value="prompt">Prompt Only</option>
-            <option value="retrieval">Retrieval</option>
-          </select>
+  return (
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+        <div className="flex items-end gap-2">
+          <h3 className="text-2xl font-semibold leading-tight">Agents</h3>
+          <span className="text-sm text-gray-600">
+            ({filteredAgents.length > 0 ? `1 - ${filteredAgents.length}` : 0} of {agents.length})
+          </span>
+        </div>
+        <div className="flex gap-2">
           <button
-            onClick={handleCreateOrUpdateAgent}
-            disabled={loading}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+            onClick={() => {
+              setForm({
+                agent_key: "",
+                name: "",
+                description: "",
+                prompt: "",
+                type: "prompt",
+              });
+              setEditingKey(null);
+              setShowForm(true);
+            }}
+            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
           >
-            {loading
-              ? editingKey
-                ? "Updating..."
-                : "Creating..."
-              : editingKey
-              ? "Update Agent"
-              : "Save Agent"}
+            <FiPlus size={16} />
+            Create Agent
           </button>
         </div>
-      )}
+      </div>
 
-      {agents.length === 0 ? (
-        <div className="text-gray-500 text-center mt-12">
-          No agents found. Click "Create Agent" to get started.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {agents.map((agent) => (
-            <div
-              key={agent.key}
-              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition"
-            >
-              <h2 className="text-lg font-semibold text-gray-800">{agent.name}</h2>
-              <p className="text-sm text-gray-500">{agent.description}</p>
-              <p className="text-xs text-gray-400 mt-1 uppercase">{agent.type}</p>
-              <div className="flex gap-4 mt-3">
-                <button
-                  onClick={() => handleEditClick(agent)}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteAgent(agent.key)}
-                  className="text-sm text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
+      {/* Search and Filter */}
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="Search all agents"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border px-3 py-2 rounded w-full max-w-sm text-sm"
+        />
+        <button className="text-sm text-blue-600 font-medium">+ Add filter</button>
+      </div>
+
+      {/* Agent List */}
+      <div className="relative border rounded-lg bg-white">
+        {filteredAgents.length === 0 ? (
+          <div className="text-center text-gray-500 py-10">
+            <p className="text-lg font-medium">No agents found</p>
+            <p className="text-sm mt-1">Click "Create Agent" to add your first one.</p>
+          </div>
+        ) : (
+          <div className="max-h-[75vh] overflow-y-auto p-2 pr-3 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredAgents.map((agent) => (
+                <AgentCard
+                  key={agent.key}
+                  agent={agent}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteAgent}
+                />
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
+
+
+      {/* Modal */}
+      <Modal
+        isOpen={showForm}
+        onClose={handleCancelForm}
+        title={editingKey ? "Edit Agent" : "Create Agent"}
+        maxWidth="max-w-2xl"
+      >
+        <CreateAgent
+          initialValues={editingKey ? form : undefined}
+          onCancel={handleCancelForm}
+          onSuccess={async () => {
+            handleCancelForm();
+            await fetchAgents();
+          }}
+          orgId={orgId}
+        />
+      </Modal>
     </div>
   );
 };

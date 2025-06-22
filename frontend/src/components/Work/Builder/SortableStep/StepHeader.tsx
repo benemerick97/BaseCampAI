@@ -41,7 +41,7 @@ export default function StepHeader({
         menuRef.current &&
         !menuRef.current.contains(event.target as Node)
       ) {
-        toggleMenu(); // close menu if open and click is outside
+        toggleMenu();
       }
     };
     document.addEventListener("click", handleClickOutside);
@@ -51,49 +51,63 @@ export default function StepHeader({
   }, [menuOpen, toggleMenu]);
 
   return (
-    <div className="flex items-center px-4 py-3">
-      {/* Expand/Collapse Toggle */}
-      <button
-        onClick={onExpand}
-        className="mr-2 text-gray-500 hover:text-gray-700"
-        title={isExpanded ? "Collapse" : "Expand"}
-      >
-        {isExpanded ? <IoIosArrowDown size={16} /> : <IoIosArrowForward size={16} />}
-      </button>
-
-      {/* Drag Handle */}
+    <div
+      className="flex items-center px-4 py-3 rounded-md hover:bg-gray-50 border border-gray-200 transition group"
+      onClick={onExpand}
+    >
+      {/* Drag Handle (now on the left) */}
       <div
         {...listeners}
-        className="drag-handle cursor-grab text-gray-400 hover:text-gray-600 pr-3 pl-1 flex items-center"
+        className="cursor-grab text-gray-400 hover:text-gray-600 px-2"
         onClick={(e) => e.stopPropagation()}
+        title="Drag to reorder"
       >
-        <RiDraggable size={20} />
+        <RiDraggable size={24} />
       </div>
+
+      {/* Expand/Collapse Toggle (moved to the right of drag) */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onExpand();
+        }}
+        className="mr-2 text-gray-500 hover:text-gray-700 transition-transform"
+        aria-label={isExpanded ? "Collapse step" : "Expand step"}
+      >
+        {isExpanded ? (
+          <IoIosArrowDown size={16} />
+        ) : (
+          <IoIosArrowForward size={16} />
+        )}
+      </button>
 
       {/* Editable Label */}
       <input
-        className="text-sm font-medium text-gray-800 bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500 transition w-full sm:w-auto placeholder-gray-400"
+        className="flex-grow bg-transparent border-b border-transparent group-hover:border-gray-300 focus:border-blue-500 focus:outline-none text-sm font-medium text-gray-800 transition px-1 placeholder-gray-400"
         value={label}
         onChange={(e) => onChangeLabel(e.target.value)}
-        placeholder="Enter the next step"
+        placeholder="Enter step title..."
         onClick={(e) => e.stopPropagation()}
+        aria-label="Step label"
       />
 
       {/* Options Menu */}
       <div
-        className="relative ml-auto"
+        className="relative ml-2"
         onClick={(e) => e.stopPropagation()}
         ref={menuRef}
       >
         <button
           onClick={toggleMenu}
-          className="text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
-          title="Options"
+          className="text-gray-500 hover:text-gray-700 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-haspopup="true"
+          aria-expanded={menuOpen}
+          aria-label="More options"
         >
           <FiMoreHorizontal size={18} />
         </button>
         {menuOpen && (
-          <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded shadow z-20 w-40">
+          <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-md z-30 w-44">
             <button
               onClick={() => {
                 onDuplicate();
