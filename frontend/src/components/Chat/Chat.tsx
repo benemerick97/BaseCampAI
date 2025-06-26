@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { FiSearch, FiPlus, FiTool, FiCompass, FiGlobe } from "react-icons/fi";
-import MessageBubble from "../components/MessageBubble";
-import SuggestionButtons from "../components/SuggestionButtons";
-import AgentSuggestions from "../components/AgentSuggestions";
-import { applyHighlighting } from "../utils/chatFormatting";
-import { sendChatMessage } from "../utils/sendChatMessage";
-import { useAgentSuggestions } from "../hooks/useAgentSuggestions";
-import { useAuth } from "../contexts/AuthContext";
+import MessageBubble from "./MessageBubble";
+import SuggestionButtons from "./SuggestionButtons";
+import AgentSuggestions from "./AgentSuggestions";
+import { applyHighlighting } from "../../utils/chatFormatting";
+import { sendChatMessage } from "../../utils/sendChatMessage";
+import { useAgentSuggestions } from "../../hooks/useAgentSuggestions";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Chat() {
   const [query, setQuery] = useState("");

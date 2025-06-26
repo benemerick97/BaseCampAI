@@ -1,50 +1,66 @@
 // components/Work/Builder/SortableStep/SortableStep.tsx
 
-import { useEffect, memo } from "react";
+import { useEffect } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import StepHeader from "./StepHeader";
 import StepBody from "./StepBody";
 import { useWorkflow } from "../../WorkflowContext";
 import { updateStep } from "../../utils/updateStepHelpers";
-import type { SortableStepProps } from "../../sharedTypes";
+import type { SortableStepShellProps as SortableStepProps } from "../../sharedTypes";
 import { stepContainerClass } from "./stepStyles";
 
 function SortableStep({
   id,
-  label,
-  instructions,
-  inputFields,
   isExpanded,
   onExpand,
   onDuplicate,
   onDelete,
   menuOpen,
   toggleMenu,
-  dragHandleProps,
 }: SortableStepProps) {
   const { steps, nodes, setSteps, setNodes } = useWorkflow();
 
-  const safeInputFields = Array.isArray(inputFields) ? inputFields : [];
+  const stepId = id.replace(/^step-/, "");
+  const currentStep = steps.find((s) => s.id === stepId);
+
+  if (!currentStep) return null;
+
+  const {
+    label,
+    instructions,
+    inputFields = [],
+  } = currentStep;
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   useEffect(() => {
-    console.log("🧩 SortableStep rendering:", { id, label, instructions, safeInputFields });
-  }, [id, label, instructions, safeInputFields]);
+    console.log("🔄 Rendering SortableStep:", { stepId, label });
+  }, [stepId, label]);
 
   return (
     <div
-      ref={dragHandleProps?.setNodeRef}
-      style={{
-        transform: dragHandleProps?.transform
-          ? `translate3d(${dragHandleProps.transform.x}px, ${dragHandleProps.transform.y}px, 0)`
-          : undefined,
-        transition: dragHandleProps?.transition,
-      }}
-      className={stepContainerClass(isExpanded, dragHandleProps?.isDragging)}
+      ref={setNodeRef}
+      style={style}
+      className={stepContainerClass(isExpanded, isDragging)}
     >
       <StepHeader
-        id={id}
+        id={stepId}
         label={label}
         onChangeLabel={(val: string) => {
-          const { updatedSteps, updatedNodes } = updateStep(steps, nodes, id, { label: val });
+          const { updatedSteps, updatedNodes } = updateStep(steps, nodes, stepId, { label: val });
           setSteps(updatedSteps);
           setNodes(updatedNodes);
         }}
@@ -54,23 +70,23 @@ function SortableStep({
         menuOpen={menuOpen}
         toggleMenu={toggleMenu}
         isExpanded={isExpanded}
-        listeners={dragHandleProps?.listeners}
-        attributes={dragHandleProps?.attributes}
+        listeners={listeners}
+        attributes={attributes}
       />
 
       <StepBody
         isExpanded={isExpanded}
         instructions={instructions}
-        inputFields={safeInputFields}
+        inputFields={inputFields}
         onChangeInstructions={(val) => {
-          const { updatedSteps, updatedNodes } = updateStep(steps, nodes, id, {
+          const { updatedSteps, updatedNodes } = updateStep(steps, nodes, stepId, {
             instructions: val,
           });
           setSteps(updatedSteps);
           setNodes(updatedNodes);
         }}
         onChangeInputFields={(fields) => {
-          const { updatedSteps, updatedNodes } = updateStep(steps, nodes, id, {
+          const { updatedSteps, updatedNodes } = updateStep(steps, nodes, stepId, {
             inputFields: fields,
           });
           setSteps(updatedSteps);
@@ -81,4 +97,4 @@ function SortableStep({
   );
 }
 
-export default memo(SortableStep);
+export default SortableStep;

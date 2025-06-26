@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../contexts/AuthContext";
-import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import EntityListPage from "./EntityListPage";
 import WorkOrderRow from "./WorkOrderRow";
 import EntityModal from "./EntityModal"; 

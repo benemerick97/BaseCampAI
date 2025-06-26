@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import AssetRow from "../AssetRow";
+import AssetRow from "../Assets/AssetRow";
 import EmptyTab from "./EmptyTab";
-import EntityModal from "../EntityModal";
+import EntityModal from "../Assets/EntityModal";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 
 interface Asset {

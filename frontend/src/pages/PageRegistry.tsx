@@ -1,27 +1,28 @@
 // src/pages/PageRegistry.tsx
 
-import Chat from "../components/Chat";
+import Chat from "../components/Chat/Chat";
 import Settings from "../components/Settings";
-import FileUpload from "../components/FileUpload";
+import FileUpload from "../components/Documents/FileUpload";
 import Placeholder from "../components/Placeholder";
 import Agents from "../components/Agents";
-import Knowledge from "../components/Knowledge";
+import Knowledge from "../components/Documents/Knowledge";
 import Organisation from "../components/Organisation";
 import Projects from "../components/Projects";
 import Learn from "../components/LMS/Learn";
 import Account from "../components/Account";
-import WorkflowBuilderContainer from "../components/Work/Builder/WorkflowBuilderContainer";
-import Workflow from "../components/Work/Workflow";
-import WorkOrders from "../components/Work/WorkOrders";
-import Assets from "../components/Work/Assets";
-import Sites from "../components/Work/Sites";
-import Tasks from "../components/Work/Tasks";
-import Content from "../components/Work/Content";
-import WorkProject from "../components/Work/Projects";
-import SiteDetails from "../components/Work/SiteDetails";
-import AssetDetails from "../components/Work/AssetDetails";
+//import WorkflowBuilderContainer from "../components/Work/Builder/WorkflowBuilderContainer";
+import Workflow from "../components/Work/Assets/Workflow";
+import WorkOrders from "../components/Work/Assets/WorkOrders";
+import Assets from "../components/Work/Assets/Assets";
+import Sites from "../components/Work/Assets/Sites";
+import Tasks from "../components/Work/Assets/Tasks";
+import Content from "../components/Work/Assets/Content";
+import WorkProject from "../components/Work/Assets/Projects";
+import SiteDetails from "../components/Work/Assets/SiteDetails";
+import AssetDetails from "../components/Work/Assets/AssetDetails";
 import UsersList from "../components/UsersList";
 import ControlPanel from "../components/AdminControls/ControlPanel";
+import WorkflowBuilder from "../components/Work/WorkflowBuilder/WorkflowBuilder"
 
 export const PageRegistry: Record<
   string,
@@ -37,7 +38,7 @@ export const PageRegistry: Record<
   projects: Projects,
   learn: Learn,
   account: Account,
-  workflow_builder: WorkflowBuilderContainer,
+  //workflow_builder: WorkflowBuilderContainer,
   workflow: Workflow,
   workorders: WorkOrders,
   assets: Assets,
@@ -49,4 +50,5 @@ export const PageRegistry: Record<
   assetdetails : AssetDetails,
   userslist : UsersList,
   controlpanel : ControlPanel,
+  workflowbuilder : WorkflowBuilder
 };

@@ -1,9 +1,9 @@
 import React from "react";
-import ProjectsSidebar from "./subsidebars/ProjectsSidebar";
-import LearnSidebar from "./subsidebars/LearnSidebar";
-import WorkSidebar from "./subsidebars/WorkSidebar";
-import OrgSidebar from "./subsidebars/OrgSidebar";
-import DefaultSidebar from "./subsidebars/DefaultSidebar";
+import ProjectsSidebar from "../subsidebars/ProjectsSidebar";
+import LearnSidebar from "../subsidebars/LearnSidebar";
+import WorkSidebar from "../subsidebars/WorkSidebar";
+import OrgSidebar from "../subsidebars/OrgSidebar";
+import DefaultSidebar from "../subsidebars/DefaultSidebar";
 
 interface SubSidebarProps {
   activeTab: string;

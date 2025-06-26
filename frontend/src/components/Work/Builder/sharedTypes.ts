@@ -22,7 +22,7 @@ export interface Step {
   label: string;
   instructions: string;
   inputFields: InputField[];
-  groupId?: string; // ✅ NEW — optional group ID
+  groupId: string;
 }
 
 // Visual drag/drop + interaction props for a step component
@@ -54,4 +54,14 @@ export interface SortableStepProps {
 export interface StepGroup {
   id: string;
   label: string;
+}
+
+export interface SortableStepShellProps {
+  id: string;
+  isExpanded: boolean;
+  onExpand: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  menuOpen: boolean;
+  toggleMenu: () => void;
 }

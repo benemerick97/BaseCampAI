@@ -1,40 +1,37 @@
-// components/Work/Builder/SortableStep/StepHeader.tsx
+// frontend/src/components/Work/WorkflowBuilder/steps/StepHeader.tsx
 
 import { useEffect, useRef } from "react";
 import { RiDraggable } from "react-icons/ri";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
-import type { SortableStepProps } from "../../sharedTypes";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
-export interface StepHeaderProps extends Pick<
-  SortableStepProps,
-  | "id"
-  | "label"
-  | "onChangeLabel"
-  | "onExpand"
-  | "onDuplicate"
-  | "onDelete"
-  | "menuOpen"
-  | "toggleMenu"
-> {
+interface StepHeaderProps {
+  id: string;
+  label: string;
+  isExpanded: boolean;
+  menuOpen: boolean;
   listeners?: SyntheticListenerMap;
   attributes?: Record<string, any>;
-  isExpanded: boolean;
+  onExpand: () => void;
+  onChangeLabel: (value: string) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  toggleMenu: () => void;
 }
 
 export default function StepHeader({
   id,
   label,
-  onChangeLabel,
-  onExpand,
-  onDuplicate,
-  onDelete,
+  isExpanded,
   menuOpen,
-  toggleMenu,
   listeners,
   attributes,
-  isExpanded,
+  onExpand,
+  onChangeLabel,
+  onDelete,
+  onDuplicate,
+  toggleMenu,
 }: StepHeaderProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -46,13 +43,11 @@ export default function StepHeader({
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen, toggleMenu]);
 
   return (
-    <div className="flex items-center px-4 py-3 rounded-md hover:bg-gray-50 border border-gray-200 transition group">
+    <div className="flex items-center px-4 py-3 rounded-md hover:bg-gray-50 border border-gray-200 transition group relative">
       {/* Drag Handle */}
       <div
         {...listeners}
@@ -104,22 +99,21 @@ export default function StepHeader({
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-md z-30 w-44">
+          <div
+            className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-md z-50 w-44"
+            role="menu"
+          >
             <button
-              onClick={() => {
-                onDuplicate();
-                toggleMenu();
-              }}
+              onClick={onDuplicate}
               className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              role="menuitem"
             >
               Duplicate Step
             </button>
             <button
-              onClick={() => {
-                onDelete();
-                toggleMenu();
-              }}
+              onClick={onDelete}
               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              role="menuitem"
             >
               Delete Step
             </button>

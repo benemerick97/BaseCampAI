@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { FiUploadCloud } from "react-icons/fi";
-import { useAuth } from "../contexts/AuthContext";
-import { apiFetch } from "../utils/apiFetch";
+import { useAuth } from "../../contexts/AuthContext";
+import { apiFetch } from "../../utils/apiFetch";
 
 interface FileUploadProps {
   onUploadComplete?: () => void;

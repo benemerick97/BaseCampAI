@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { FiPlus, FiUserX } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
-import Modal from "../components/Modal";
+import Modal from "./UI/Modal";
 import UserInviteForm from "../components/UserInviteForm";
 
 interface UsersListProps {

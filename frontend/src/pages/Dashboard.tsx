@@ -2,10 +2,10 @@
 
 import React, { useState, Suspense } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/UI/Sidebar";
 import Main from "../components/Main";
-import Header from "../components/Header";
-import SubSidebar from "../components/SubSidebar";
+import Header from "../components/UI/Header";
+import SubSidebar from "../components/UI/SubSidebar";
 import { PageRegistry } from "./PageRegistry";
 import { SelectedEntityProvider } from "../contexts/SelectedEntityContext"; // ✅ Import
 

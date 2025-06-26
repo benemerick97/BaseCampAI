@@ -10,11 +10,15 @@ interface DragOverlayPreviewProps {
   groups: StepGroup[];
 }
 
+function stripPrefix(id: string): string {
+  return id.replace(/^step-/, "").replace(/^group-/, "");
+}
+
 export default function DragOverlayPreview({ activeId, steps, groups }: DragOverlayPreviewProps) {
   if (!activeId) return null;
 
-  const step = steps.find((s) => s.id === activeId);
-  const group = groups.find((g) => g.id === activeId);
+  const step = steps.find((s) => `step-${s.id}` === activeId);
+  const group = groups.find((g) => `group-${g.id}` === activeId);
 
   const label = step?.label || group?.label || "Untitled";
   const isGroup = !!group;

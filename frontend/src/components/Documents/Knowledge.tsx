@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { FiUpload, FiPlus } from "react-icons/fi";
-import { useAuth } from "../contexts/AuthContext";
-import Modal from "../components/Modal"; 
-import FileUpload from "../components/FileUpload";
+import { useAuth } from "../../contexts/AuthContext";
+import Modal from "../UI/Modal"; 
+import FileUpload from "./FileUpload";
 
 interface KnowledgeProps {
   onNavClick: (page: string) => void;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import Modal from "../components/Modal";
+import Modal from "./UI/Modal";
 import CreateAgent from "../components/Forms/CreateAgent";
 import AgentCard from "../components/AgentCard";
 import { FiPlus, FiMoreHorizontal } from "react-icons/fi";

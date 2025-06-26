@@ -1,13 +1,11 @@
-// frontend/src/components/Work/Builder/WorkflowBuilder.tsx
+// frontend/src/components/Work/WorkflowBuilder/WorkflowBuilder.tsx 
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
 import ListEditor from "./ListEditor/ListEditor";
-import FlowEditor from "./FlowEditor/FlowEditor";
-import { useWorkflow } from "./WorkflowContext";
-import type { InputField } from "./sharedTypes";
+import { useWorkflowStore } from "./context/useWorkflowStore";
 import { FiPlus, FiEdit3, FiMoreHorizontal } from "react-icons/fi";
 
 interface WorkflowBuilderProps {
@@ -18,80 +16,15 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
   const [mode, setMode] = useState<"list" | "flow">("list");
   const [workflowTitle, setWorkflowTitle] = useState("Untitled Workflow");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const stepIdCounter = useRef(1);
-  const groupIdCounter = useRef(1); // 🆕
 
-  const {
-    steps,
-    setSteps,
-    nodes,
-    setNodes,
-    onNodesChange,
-    edges,
-    setEdges,
-    onEdgesChange,
-    groups,
-    setGroups, // 🆕
-  } = useWorkflow();
-
-  const addStep = () => {
-    const id = `step-${stepIdCounter.current++}`;
-    const label = "";
-    const instructions = "";
-    const inputFields: InputField[] = [];
-
-    setSteps((prevSteps) => [
-      ...prevSteps,
-      { 
-        id, 
-        label, 
-        instructions, 
-        inputFields,
-        groupId: "",
-      },
-    ]);
-
-    setNodes((prevNodes) => {
-      const position = { x: 300, y: 100 + prevNodes.length * 120 };
-      return [
-        ...prevNodes,
-        {
-          id,
-          type: "custom",
-          data: { label, instructions, inputFields },
-          position,
-        },
-      ];
-    });
-
-    setEdges((prevEdges) => {
-      const lastNode = nodes[nodes.length - 1];
-      if (lastNode) {
-        return [
-          ...prevEdges,
-          {
-            id: `edge-${lastNode.id}-${id}`,
-            source: lastNode.id,
-            target: id,
-          },
-        ];
-      }
-      return prevEdges;
-    });
-  };
-
-  const addGroup = () => {
-    const id = `group-${groupIdCounter.current++}`;
-    const label = `New Section ${groupIdCounter.current - 1}`;
-
-    setGroups((prev) => [...prev, { id, label }]);
-  };
+  const addGroup = useWorkflowStore((state) => state.addGroup);
+  const addStep = useWorkflowStore((state) => state.addStep);
 
   return (
     <div className="relative h-full flex flex-col">
       {/* Header */}
       <div className="h-[72px] px-6 py-4 border-b bg-white shadow-sm flex items-center justify-between">
-        {/* Left: Back Button and Title */}
+        {/* Left: Back Button */}
         <div className="w-1/3 flex items-center gap-3">
           <button
             onClick={() => setMainPage("workflow")}
@@ -101,7 +34,7 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
           </button>
         </div>
 
-        {/* Center: Editable Title */}
+        {/* Center: Title */}
         <div className="w-1/3 flex justify-center">
           {isEditingTitle ? (
             <input
@@ -126,12 +59,15 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
           )}
         </div>
 
-        {/* Right: Buttons */}
-        <div className="w-1/3 flex justify-end items-center gap-3">
+        {/* Right: Actions + Mode Switch */}
+        <div className="w-1/3 flex justify-end items-center gap-4">
           <button
-            className="p-2 rounded hover:bg-gray-100"
-            onClick={() => console.log("Settings menu open")}
+            onClick={() => setMode((prev) => (prev === "list" ? "flow" : "list"))}
+            className="text-sm text-blue-700 underline"
           >
+            Switch to {mode === "list" ? "Flow View" : "List View"}
+          </button>
+          <button className="p-2 rounded hover:bg-gray-100">
             <FiMoreHorizontal className="text-md text-gray-700" />
           </button>
           <button
@@ -143,19 +79,15 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
         </div>
       </div>
 
-      {/* Scrollable content */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-4">
           {mode === "flow" ? (
             <ReactFlowProvider>
-              <FlowEditor
-                nodes={nodes}
-                setNodes={setNodes}
-                onNodesChange={onNodesChange}
-                edges={edges}
-                setEdges={setEdges}
-                onEdgesChange={onEdgesChange}
-              />
+              {/* Flow View Component Placeholder */}
+              <div className="text-center text-gray-500">
+                Flow view coming soon...
+              </div>
             </ReactFlowProvider>
           ) : (
             <ListEditor />

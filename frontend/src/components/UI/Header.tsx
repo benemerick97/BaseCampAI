@@ -2,9 +2,9 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { FiUser, FiSettings, FiChevronDown, FiBell } from "react-icons/fi";
-import logo from "../assets/logo/BASECAMP.svg";
-import { useAuth } from "../contexts/AuthContext";
-import { useOrganisations } from "../hooks/useOrganisations";
+import logo from "../../assets/logo/BASECAMP.svg";
+import { useAuth } from "../../contexts/AuthContext";
+import { useOrganisations } from "../../hooks/useOrganisations";
 
 interface Organisation {
   id: number;

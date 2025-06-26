@@ -65,6 +65,12 @@ const WorkSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) =
         >
         Create Workflow
         </button>
+      <button
+        onClick={() => setMainPage("workflowbuilder")}
+        className="w-full mt-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+        >
+        Create Workflow 2
+        </button>
     </>
   );
 };

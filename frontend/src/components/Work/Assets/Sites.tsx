@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../contexts/AuthContext";
-import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import EntityListPage from "./EntityListPage";
 import SiteRow from "./SiteRow";
-import EntityModal from "../Work/EntityModal";
+import EntityModal from "./EntityModal";
 
 interface SiteItem {
   id: number;

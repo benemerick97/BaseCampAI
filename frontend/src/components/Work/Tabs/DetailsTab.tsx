@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useCustomFields } from "../../../hooks/useCustomFields";
 import { useCustomFieldValues } from "../../../hooks/useCustomFieldValues";
-import EditCustomFieldModal from "../EditCustomFieldModal";
+import EditCustomFieldModal from "../Assets/EditCustomFieldModal";
 
 export default function DetailsTab({ data }: { data: any }) {
   const {

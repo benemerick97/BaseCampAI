@@ -1,49 +1,50 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../../contexts/AuthContext";
-import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import {
   FiFileText,
   FiTool,
   FiClipboard,
-  FiPackage,
+  FiMapPin,
   FiFolder,
+  FiRss,
 } from "react-icons/fi";
 import DetailsPage from "./DetailsPage";
 
 // Modular tabs
-import DetailsTab from "../Work/Tabs/DetailsTab";
-import AssetsTab from "../Work/Tabs/AssetsTab";
-import EmptyTab from "../Work/Tabs/EmptyTab";
+import DetailsTab from "../Tabs/DetailsTab";
+import EmptyTab from "../Tabs/EmptyTab";
+import SensorsTab from "../Tabs/IoTSensorsTab";
 
-interface SiteDetailsProps {
+interface AssetDetailsProps {
   setMainPage: (page: string) => void;
 }
 
-export default function SiteDetails({ setMainPage }: SiteDetailsProps) {
+export default function AssetDetails({ setMainPage }: AssetDetailsProps) {
   const { user } = useAuth();
   const { selectedEntity, clearSelectedEntity } = useSelectedEntity();
-  const [site, setSite] = useState<any>(null);
+  const [asset, setAsset] = useState<any>(null);
 
   useEffect(() => {
-    if (!selectedEntity || selectedEntity.type !== "site") return;
+    if (!selectedEntity || selectedEntity.type !== "asset") return;
 
     axios
-      .get(`https://basecampai.ngrok.io/sites/${selectedEntity.id}`, {
+      .get(`https://basecampai.ngrok.io/assets/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
-      .then((res) => setSite(res.data))
-      .catch((err) => console.error("Error fetching site details:", err));
+      .then((res) => setAsset(res.data))
+      .catch((err) => console.error("Error fetching asset details:", err));
   }, [selectedEntity]);
 
-  if (!site) return <div className="p-6">Loading site details...</div>;
+  if (!asset) return <div className="p-6">Loading asset details...</div>;
 
   const tabConfig = [
     {
       key: "details",
       label: "Details",
       icon: <FiFileText />,
-      content: <DetailsTab data={site} />,
+      content: <DetailsTab data={asset} />,
     },
     {
       key: "work-orders",
@@ -58,37 +59,31 @@ export default function SiteDetails({ setMainPage }: SiteDetailsProps) {
       content: <EmptyTab label="Projects" />,
     },
     {
-      key: "assets",
-      label: "Assets",
-      icon: <FiPackage />,
-      content: (
-        <AssetsTab
-          siteId={site.id}
-          organisationId={site.organisation_id}
-          setMainPage={setMainPage}
-        />
-      ),
-    },
-    {
       key: "files",
       label: "Files",
       icon: <FiFolder />,
       content: <EmptyTab label="Files" />,
     },
+    {
+      key: "sensors",
+      label: "IoT Sensors",
+      icon: <FiRss />,
+      content: <SensorsTab />,
+    },
   ];
 
   return (
     <DetailsPage
-      title={site.name}
+      title={asset.name}
       breadcrumbs={[
         {
-          label: "Sites",
+          label: "Assets",
           onClick: () => {
             clearSelectedEntity();
-            setMainPage("sites");
+            setMainPage("assets");
           },
         },
-        { label: site.name },
+        { label: asset.name },
       ]}
       tabs={tabConfig}
     />

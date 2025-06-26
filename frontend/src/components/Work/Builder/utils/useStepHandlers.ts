@@ -1,7 +1,7 @@
 // components/Work/Builder/hooks/useStepHandlers.ts
 
 import { useCallback } from "react";
-import type { Step, InputField } from "../components/Work/Builder/sharedTypes";
+import type { Step, InputField } from "../sharedTypes";
 
 export function useStepHandlers(
   steps: Step[],
@@ -47,6 +47,7 @@ export function useStepHandlers(
           ...stepToDuplicate,
           id: crypto.randomUUID(),
           label: `${stepToDuplicate.label} (Copy)`,
+          groupId: stepToDuplicate.groupId, // ✅ preserve groupId
         };
 
         return [...prev, newStep];
@@ -62,16 +63,20 @@ export function useStepHandlers(
     [setSteps]
   );
 
-  const handleAddStep = useCallback(() => {
-    const newStep: Step = {
-      id: crypto.randomUUID(),
-      label: "",
-      instructions: "",
-      inputFields: [],
-    };
+  const handleAddStep = useCallback(
+    (groupId: string) => {
+      const newStep: Step = {
+        id: crypto.randomUUID(),
+        label: "",
+        instructions: "",
+        inputFields: [],
+        groupId, // ✅ assign correct group
+      };
 
-    setSteps((prev) => [...prev, newStep]);
-  }, [setSteps]);
+      setSteps((prev) => [...prev, newStep]);
+    },
+    [setSteps]
+  );
 
   return {
     updateStep,

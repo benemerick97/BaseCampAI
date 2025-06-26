@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../contexts/AuthContext";
-import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import EntityListPage from "./EntityListPage";
 import AssetRow from "./AssetRow";
-import EntityModal from "../Work/EntityModal"; // adjust path if needed
+import EntityModal from "./EntityModal"; // adjust path if needed
 
 interface AssetItem {
   id: number;

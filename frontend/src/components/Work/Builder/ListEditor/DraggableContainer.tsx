@@ -20,8 +20,13 @@ interface DraggableContainerProps {
 export default function DraggableContainer({ id, children }: DraggableContainerProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
+  const style = {
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transition,
+  };
+
   return (
-    <div ref={setNodeRef}>
+    <div ref={setNodeRef} style={style}>
       {children({
         setNodeRef,
         attributes,
@@ -33,3 +38,4 @@ export default function DraggableContainer({ id, children }: DraggableContainerP
     </div>
   );
 }
+
