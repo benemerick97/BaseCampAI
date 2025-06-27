@@ -23,6 +23,9 @@ import AssetDetails from "../components/Work/Assets/AssetDetails";
 import UsersList from "../components/UsersList";
 import ControlPanel from "../components/AdminControls/ControlPanel";
 import WorkflowBuilder from "../components/Work/WorkflowBuilder/WorkflowBuilder"
+import Course from "../components/LMS/CourseBuilder/Course";
+import Module from "../components/LMS/CourseBuilder/Module";
+import Skill from "../components/LMS/CourseBuilder/Skill";
 
 export const PageRegistry: Record<
   string,
@@ -50,5 +53,8 @@ export const PageRegistry: Record<
   assetdetails : AssetDetails,
   userslist : UsersList,
   controlpanel : ControlPanel,
-  workflowbuilder : WorkflowBuilder
+  workflowbuilder : WorkflowBuilder,
+  course : Course,
+  module : Module,
+  skill : Skill,
 };

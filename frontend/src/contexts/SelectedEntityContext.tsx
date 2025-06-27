@@ -2,7 +2,17 @@
 
 import React, { createContext, useContext, useState } from "react";
 
-type EntityType = "site" | "asset" | "workorder" | "project" | "file"; // Extend as needed
+type EntityType = 
+  | "site"
+  | "asset" 
+  | "workorder" 
+  | "project" 
+  | "file"
+  | "course"
+  | "skill"
+  | "module"
+  | "user"
+  ; 
 
 interface SelectedEntity {
   type: EntityType;
