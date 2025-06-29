@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AdminCreateOrg from "./AdminCreateOrg";
 import AdminCreateUser from "./AdminCreateUser";
 import AdminModal from "./AdminModal";

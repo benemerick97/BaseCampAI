@@ -1,6 +1,6 @@
 // src/pages/Dashboard.tsx
 
-import React, { useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import Sidebar from "../components/UI/Sidebar";
 import Main from "../components/Main";

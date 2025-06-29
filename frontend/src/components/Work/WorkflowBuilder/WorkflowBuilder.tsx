@@ -6,7 +6,7 @@ import "reactflow/dist/style.css";
 
 import ListEditor from "./ListEditor/ListEditor";
 import { useWorkflowStore } from "./context/useWorkflowStore";
-import { FiPlus, FiEdit3, FiMoreHorizontal } from "react-icons/fi";
+import { FiEdit3, FiMoreHorizontal } from "react-icons/fi";
 
 interface WorkflowBuilderProps {
   setMainPage: (page: string) => void;

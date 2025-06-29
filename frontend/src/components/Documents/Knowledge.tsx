@@ -1,7 +1,7 @@
 // frontend/src/components/Knowledge.tsx
 
 import { useState, useEffect } from "react";
-import { FiUpload, FiPlus } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal"; 
 import FileUpload from "./FileUpload";
