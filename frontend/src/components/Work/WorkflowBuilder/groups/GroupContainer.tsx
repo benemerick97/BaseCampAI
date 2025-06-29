@@ -32,7 +32,7 @@ export default function GroupContainer({
     setNodeRef,
     transform,
     transition,
-    isDragging,
+//  isDragging,
     attributes,
     listeners,
   } = useSortable({ id: groupId });
