@@ -1,4 +1,4 @@
-import React from "react";
+
 import { FiBookOpen, FiUsers, FiEdit2 } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage"; 
 export default function CourseDetails({ course }: { course: any }) {

@@ -2,21 +2,24 @@ import React, { useState, useEffect } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { createPortal } from "react-dom";
 
-interface WorkOrderItem {
+// Full WorkOrder type (same as used in WorkOrders.tsx)
+interface WorkOrder {
   id: number;
   title: string;
   description: string;
   status: string;
+  asset_id: number;
   asset_name: string;
   start_date: string;
   due_date: string;
   category: string;
+  organisation_id: number;
 }
 
 interface WorkOrderRowProps {
-  workOrder: WorkOrderItem;
+  workOrder: WorkOrder;
   onClick: () => void;
-  onEdit: (item: WorkOrderItem) => void;
+  onEdit: (item: WorkOrder) => void;
   onDelete: (id: number) => void;
 }
 
@@ -86,10 +89,7 @@ const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
   };
 
   return (
-    <tr
-      className="cursor-pointer hover:bg-gray-50"
-      onClick={onClick}
-    >
+    <tr className="cursor-pointer hover:bg-gray-50" onClick={onClick}>
       <td className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900">{workOrder.title}</td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">{workOrder.description}</td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">{workOrder.status}</td>

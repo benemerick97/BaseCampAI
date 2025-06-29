@@ -26,6 +26,7 @@ import WorkflowBuilder from "../components/Work/WorkflowBuilder/WorkflowBuilder"
 import Course from "../components/LMS/CourseBuilder/Course";
 import Module from "../components/LMS/CourseBuilder/Module";
 import Skill from "../components/LMS/CourseBuilder/Skill";
+import DocumentManager from "../components/Documents/DocumentManager";
 
 export const PageRegistry: Record<
   string,
@@ -57,4 +58,5 @@ export const PageRegistry: Record<
   course : Course,
   module : Module,
   skill : Skill,
+  documentmanager : DocumentManager,
 };

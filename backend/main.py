@@ -15,6 +15,7 @@ from routes.work.sites import router as sites_router
 from routes.work.custom_fields import router as custom_fields_router
 from routes.work.custom_field_values import router as custom_field_values_router
 from routes.work.assets import router as asset_router
+from routes.document import router as document_router
 
 
 
@@ -50,6 +51,7 @@ app.include_router(sites_router)
 app.include_router(custom_fields_router)
 app.include_router(custom_field_values_router)
 app.include_router(asset_router)
+app.include_router(document_router)
 
 @app.get("/")
 async def root():

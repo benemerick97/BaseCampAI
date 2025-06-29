@@ -1,6 +1,6 @@
 // OrgSidebar.tsx
 
-import React from "react";
+
 import { FiUsers, FiSettings, FiUserPlus } from "react-icons/fi";
 
 const OrgSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) => {

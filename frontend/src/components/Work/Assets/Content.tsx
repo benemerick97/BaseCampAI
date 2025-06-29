@@ -1,4 +1,4 @@
-import React from "react";
+
 import { FiPlus, FiEdit3, FiUpload } from "react-icons/fi";
 
 interface ContentItem {

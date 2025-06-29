@@ -13,7 +13,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import InputFieldRow from "./InputFieldRow";
-import type { InputField } from "../../sharedTypes";
+import type { InputField } from "../../types/InputField";
 
 interface InputFieldListProps {
   fields?: InputField[]; // Made optional for safety

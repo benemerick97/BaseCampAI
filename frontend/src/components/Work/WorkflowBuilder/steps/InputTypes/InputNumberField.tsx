@@ -1,4 +1,4 @@
-import type { InputField } from "../../../sharedTypes";
+import type { InputField } from "../../types/InputField";
 
 export default function InputNumberField({
   field,

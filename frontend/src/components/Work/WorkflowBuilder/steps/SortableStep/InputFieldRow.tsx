@@ -2,7 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RiDraggable } from "react-icons/ri";
 import { FiToggleLeft, FiToggleRight } from "react-icons/fi";
-import type { InputField } from "../../sharedTypes";
+import type { InputField } from "../../types/InputField";
 import InputTextField from "../InputTypes/InputTextField";
 import InputDateField from "../InputTypes/InputDateField";
 import InputSelectField from "../InputTypes/InputSelectField";

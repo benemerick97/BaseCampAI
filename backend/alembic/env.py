@@ -17,12 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import your models
 from models.base import Base
-import models.user
-import models.organisation
-import models.agent
-import models.work.site
-import models.work.custom_field_value
-import models.work.custom_field
+import models
 
 # Alembic Config object
 config = context.config

@@ -1,4 +1,4 @@
-import React from "react";
+
 import { FiClipboard, FiMapPin, FiPlay, FiPackage, FiPaperclip, FiCheckSquare, FiFileText, FiList, FiLink } from "react-icons/fi";
 
 const WorkSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) => {

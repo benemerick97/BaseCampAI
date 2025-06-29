@@ -31,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin, isSu
     { key: "work", icon: <FiClipboard />, label: "Work" },
     { key: "upload", icon: <FiUpload />, label: "Upload" },
     { key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
+    { key: "documentmanager", icon: <FiDatabase />, label: "DocumentManager" },
     { key: "organisation", icon: <FiUsers />, label: "Organisation" },
     { key: "controlpanel", icon: <GrUserAdmin />, label: "Control Panel" },
   ];

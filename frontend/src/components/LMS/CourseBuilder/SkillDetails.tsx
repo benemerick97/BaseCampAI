@@ -1,4 +1,4 @@
-import React from "react";
+
 import { FiInfo, FiUsers, FiEdit2 } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage"; // adjust import if needed
 
