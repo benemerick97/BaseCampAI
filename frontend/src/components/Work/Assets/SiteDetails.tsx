@@ -9,7 +9,7 @@ import {
   FiPackage,
   FiFolder,
 } from "react-icons/fi";
-import DetailsPage from "./DetailsPage";
+import DetailsPage from "../../Shared/DetailsPage";
 
 // Modular tabs
 import DetailsTab from "../Tabs/DetailsTab";
