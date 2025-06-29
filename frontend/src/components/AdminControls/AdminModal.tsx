@@ -6,7 +6,7 @@ interface AdminModalProps {
   onClose: () => void;
 }
 
-export default function AdminModal({ children, onClose }: AdminModalProps) {
+export default function AdminModal({ children }: AdminModalProps) {
   // Optional: Disable background scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = "hidden";

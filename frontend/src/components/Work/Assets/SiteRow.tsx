@@ -17,7 +17,7 @@ interface SiteRowProps {
   onDelete: (id: number) => void;
 }
 
-const SiteRow: React.FC<SiteRowProps> = ({ site, onSelect, onEdit, onDelete }) => {
+const SiteRow: React.FC<SiteRowProps> = ({ site, onEdit, onDelete }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
 

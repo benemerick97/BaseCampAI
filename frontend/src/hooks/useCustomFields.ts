@@ -19,7 +19,7 @@ interface CustomFieldCreateInput {
 
 export function useCustomFields({
   entityType,
-  entityId,
+ // entityId,
   organisationId,
 }: UseCustomFieldsProps) {
   const { token } = useAuth();

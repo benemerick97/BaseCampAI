@@ -6,9 +6,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal"; 
 import FileUpload from "./FileUpload";
 
-interface KnowledgeProps {
-  onNavClick: (page: string) => void;
-}
+//interface KnowledgeProps {
+ // onNavClick: (page: string) => void;
+//}
 
 interface FileMeta {
   filename: string;
@@ -18,7 +18,9 @@ interface FileMeta {
 
 const BACKEND_URL = "https://basecampai.ngrok.io";
 
-const Knowledge = ({ onNavClick }: KnowledgeProps) => {
+//const Knowledge = ({ onNavClick }: KnowledgeProps) => {
+
+const Knowledge = () => {
   const { user } = useAuth();
   const orgId = user?.organisation?.id?.toString();
 

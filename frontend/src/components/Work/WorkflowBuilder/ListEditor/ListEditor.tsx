@@ -19,7 +19,7 @@ import {
 import { useWorkflowStore } from "../context/useWorkflowStore";
 import GroupContainer from "../groups/GroupContainer";
 import { useState } from "react";
-import { RiDraggable } from "react-icons/ri";
+// import { RiDraggable } from "react-icons/ri";
 import { FiPlus } from "react-icons/fi";
 
 export default function ListEditor() {
@@ -166,13 +166,14 @@ export default function ListEditor() {
 
       <DragOverlay dropAnimation={null}>
         {activeGroupId ? (
-          <div className="bg-white border border-gray-300 shadow-md rounded-xl p-4 w-full max-w-2xl opacity-90">
-            <div className="flex items-center gap-2">
-              <RiDraggable className="text-gray-400" />
-              <span className="text-md font-medium text-gray-800">
-                {getGroup[activeGroupId]?.label || "Dragging Group"}
-              </span>
-            </div>
+          // existing group overlay
+          <div className="bg-white border p-4 rounded-xl shadow-md">
+            <span>{getGroup[activeGroupId]?.label || "Dragging Group"}</span>
+          </div>
+        ) : activeStepId ? (
+          // 👇 step overlay (you’ll need access to the step label from store)
+          <div className="bg-white border p-3 rounded shadow text-sm">
+            {useWorkflowStore.getState().stepsById[activeStepId]?.label || "Dragging Step"}
           </div>
         ) : null}
       </DragOverlay>

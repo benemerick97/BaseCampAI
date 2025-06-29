@@ -5,7 +5,7 @@ import { ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
 import ListEditor from "./ListEditor/ListEditor";
-import { useWorkflowStore } from "./context/useWorkflowStore";
+// import { useWorkflowStore } from "./context/useWorkflowStore";
 import { FiEdit3, FiMoreHorizontal } from "react-icons/fi";
 
 interface WorkflowBuilderProps {
@@ -17,8 +17,8 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
   const [workflowTitle, setWorkflowTitle] = useState("Untitled Workflow");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-  const addGroup = useWorkflowStore((state) => state.addGroup);
-  const addStep = useWorkflowStore((state) => state.addStep);
+//  const addGroup = useWorkflowStore((state) => state.addGroup);
+//  const addStep = useWorkflowStore((state) => state.addStep);
 
   return (
     <div className="relative h-full flex flex-col">

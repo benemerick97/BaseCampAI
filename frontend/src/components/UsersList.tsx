@@ -6,9 +6,9 @@ import { useAuth } from "../contexts/AuthContext";
 import Modal from "./UI/Modal";
 import UserInviteForm from "../components/UserInviteForm";
 
-interface UsersListProps {
-  onNavClick: (page: string) => void;
-}
+//interface UsersListProps {
+//  onNavClick: (page: string) => void;
+//}
 
 interface User {
   id: number;
@@ -20,7 +20,9 @@ interface User {
 
 const BACKEND_URL = "https://basecampai.ngrok.io";
 
-const UsersList = ({ onNavClick }: UsersListProps) => {
+// const UsersList = ({ onNavClick }: UsersListProps) => {
+
+const UsersList = () => {
   const { user, token } = useAuth();
   const orgId = user?.organisation?.id?.toString();
 
