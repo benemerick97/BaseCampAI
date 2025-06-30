@@ -7,3 +7,4 @@ langchain
 langchain-community
 email-validator
 langchain-openai
+psycopg2-binary
