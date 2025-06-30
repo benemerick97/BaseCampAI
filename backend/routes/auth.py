@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from datetime import timedelta
+from fastapi.responses import Response
 
 from models.user import User
 from databases.database import SessionLocal
@@ -64,3 +65,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
             } if user.organisation else None
         }
     }
+
+@router.options("/login")
+async def options_login():
+    return Response(status_code=200)
