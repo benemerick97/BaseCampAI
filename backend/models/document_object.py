@@ -1,3 +1,5 @@
+# backend/models/document_object.py
+
 from sqlalchemy import Column, String, Date, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -14,7 +16,6 @@ class DocumentObject(Base):
     org_id = Column(Integer, ForeignKey("organisations.id", ondelete="CASCADE"), nullable=False)
     review_date = Column(Date, nullable=True)
 
-    # Fix circular dependency by deferring FK creation
     current_file_id = Column(
         UUID(as_uuid=True),
         ForeignKey("document_files.id", use_alter=True, name="fk_current_file_id"),
@@ -25,16 +26,22 @@ class DocumentObject(Base):
     updated_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    current_file = relationship("DocumentFile", foreign_keys=[current_file_id])
+    current_file = relationship(
+        "DocumentFile",
+        foreign_keys=[current_file_id],
+        passive_deletes=True  # ✅ Prevents circular deletion problems
+    )
+
     versions = relationship(
         "DocumentFile",
         back_populates="document",
-        cascade="all, delete",
-        foreign_keys=[DocumentFile.document_id]  # Disambiguates join path
+        cascade="all, delete-orphan",  # ✅ Deletes orphaned versions
+        passive_deletes=True,
+        foreign_keys=[DocumentFile.document_id]
     )
+
     organisation = relationship("Organisation", back_populates="documents")
 
-    # New: M2M with agents via join table
     agents = relationship(
         "Agent",
         secondary="agent_documents",

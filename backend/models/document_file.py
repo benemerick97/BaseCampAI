@@ -1,3 +1,5 @@
+# backend/models/document_file.py
+
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -16,7 +18,8 @@ class DocumentFile(Base):
     version = Column(Integer, nullable=False)
 
     document = relationship(
-    "DocumentObject",
-    back_populates="versions",
-    foreign_keys=[document_id]
-)
+        "DocumentObject",
+        back_populates="versions",
+        foreign_keys=[document_id],
+        passive_deletes=True  # ✅ Ensures clean cascade deletes
+    )

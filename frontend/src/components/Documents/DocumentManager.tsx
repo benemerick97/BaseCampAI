@@ -33,18 +33,31 @@ const DocumentManager = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchDocuments = async () => {
     if (!orgId) return;
     setLoading(true);
+    setError(null);
+
     try {
       const res = await fetch(`${BACKEND_URL}/document-objects`, {
-        headers: { "org-id": orgId },
+        headers: { "x-org-id": orgId },
       });
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.detail || "Failed to fetch documents.");
+      }
+
+      if (!Array.isArray(data)) {
+        throw new Error("Unexpected response format.");
+      }
+
       setDocuments(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch documents:", err);
+      setError(err.message || "Unknown error occurred.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +76,7 @@ const DocumentManager = () => {
       const res = await fetch(`${BACKEND_URL}/document-objects/${documentId}`, {
         method: "DELETE",
         headers: {
-          "org-id": orgId,
+          "x-org-id": orgId,
         },
       });
 
@@ -116,9 +129,13 @@ const DocumentManager = () => {
         <button className="text-sm text-blue-600 font-medium">+ Add filter</button>
       </div>
 
-      {/* Table or Empty State */}
+      {/* Loading / Error / Table */}
       {loading ? (
         <p className="text-gray-500">Loading documents...</p>
+      ) : error ? (
+        <div className="text-red-600 bg-red-100 border border-red-300 p-4 rounded text-sm">
+          <strong>Error:</strong> {error}
+        </div>
       ) : filteredDocs.length === 0 ? (
         <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
           <p className="text-lg font-medium">No documents found</p>

@@ -20,6 +20,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>; // <-- Add this
   token: string | null;
   login: (email: string, password: string, onSuccess?: () => void) => Promise<void>;
   logout: () => void;
@@ -144,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         token,
         login,
         logout,

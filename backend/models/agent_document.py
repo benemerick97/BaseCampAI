@@ -1,3 +1,5 @@
+# backend/models/agent_document.py
+
 from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from models.base import Base

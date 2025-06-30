@@ -1,3 +1,5 @@
+// frontend/src/components/Documents/FileUpload.tsx
+
 import { useState, useEffect } from "react";
 import { FiUploadCloud } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";

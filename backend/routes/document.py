@@ -1,6 +1,8 @@
+# backend/routes/document.py
+
 import os
 import uuid
-from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, Header, Path
+from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -17,29 +19,26 @@ from CRUD.document import (
 )
 from services.vector_store import store_file_chunks, delete_vectors_by_source
 from utils.file_utils import save_uploaded_file_to_disk
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 
 router = APIRouter()
-
 
 # ---------------------------
 # Create New Document Object
 # ---------------------------
 @router.post("/document-objects", response_model=DocumentObjectRead)
 async def create_document_with_upload(
-    org_id: str = Header(...),
+    org_id: int = Header(...),  # ✅ Changed to int
     name: str = Form(...),
     review_date: str = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
     try:
-        # Step 1: Create document record
         doc_obj = create_document_object(
             db, DocumentObjectCreate(name=name, org_id=org_id, review_date=review_date)
         )
 
-        # Step 2: Save file to disk
         upload_dir = os.path.join("uploads", str(doc_obj.id))
         os.makedirs(upload_dir, exist_ok=True)
 
@@ -48,12 +47,10 @@ async def create_document_with_upload(
         file_path = os.path.join(upload_dir, f"v{version}_{original_filename}")
         await save_uploaded_file_to_disk(file, file_path)
 
-        # Step 3: Embed to Pinecone
         loader = PyPDFLoader(file_path)
         docs = loader.load()
         store_file_chunks(docs, file_id=str(doc_obj.id), metadata={"org_id": org_id})
 
-        # Step 4: Save version
         file_record = add_document_file_version(
             db,
             document_id=doc_obj.id,
@@ -73,7 +70,7 @@ async def create_document_with_upload(
 # List Document Objects
 # ---------------------------
 @router.get("/document-objects", response_model=List[DocumentObjectRead])
-def list_documents(x_org_id: str = Header(...), db: Session = Depends(get_db)):
+def list_documents(x_org_id: int = Header(...), db: Session = Depends(get_db)):  # ✅ Changed to int
     return list_document_objects_by_org(db, x_org_id)
 
 
@@ -85,7 +82,7 @@ async def replace_document_file(
     document_id: uuid.UUID,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    x_org_id: str = Header(...)
+    x_org_id: int = Header(...)  # ✅ Changed to int
 ):
     doc = get_document_object(db, document_id)
     if not doc:
@@ -94,7 +91,6 @@ async def replace_document_file(
         raise HTTPException(status_code=403, detail="Not authorised")
 
     try:
-        # Step 1: Version bump
         version = get_latest_file_version(db, document_id) + 1
         upload_dir = os.path.join("uploads", str(document_id))
         os.makedirs(upload_dir, exist_ok=True)
@@ -103,15 +99,12 @@ async def replace_document_file(
         new_file_path = os.path.join(upload_dir, f"v{version}_{original_filename}")
         await save_uploaded_file_to_disk(file, new_file_path)
 
-        # Step 2: Delete old vectors
         delete_vectors_by_source(str(document_id))
 
-        # Step 3: Re-embed
         loader = PyPDFLoader(new_file_path)
         docs = loader.load()
         store_file_chunks(docs, file_id=str(document_id), metadata={"org_id": x_org_id})
 
-        # Step 4: Save new file version
         file_record = add_document_file_version(
             db,
             document_id=document_id,
@@ -134,12 +127,11 @@ async def replace_document_file(
 def get_document_details(
     document_id: uuid.UUID,
     db: Session = Depends(get_db),
-    x_org_id: str = Header(...)
+    x_org_id: int = Header(...)  # ✅ Changed to int
 ):
     doc = get_document_object(db, document_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
-
     if doc.org_id != x_org_id:
         raise HTTPException(status_code=403, detail="Not authorised")
 
@@ -153,16 +145,14 @@ def get_document_details(
 def delete_document(
     document_id: uuid.UUID,
     db: Session = Depends(get_db),
-    x_org_id: str = Header(...)
+    x_org_id: int = Header(...)  # ✅ Changed to int
 ):
-    # Step 1: Validate ownership
     doc = get_document_object(db, document_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     if doc.org_id != x_org_id:
         raise HTTPException(status_code=403, detail="Not authorised")
 
-    # Step 2: Delete all uploaded files
     upload_dir = os.path.join("uploads", str(document_id))
     if os.path.exists(upload_dir):
         for f in os.listdir(upload_dir):
@@ -175,13 +165,11 @@ def delete_document(
         except Exception as e:
             print(f"⚠️ Could not remove upload folder: {e}")
 
-    # Step 3: Delete vectors
     try:
         delete_vectors_by_source(str(document_id))
     except Exception as e:
         print(f"⚠️ Vector deletion failed: {e}")
 
-    # Step 4: Remove from database
     try:
         delete_document_object(db, document_id)
     except Exception as e:

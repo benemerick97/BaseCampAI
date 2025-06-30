@@ -1,3 +1,5 @@
+# backend/services/vector_store.py
+
 import os
 from dotenv import load_dotenv
 from pinecone import Pinecone
@@ -52,16 +54,25 @@ def store_file_chunks(docs, file_id: str, metadata: dict = None) -> int:
         return 0
 
 
-def delete_vectors_by_source(source_filename: str, num_chunks: int) -> int:
+def delete_vectors_by_source(source_filename: str, num_chunks: int = None) -> int:
     """
-    Deletes all vectors for a given source file, assuming a known chunk count.
+    Deletes vectors for a given source file.
+
+    If `num_chunks` is provided, deletes by ID range.
+    If not, deletes all vectors with matching 'source' metadata.
     """
     try:
-        ids_to_delete = [f"{source_filename}_{i}" for i in range(num_chunks)]
-        index.delete(ids=ids_to_delete)
-        print(f"🧹 Deleted {len(ids_to_delete)} vectors for '{source_filename}'")
-        return len(ids_to_delete)
-
+        if num_chunks is not None:
+            ids_to_delete = [f"{source_filename}_{i}" for i in range(num_chunks)]
+            index.delete(ids=ids_to_delete)
+            print(f"🧹 Deleted {len(ids_to_delete)} vectors by ID for '{source_filename}'")
+            return len(ids_to_delete)
+        else:
+            # Use metadata filter if chunk count is unknown
+            index.delete(filter={"source": source_filename})
+            print(f"🧹 Deleted vectors by metadata filter for '{source_filename}'")
+            return -1  # Unknown exact count
     except Exception as e:
         print(f"❌ Failed to delete vectors for '{source_filename}': {e}")
         return 0
+
