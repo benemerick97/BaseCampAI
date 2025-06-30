@@ -33,7 +33,12 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://effective-meme-77g9vjx575ghrxgr-5173.app.github.dev",
+        "https://app.hellobasecamp.com.au",
+        "https://base-camp-ai-benemerick97s-projects.vercel.app/",
+        "https://base-camp-ai-git-main-benemerick97s-projects.vercel.app/",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
