@@ -8,3 +8,4 @@ langchain-community
 email-validator
 langchain-openai
 psycopg2-binary
+pinecone-client>=3.0.0
