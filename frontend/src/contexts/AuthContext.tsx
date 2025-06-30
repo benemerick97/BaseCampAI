@@ -21,7 +21,6 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  setUser: (user: User | null) => void;
   login: (email: string, password: string, onSuccess?: () => void) => Promise<void>;
   logout: () => void;
   refetchUser: () => Promise<void>;
@@ -30,29 +29,48 @@ interface AuthContextType {
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isUser: boolean;
+  authLoading: boolean; // ✅ NEW: for loading state
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [roleOverride, setRoleOverride] = useState<"super_admin" | "admin" | "user" | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+  const [authLoading, setAuthLoading] = useState(true); // ✅ NEW: track loading
+  const [roleOverride, setRoleOverride] = useState<"super_admin" | "admin" | "user" | null>(
+    sessionStorage.getItem("roleOverride") as "super_admin" | "admin" | "user" | null
+  );
 
-  // Load token and role override on startup
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const storedOverride = sessionStorage.getItem("roleOverride");
+    const validateTokenAndFetchUser = async () => {
+      if (!token) {
+        setAuthLoading(false);
+        return;
+      }
 
-    if (savedToken) {
-      setToken(savedToken);
-      refetchUser(); // ✅ Always fetch fresh user data
-    }
+      try {
+        const response = await fetch("https://basecampai.ngrok.io/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-    if (storedOverride === "super_admin" || storedOverride === "admin" || storedOverride === "user") {
-      setRoleOverride(storedOverride);
-    }
-  }, []);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error("Token validation failed:", error);
+        logout();
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    validateTokenAndFetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => {
     if (roleOverride) {
@@ -63,20 +81,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [roleOverride]);
 
   const login = async (email: string, password: string, onSuccess?: () => void) => {
-    const response = await fetch("https://basecampai.ngrok.io/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const response = await fetch("https://basecampai.ngrok.io/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await response.json();
+      if (!response.ok) throw new Error("Login failed");
 
-    if (data.access_token) {
-      localStorage.setItem("token", data.access_token);
-      setToken(data.access_token);
-      setRoleOverride(null); // Reset override on login
-      await refetchUser(); // ✅ Immediately load full user (including organisation.short_name)
-      if (onSuccess) onSuccess();
+      const data = await response.json();
+
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+        setToken(data.access_token);
+        setRoleOverride(null);
+        await refetchUser();
+        if (onSuccess) onSuccess();
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     }
   };
 
@@ -89,32 +114,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refetchUser = async () => {
-    const storedToken = localStorage.getItem("token");
-    if (!storedToken) return;
+    if (!token) return;
 
     try {
       const response = await fetch("https://basecampai.ngrok.io/me", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
         const data = await response.json();
         setUser(data);
       } else {
-        console.error("Failed to refetch user");
+        logout();
       }
     } catch (error) {
-      console.error("Error during user refetch:", error);
+      console.error("User refetch failed:", error);
+      logout();
     }
   };
 
-  const effectiveRole: "super_admin" | "admin" | "user" = roleOverride || user?.role || "user";
+  const effectiveRole: "super_admin" | "admin" | "user" =
+    roleOverride || user?.role || "user";
 
   const isSuperAdmin = effectiveRole === "super_admin";
-  const isAdmin = effectiveRole === "admin" || effectiveRole === "super_admin";
+  const isAdmin = ["admin", "super_admin"].includes(effectiveRole);
   const isUser = effectiveRole === "user";
 
   return (
@@ -122,7 +145,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         token,
-        setUser,
         login,
         logout,
         refetchUser,
@@ -131,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isSuperAdmin,
         isAdmin,
         isUser,
+        authLoading, // ✅ provide loading state
       }}
     >
       {children}

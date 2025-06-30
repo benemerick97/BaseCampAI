@@ -11,17 +11,18 @@ import {
   FiClipboard,
 } from "react-icons/fi";
 import { GrUserAdmin } from "react-icons/gr";
-import clsx from "clsx"; // Optional for cleaner conditional classNames
+import clsx from "clsx";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface SidebarProps {
-  onNavClick: (page: string) => void;
-  activePage: string;
   isAdmin: boolean;
   isSuperAdmin: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin, isSuperAdmin }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isAdmin, isSuperAdmin }) => {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
+  const { page: activePage = "chat" } = useParams(); // Use URL to determine current page
 
   const navItems = [
     { key: "chat", icon: <FiMessageCircle />, label: "Chat" },
@@ -36,13 +37,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin, isSu
     { key: "controlpanel", icon: <GrUserAdmin />, label: "Control Panel" },
   ];
 
-  // Filter out "agents" if not admin or superadmin
   const visibleNavItems = navItems.filter((item) => {
-  if (item.key === "agents" && !isAdmin) return false;
-  if (item.key === "controlpanel" && !isSuperAdmin) return false;
-  return true;
-});
-
+    if (item.key === "agents" && !isAdmin) return false;
+    if (item.key === "controlpanel" && !isSuperAdmin) return false;
+    return true;
+  });
 
   return (
     <aside
@@ -60,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin, isSu
           <span className="text-xl">
             <FiSidebar />
           </span>
-          {expanded}
+          {expanded && <span>Toggle</span>}
         </button>
       </div>
 
@@ -69,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavClick, activePage, isAdmin, isSu
         {visibleNavItems.map((item) => (
           <button
             key={item.key}
-            onClick={() => onNavClick(item.key)}
+            onClick={() => navigate(`/dashboard/${item.key}`)}
             className={clsx(
               "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
               activePage === item.key
