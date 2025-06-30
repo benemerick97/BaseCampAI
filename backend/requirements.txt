@@ -6,3 +6,4 @@ python-multipart
 langchain
 langchain-community
 email-validator
+langchain-openai
