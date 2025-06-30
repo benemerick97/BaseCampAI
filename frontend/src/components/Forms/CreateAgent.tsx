@@ -13,7 +13,7 @@ interface CreateAgentProps {
   orgId: string;
 }
 
-const BACKEND_URL = "https://basecampai.ngrok.io";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 export default function CreateAgent({
   initialValues,

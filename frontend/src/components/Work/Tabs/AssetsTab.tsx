@@ -5,6 +5,8 @@ import EmptyTab from "./EmptyTab";
 import EntityModal from "../Assets/EntityModal";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface Asset {
   id: number;
   name: string;
@@ -35,7 +37,7 @@ export default function AssetsTab({
 
   const fetchAssets = async () => {
     try {
-      const res = await axios.get("https://basecampai.ngrok.io/assets", {
+      const res = await axios.get(`${BACKEND_URL}/assets`, {
         params: { site_id: siteId, organisation_id: organisationId },
       });
       setAssets(res.data);
@@ -54,13 +56,13 @@ export default function AssetsTab({
   const handleSubmit = async (form: Partial<Asset>) => {
     try {
       if (form.id) {
-        await axios.put(`https://basecampai.ngrok.io/assets/${form.id}`, {
+        await axios.put(`${BACKEND_URL}/assets/${form.id}`, {
           ...form,
           site_id: siteId,
           organisation_id: organisationId,
         });
       } else {
-        await axios.post("https://basecampai.ngrok.io/assets", {
+        await axios.post(`${BACKEND_URL}/assets`, {
           ...form,
           site_id: siteId,
           organisation_id: organisationId,
@@ -79,7 +81,7 @@ export default function AssetsTab({
     if (!confirmed) return;
 
     try {
-      await axios.delete(`https://basecampai.ngrok.io/assets/${id}`, {
+      await axios.delete(`${BACKEND_URL}/assets/${id}`, {
         params: { organisation_id: organisationId },
       });
       fetchAssets();

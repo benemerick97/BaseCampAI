@@ -16,6 +16,8 @@ import DetailsTab from "../Tabs/DetailsTab";
 import AssetsTab from "../Tabs/AssetsTab";
 import EmptyTab from "../Tabs/EmptyTab";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface SiteDetailsProps {
   setMainPage: (page: string) => void;
 }
@@ -29,7 +31,7 @@ export default function SiteDetails({ setMainPage }: SiteDetailsProps) {
     if (!selectedEntity || selectedEntity.type !== "site") return;
 
     axios
-      .get(`https://basecampai.ngrok.io/sites/${selectedEntity.id}`, {
+      .get(`${BACKEND_URL}/sites/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
       .then((res) => setSite(res.data))

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 const Account: React.FC = () => {
   const { user, setUser } = useAuth(); // ✅ Destructure setUser
   const [firstName, setFirstName] = useState(user?.first_name || "");
@@ -18,7 +20,7 @@ const Account: React.FC = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://basecampai.ngrok.io/users/${user.id}`, {
+      const response = await fetch(`${BACKEND_URL}//users/${user.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

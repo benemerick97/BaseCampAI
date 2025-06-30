@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-const BASE_URL = "https://basecampai.ngrok.io/custom-fields/";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 interface UseCustomFieldsProps {
   entityType: string;
@@ -36,7 +36,7 @@ export function useCustomFields({
 
   const fetchFields = async () => {
     try {
-      const url = `${BASE_URL}?entity_type=${entityType}`;
+      const url = `${BASE_URL}/custom-fields/?entity_type=${entityType}`;
       console.log("Fetching custom fields from:", url);
 
       const res = await fetch(url, { headers });
@@ -59,7 +59,7 @@ export function useCustomFields({
   };
 
   const createField = async (fieldData: CustomFieldCreateInput) => {
-    const res = await fetch(BASE_URL, {
+    const res = await fetch(`${BASE_URL}/custom-fields/`, {
       method: "POST",
       headers,
       body: JSON.stringify(fieldData),
@@ -75,7 +75,7 @@ export function useCustomFields({
   };
 
   const deleteField = async (fieldId: number) => {
-    const res = await fetch(`${BASE_URL}${fieldId}`, {
+    const res = await fetch(`${BASE_URL}/custom-fields/${fieldId}`, {
       method: "DELETE",
       headers,
     });

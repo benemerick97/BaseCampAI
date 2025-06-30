@@ -1,5 +1,7 @@
 import  { useEffect, useRef, useState } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface AdminCreateOrgProps {
   onSuccess?: () => void;
   onCancel: () => void;
@@ -28,7 +30,7 @@ export default function AdminCreateOrg({ onSuccess, onCancel }: AdminCreateOrgPr
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://basecampai.ngrok.io/superadmin/create-org", {
+      const response = await fetch(`${BACKEND_URL}/superadmin/create-org`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

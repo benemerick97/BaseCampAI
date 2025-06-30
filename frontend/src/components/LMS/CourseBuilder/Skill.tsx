@@ -6,6 +6,8 @@ import LearnListPage from "../LearnListPage";
 import SkillRow from "./SkillRow";
 import LearnModal from "../LearnModal";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface Skill {
   id: number;
   name: string;
@@ -29,7 +31,7 @@ export default function Skill({ setMainPage }: SkillProps) {
 
   const fetchSkills = async () => {
     try {
-      const response = await axios.get("https://basecampai.ngrok.io/skills/", {
+      const response = await axios.get(`${BACKEND_URL}/skills/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setSkills(response.data);
@@ -51,9 +53,9 @@ export default function Skill({ setMainPage }: SkillProps) {
     };
 
     if (form.id) {
-      await axios.put(`https://basecampai.ngrok.io/skills/${form.id}`, payload);
+      await axios.put(`${BACKEND_URL}/skills/${form.id}`, payload);
     } else {
-      await axios.post("https://basecampai.ngrok.io/skills/", payload);
+      await axios.post(`${BACKEND_URL}/skills/`, payload);
     }
 
     setShowModal(false);
@@ -64,7 +66,7 @@ export default function Skill({ setMainPage }: SkillProps) {
   const handleDelete = async (id: number) => {
     const confirmed = confirm("Delete this skill?");
     if (confirmed) {
-      await axios.delete(`https://basecampai.ngrok.io/skills/${id}`, {
+      await axios.delete(`${BACKEND_URL}/skills/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       });
       fetchSkills();

@@ -5,6 +5,8 @@ import { FiUploadCloud } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { apiFetch } from "../../utils/apiFetch";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface DocumentUploadProps {
   onUploadComplete?: () => void;
 }
@@ -30,7 +32,7 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
     const fetchAgents = async () => {
       try {
         const res = await apiFetch(
-          "https://basecampai.ngrok.io/agents",
+          `${BACKEND_URL}/agents`,
           user?.organisation?.id?.toString() || ""
         );
         const data = await res.json();
@@ -78,7 +80,7 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
       setUploadProgress(0);
       setMessage("Uploading...");
 
-      const res = await fetch("https://basecampai.ngrok.io/document-objects", {
+      const res = await fetch(`${BACKEND_URL}"/document-objects`, {
         method: "POST",
         headers: {
           "org-id": user?.organisation?.id?.toString() || "",
@@ -97,7 +99,7 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
       if (selectedAgent) {
         try {
           await apiFetch(
-            `https://basecampai.ngrok.io/agents/${selectedAgent}/documents`,
+            `${BACKEND_URL}/agents/${selectedAgent}/documents`,
             user?.organisation?.id?.toString() || "",
             {
               method: "POST",

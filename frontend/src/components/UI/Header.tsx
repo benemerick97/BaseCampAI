@@ -6,6 +6,8 @@ import logo from "../../assets/logo/BASECAMP.svg";
 import { useAuth } from "../../contexts/AuthContext";
 import { useOrganisations } from "../../hooks/useOrganisations";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface Organisation {
   id: number;
   name: string;
@@ -36,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
   const onChangeOrganisation = async (org: Organisation) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://basecampai.ngrok.io/superadmin/switch-org", {
+      const response = await fetch(`${BACKEND_URL}/superadmin/switch-org`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

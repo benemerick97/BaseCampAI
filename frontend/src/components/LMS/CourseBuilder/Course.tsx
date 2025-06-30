@@ -6,6 +6,8 @@ import LearnListPage from "../LearnListPage";
 import CourseRow from "./CourseRow";
 import EntityModal from "../LearnModal";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface Course {
   id: number;
   title: string;
@@ -29,7 +31,7 @@ export default function Course({ setMainPage }: CourseProps) {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get("https://basecampai.ngrok.io/courses/", {
+      const response = await axios.get(`${BACKEND_URL}/courses/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setCourses(response.data);
@@ -51,9 +53,9 @@ export default function Course({ setMainPage }: CourseProps) {
     };
 
     if (form.id) {
-      await axios.put(`https://basecampai.ngrok.io/courses/${form.id}`, payload);
+      await axios.put(`${BACKEND_URL}/courses/${form.id}`, payload);
     } else {
-      await axios.post("https://basecampai.ngrok.io/courses/", payload);
+      await axios.post(`${BACKEND_URL}/courses/`, payload);
     }
 
     setShowModal(false);
@@ -64,7 +66,7 @@ export default function Course({ setMainPage }: CourseProps) {
   const handleDelete = async (id: number) => {
     const confirmed = confirm("Delete this course?");
     if (confirmed) {
-      await axios.delete(`https://basecampai.ngrok.io/courses/${id}`, {
+      await axios.delete(`${BACKEND_URL}/courses/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       });
       fetchCourses();

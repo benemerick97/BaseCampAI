@@ -5,6 +5,8 @@ import { FiUploadCloud } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { apiFetch } from "../../utils/apiFetch";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface FileUploadProps {
   onUploadComplete?: () => void;
 }
@@ -28,7 +30,7 @@ const FileUpload = ({ onUploadComplete }: FileUploadProps) => {
     const fetchAgents = async () => {
       try {
         const res = await apiFetch(
-          "https://basecampai.ngrok.io/agents",
+          `${BACKEND_URL}/agents`,
           user?.organisation?.id?.toString() || ""
         );
         const data = await res.json();
@@ -73,7 +75,7 @@ const FileUpload = ({ onUploadComplete }: FileUploadProps) => {
     formData.append("org_id", user?.organisation?.id.toString() || "");
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://basecampai.ngrok.io/upload");
+    xhr.open("POST", `${BACKEND_URL}/upload`);
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {

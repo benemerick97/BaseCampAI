@@ -5,13 +5,15 @@ interface SendChatOptions {
   onStream: (chunk: string) => void;
 }
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 export async function sendChatMessage({
   message,
   agentKey,
   orgId,
   onStream,
 }: SendChatOptions): Promise<void> {
-  const response = await fetch("https://basecampai.ngrok.io/chat", {
+  const response = await fetch(`${BACKEND_URL}/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

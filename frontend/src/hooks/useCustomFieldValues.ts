@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-const BASE_URL = "https://basecampai.ngrok.io/custom-field-values/";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 interface FieldValue {
   id: number;
@@ -30,7 +30,7 @@ export function useCustomFieldValues({ entityId }: UseCustomFieldValuesProps) {
   const fetchValues = async () => {
     try {
       console.log("Fetching custom field values for entity:", entityId);
-      const res = await fetch(`${BASE_URL}entity/${entityId}`, { headers });
+      const res = await fetch(`${BASE_URL}/custom-field-values/entity/${entityId}`, { headers });
       if (!res.ok) throw new Error("Failed to fetch custom field values");
 
       const data = await res.json();
@@ -49,7 +49,7 @@ export function useCustomFieldValues({ entityId }: UseCustomFieldValuesProps) {
     try {
       if (existing) {
         // Update
-        const res = await fetch(`${BASE_URL}${existing.id}`, {
+        const res = await fetch(`${BASE_URL}/custom-field-value/${existing.id}`, {
           method: "PUT",
           headers,
           body: JSON.stringify({ value_text: value }),
@@ -61,7 +61,7 @@ export function useCustomFieldValues({ entityId }: UseCustomFieldValuesProps) {
         );
       } else {
         // Create
-        const res = await fetch(BASE_URL, {
+        const res = await fetch(`${BASE_URL}/custom-field-value/`, {
           method: "POST",
           headers,
           body: JSON.stringify({

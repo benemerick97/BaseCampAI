@@ -6,6 +6,8 @@ import EntityListPage from "./EntityListPage";
 import SiteRow from "./SiteRow";
 import EntityModal from "./EntityModal";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface SiteItem {
   id: number;
   name: string;
@@ -28,7 +30,7 @@ export default function Sites({ setMainPage }: SiteProps) {
 
   const fetchSites = async () => {
     try {
-      const response = await axios.get("https://basecampai.ngrok.io/sites/", {
+      const response = await axios.get(`${BACKEND_URL}/sites/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setSites(response.data);
@@ -43,13 +45,13 @@ export default function Sites({ setMainPage }: SiteProps) {
 
   const handleAddOrEditSite = async (form: any) => {
     if (form.id) {
-      await axios.put(`https://basecampai.ngrok.io/sites/${form.id}`, {
+      await axios.put(`${BACKEND_URL}/sites/${form.id}`, {
         name: form.name,
         location: form.location,
         organisation_id: user?.organisation?.id,
       });
     } else {
-      await axios.post("https://basecampai.ngrok.io/sites/", {
+      await axios.post(`${BACKEND_URL}/sites/`, {
         name: form.name,
         location: form.location,
         organisation_id: user?.organisation?.id,
@@ -63,7 +65,7 @@ export default function Sites({ setMainPage }: SiteProps) {
   const handleDelete = async (id: number) => {
     const confirmed = confirm("Delete this site?");
     if (confirmed) {
-      await axios.delete(`https://basecampai.ngrok.io/sites/${id}`);
+      await axios.delete(`${BACKEND_URL}/sites/${id}`);
       fetchSites();
     }
   };

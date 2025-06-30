@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface Organisation {
   id: number;
   name: string;
@@ -42,7 +44,7 @@ export default function AdminCreateUser({
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://basecampai.ngrok.io/superadmin/create-user", {
+      const response = await fetch(`${BACKEND_URL}/superadmin/create-user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

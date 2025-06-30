@@ -16,6 +16,8 @@ import DetailsTab from "../Tabs/DetailsTab";
 import EmptyTab from "../Tabs/EmptyTab";
 import SensorsTab from "../Tabs/IoTSensorsTab";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface AssetDetailsProps {
   setMainPage: (page: string) => void;
 }
@@ -29,7 +31,7 @@ export default function AssetDetails({ setMainPage }: AssetDetailsProps) {
     if (!selectedEntity || selectedEntity.type !== "asset") return;
 
     axios
-      .get(`https://basecampai.ngrok.io/assets/${selectedEntity.id}`, {
+      .get(`${BACKEND_URL}/assets/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
       .then((res) => setAsset(res.data))

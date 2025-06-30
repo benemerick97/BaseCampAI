@@ -16,7 +16,7 @@ interface FileMeta {
   original_name?: string;
 }
 
-const BACKEND_URL = "https://basecampai.ngrok.io";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 //const Knowledge = ({ onNavClick }: KnowledgeProps) => {
 

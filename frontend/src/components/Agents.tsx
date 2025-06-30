@@ -5,7 +5,7 @@ import CreateAgent from "../components/Forms/CreateAgent";
 import AgentCard from "../components/AgentCard";
 import { FiPlus, FiMoreHorizontal } from "react-icons/fi";
 
-const BACKEND_URL = "https://basecampai.ngrok.io";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 interface Agent {
   key: string;

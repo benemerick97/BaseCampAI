@@ -3,6 +3,8 @@ import AdminCreateOrg from "./AdminCreateOrg";
 import AdminCreateUser from "./AdminCreateUser";
 import AdminModal from "./AdminModal";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface Organisation {
   id: number;
   name: string;
@@ -15,7 +17,7 @@ export default function ControlPanel() {
 
   const fetchOrgs = async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch("https://basecampai.ngrok.io/superadmin/organisations", {
+    const res = await fetch(`${BACKEND_URL}/superadmin/organisations`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

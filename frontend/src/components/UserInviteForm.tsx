@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface UserInviteFormProps {
   onSuccess: () => void;
 }
@@ -31,7 +33,7 @@ export default function UserInviteForm({ onSuccess }: UserInviteFormProps) {
     setError("");
 
     try {
-      const res = await fetch("https://basecampai.ngrok.io/users/invite", {
+      const res = await fetch(`${BACKEND_URL}/users/invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

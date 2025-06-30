@@ -12,6 +12,8 @@ export function useOrganisations(enabled: boolean) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const BACKEND_URL = import.meta.env.VITE_API_URL;
+
   const fetchOrganisations = useCallback(async () => {
     if (!enabled) return;
 
@@ -20,7 +22,7 @@ export function useOrganisations(enabled: boolean) {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://basecampai.ngrok.io/superadmin/organisations", {
+      const response = await fetch(`${BACKEND_URL}/superadmin/organisations`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

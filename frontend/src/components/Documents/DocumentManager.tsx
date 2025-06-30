@@ -4,6 +4,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal";
 import DocumentUpload from "./DocumentUpload";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface DocumentFile {
   id: string;
   file_path: string;
@@ -22,8 +24,6 @@ interface DocumentObject {
   updated_at: string;
   versions: DocumentFile[];
 }
-
-const BACKEND_URL = "https://basecampai.ngrok.io";
 
 const DocumentManager = () => {
   const { user } = useAuth();

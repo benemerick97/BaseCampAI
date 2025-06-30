@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-const BACKEND_URL = "https://basecampai.ngrok.io";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 export function useAgentSuggestions() {
   const { user } = useAuth();

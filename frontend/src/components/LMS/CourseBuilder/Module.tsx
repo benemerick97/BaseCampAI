@@ -6,6 +6,8 @@ import LearnListPage from "../LearnListPage";
 import ModuleRow from "./ModuleRow";
 import LearnModal from "../LearnModal";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface Module {
   id: number;
   title: string;
@@ -28,7 +30,7 @@ export default function Module({ setMainPage }: ModuleProps) {
 
   const fetchModules = async () => {
     try {
-      const response = await axios.get("https://basecampai.ngrok.io/modules/", {
+      const response = await axios.get(`${BACKEND_URL}/modules/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setModules(response.data);
@@ -49,9 +51,9 @@ export default function Module({ setMainPage }: ModuleProps) {
     };
 
     if (form.id) {
-      await axios.put(`https://basecampai.ngrok.io/modules/${form.id}`, payload);
+      await axios.put(`${BACKEND_URL}/modules/${form.id}`, payload);
     } else {
-      await axios.post("https://basecampai.ngrok.io/modules/", payload);
+      await axios.post(`${BACKEND_URL}/modules/`, payload);
     }
 
     setShowModal(false);
@@ -62,7 +64,7 @@ export default function Module({ setMainPage }: ModuleProps) {
   const handleDelete = async (id: number) => {
     const confirmed = confirm("Delete this module?");
     if (confirmed) {
-      await axios.delete(`https://basecampai.ngrok.io/modules/${id}`, {
+      await axios.delete(`${BACKEND_URL}/modules/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       });
       fetchModules();

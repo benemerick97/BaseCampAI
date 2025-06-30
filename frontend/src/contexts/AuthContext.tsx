@@ -1,6 +1,8 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 // Organisation interface
 interface Organisation {
   id: number;
@@ -51,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const response = await fetch("https://basecampai.ngrok.io/me", {
+        const response = await fetch(`${BACKEND_URL}/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -83,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string, onSuccess?: () => void) => {
     try {
-      const response = await fetch("https://basecampai.ngrok.io/login", {
+      const response = await fetch(`${BACKEND_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -118,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
 
     try {
-      const response = await fetch("https://basecampai.ngrok.io/me", {
+      const response = await fetch(`${BACKEND_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

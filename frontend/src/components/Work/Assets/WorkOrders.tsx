@@ -6,6 +6,8 @@ import EntityListPage from "./EntityListPage";
 import WorkOrderRow from "./WorkOrderRow";
 import EntityModal from "./EntityModal"; 
 
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 interface WorkOrder {
   id: number;
   title: string;
@@ -40,7 +42,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const fetchWorkOrders = async () => {
     try {
-      const res = await axios.get("https://basecampai.ngrok.io/workorders/", {
+      const res = await axios.get(`${BACKEND_URL}/workorders/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setWorkOrders(res.data);
@@ -51,7 +53,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const fetchAssets = async () => {
     try {
-      const res = await axios.get("https://basecampai.ngrok.io/assets/", {
+      const res = await axios.get(`${BACKEND_URL}/assets/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setAssets(res.data);
@@ -72,9 +74,9 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
     };
 
     if (form.id) {
-      await axios.put(`https://basecampai.ngrok.io/workorders/${form.id}`, payload);
+      await axios.put(`${BACKEND_URL}/workorders/${form.id}`, payload);
     } else {
-      await axios.post("https://basecampai.ngrok.io/workorders/", payload);
+      await axios.post(`${BACKEND_URL}/workorders/`, payload);
     }
 
     setShowModal(false);
@@ -84,7 +86,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const handleDelete = async (id: number) => {
     if (confirm("Delete this work order?")) {
-      await axios.delete(`https://basecampai.ngrok.io/workorders/${id}`, {
+      await axios.delete(`${BACKEND_URL}/workorders/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       });
       fetchWorkOrders();
