@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import EntityModal from "./LearnModal";
 import { useAuth } from "../../contexts/AuthContext";
-import { apiFetch } from "../../utils/apiFetch";
+
 
 interface DocumentOption {
   id: string;
@@ -68,11 +68,13 @@ export default function CourseCreate({
         org_id: orgId,
       };
 
-      const res = await apiFetch("/courses/", orgId, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
       if (!res.ok) {
         const errorBody = await res.text();
