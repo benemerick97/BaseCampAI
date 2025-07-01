@@ -80,7 +80,7 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
       setUploadProgress(0);
       setMessage("Uploading...");
 
-      const res = await fetch(`${BACKEND_URL}"/document-objects`, {
+      const res = await fetch(`${BACKEND_URL}/document-objects`, {
         method: "POST",
         headers: {
           "org-id": user?.organisation?.id?.toString() || "",
