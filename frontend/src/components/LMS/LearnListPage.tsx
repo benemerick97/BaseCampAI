@@ -6,11 +6,11 @@ export interface LearnListPageProps<T> {
   entityType: string;
   items: T[];
   onFetch: () => Promise<void>;
-  onSelect: (id: number) => void;
+  onSelect: (id: string | number) => void;
   renderRow: (
     item: T,
-    openDropdown: number | null,
-    setDropdownOpen: (id: number | null) => void,
+    openDropdown: string | number | null,
+    setDropdownOpen: (id: string | number | null) => void,
     openEditModal: (item: T) => void
   ) => React.ReactNode;
   columns: string[];
@@ -33,7 +33,7 @@ export default function LearnListPage<T>({
   onSearch,
   onAddClick,
 }: LearnListPageProps<T>) {
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<string | number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function LearnListPage<T>({
                 <tr
                   key={item.id}
                   className="border-t hover:bg-gray-50 cursor-pointer relative"
-                  onClick={() => onSelect(item.id)}
+                  onClick={() => onSelect(item.id as string | number)}
                 >
                   {renderRow(item, dropdownOpen, setDropdownOpen, () => {})}
                 </tr>

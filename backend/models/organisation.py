@@ -19,3 +19,5 @@ class Organisation(Base):
 
     
     documents = relationship("DocumentObject", back_populates="organisation", cascade="all, delete")
+
+    courses = relationship("Course", back_populates="organisation", cascade="all, delete")

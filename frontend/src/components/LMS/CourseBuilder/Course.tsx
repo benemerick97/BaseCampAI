@@ -4,17 +4,18 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
 import CourseRow from "./CourseRow";
-import EntityModal from "../LearnModal";
+import CourseCreate from "../CourseCreate";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 interface Course {
-  id: number;
-  title: string;
-  category?: string;
-  duration?: string;
-  created_date: string;
-  organisation_id: number;
+  id: string;
+  name: string;
+  description?: string;
+  org_id: number;
+  document_id: string;
+  slides: any[];
+  created_at: string;
 }
 
 interface CourseProps {
@@ -27,12 +28,12 @@ export default function Course({ setMainPage }: CourseProps) {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  
 
   const fetchCourses = async () => {
     try {
       const response = await axios.get(`${BACKEND_URL}/courses/`, {
-        params: { organisation_id: user?.organisation?.id },
+        params: { org_id: user?.organisation?.id },
       });
       setCourses(response.data);
     } catch (error) {
@@ -44,54 +45,37 @@ export default function Course({ setMainPage }: CourseProps) {
     fetchCourses();
   }, []);
 
-  const handleAddOrEditCourse = async (form: any) => {
-    const payload = {
-      title: form.title,
-      category: form.category,
-      duration: form.duration,
-      organisation_id: user?.organisation?.id,
-    };
-
-    if (form.id) {
-      await axios.put(`${BACKEND_URL}/courses/${form.id}`, payload);
-    } else {
-      await axios.post(`${BACKEND_URL}/courses/`, payload);
-    }
-
-    setShowModal(false);
-    setFormData({});
-    fetchCourses();
-  };
-
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     const confirmed = confirm("Delete this course?");
     if (confirmed) {
-      await axios.delete(`${BACKEND_URL}/courses/${id}`, {
-        params: { organisation_id: user?.organisation?.id },
-      });
-      fetchCourses();
+      try {
+        await axios.delete(`${BACKEND_URL}/courses/${id}`, {
+          params: { org_id: user?.organisation?.id },
+        });
+        fetchCourses();
+      } catch (err) {
+        console.error("Error deleting course:", err);
+      }
     }
   };
 
-  const handleSelect = (id: number) => {
+  const handleSelect = (id: string | number) => {
     setSelectedEntity({ type: "course", id });
     setMainPage("coursedetails");
   };
 
   const handleAddClick = () => {
-    setFormData({});
     setShowModal(true);
   };
 
-  const handleEditClick = (course: Course) => {
-    setFormData(course);
+  const handleEditClick = () => {
     setShowModal(true);
   };
 
   const renderRow = (
     course: Course,
-    _openDropdown: number | null,
-    _setOpenDropdown: (id: number | null) => void,
+    _openDropdown: string | number | null,
+    _setDropdownOpen: (id: string | number | null) => void,
     _openEditModal: (item: Course) => void
   ) => (
     <CourseRow
@@ -111,27 +95,16 @@ export default function Course({ setMainPage }: CourseProps) {
         onFetch={fetchCourses}
         onSelect={handleSelect}
         renderRow={renderRow}
-        columns={["Title", "Category", "Duration", "Created", "Actions"]}
+        columns={["Title", "Description", "Slides", "Created", "Actions"]}
         addButtonLabel="Add"
         showSearchBar={true}
         onAddClick={handleAddClick}
       />
 
-      <EntityModal
-        title="Course"
+      <CourseCreate
         visible={showModal}
-        onClose={() => {
-          setFormData({});
-          setShowModal(false);
-        }}
-        onSubmit={handleAddOrEditCourse}
-        formData={formData}
-        setFormData={setFormData}
-        fields={[
-          { label: "Title", key: "title" },
-          { label: "Category", key: "category" },
-          { label: "Duration", key: "duration" },
-        ]}
+        onClose={() => setShowModal(false)}
+        onCreated={fetchCourses}
       />
     </>
   );

@@ -22,7 +22,7 @@ def get_vector_retriever(
         raise ValueError("PINECONE_INDEX is not set in environment variables.")
 
     # Merge org filter with any additional metadata filters
-    filter_metadata = {"org_id": org_id}
+    filter_metadata = {"org_id": int(org_id)}
     if extra_filter:
         filter_metadata.update(extra_filter)
 

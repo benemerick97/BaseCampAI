@@ -25,14 +25,30 @@ export async function sendChatMessage({
     }),
   });
 
-  if (!response.body) throw new Error("No response body");
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`[Server error] ${errorText || "Unknown error"}`);
+  }
+
+  if (!response.body) {
+    throw new Error("[Server error] No response body");
+  }
 
   const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8");
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    onStream(decoder.decode(value, { stream: true }));
+  try {
+    let done = false;
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      done = streamDone;
+      const chunk = decoder.decode(value, { stream: true });
+      if (chunk) {
+        onStream(chunk);
+      }
+    }
+  } catch (err) {
+    console.error("❌ Stream error:", err);
+    throw new Error("[Server error] Stream interrupted");
   }
 }

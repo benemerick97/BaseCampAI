@@ -1,0 +1,31 @@
+# backend/schemas/course.py
+
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from uuid import UUID
+from datetime import datetime
+
+
+class Slide(BaseModel):
+    title: str
+    bullets: List[str]
+
+
+class CourseBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    document_id: UUID
+
+
+class CourseCreate(CourseBase):
+    org_id: int
+
+
+class CourseOut(CourseBase):
+    id: UUID
+    org_id: int
+    slides: List[Slide]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

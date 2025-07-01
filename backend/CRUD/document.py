@@ -74,6 +74,8 @@ def get_latest_file_version(db: Session, document_id: uuid.UUID) -> int:
     )
     return latest.version if latest else 0
 
+def get_document_file(db: Session, file_id: uuid.UUID) -> DocumentFile | None:
+    return db.query(DocumentFile).filter(DocumentFile.id == file_id).first()
 # -------------------------------
 # AGENT-DOCUMENT ASSIGNMENT
 # -------------------------------

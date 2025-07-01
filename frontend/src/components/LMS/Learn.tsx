@@ -1,10 +1,14 @@
+// frontend/src/components/LMS/Learn.tsx
+
 import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 interface FileMeta {
-  filename: string;
+  id: string;
+  name: string;
+  review_date?: string;
 }
 
 interface Question {
@@ -19,7 +23,7 @@ const Learn = () => {
   const orgId = user?.organisation?.id?.toString();
 
   const [files, setFiles] = useState<FileMeta[]>([]);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileMeta | null>(null);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
@@ -35,24 +39,30 @@ const Learn = () => {
   const fetchFiles = async () => {
     if (!headers) return;
     try {
-      const res = await fetch(`${BACKEND_URL}/files`, { headers });
+      const res = await fetch(`${BACKEND_URL}/document-objects`, { headers });
       const data = await res.json();
-      setFiles(data.files);
+      setFiles(data);
     } catch (err) {
-      console.error("Failed to load files:", err);
+      console.error("Failed to load documents:", err);
     }
   };
 
-  const generateQuestions = async (filename: string) => {
+  const generateQuestions = async (documentId: string) => {
     if (!headers) return;
+
+    const endpoint = `${BACKEND_URL}/lms/questions`;
+    console.log("📤 Sending POST request to:", endpoint);
+    console.log("📦 Payload:", { document_id: documentId });
+
     try {
-      const res = await fetch(`${BACKEND_URL}/lms/questions`, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers,
-        body: JSON.stringify({ filename }),
+        body: JSON.stringify({ document_id: documentId }),
       });
 
       if (!res.ok) throw new Error("Failed to generate questions");
+
       const data = await res.json();
       setQuestions(data.questions);
       setCurrentQuestion(0);
@@ -61,9 +71,10 @@ const Learn = () => {
       setCorrectAnswers(0);
       setCompleted(false);
     } catch (err) {
-      console.error("Error generating questions:", err);
+      console.error("❌ Error generating questions:", err);
     }
   };
+
 
   useEffect(() => {
     fetchFiles();
@@ -103,15 +114,15 @@ const Learn = () => {
           <h2 className="text-xl font-semibold mb-4">Select a document to begin training</h2>
           <ul className="space-y-2">
             {files.map((file) => (
-              <li key={file.filename}>
+              <li key={file.id}>
                 <button
                   onClick={() => {
-                    setSelectedFile(file.filename);
-                    generateQuestions(file.filename);
+                    setSelectedFile(file);
+                    generateQuestions(file.id);
                   }}
                   className="text-blue-600 hover:underline"
                 >
-                  {file.filename}
+                  {file.name}
                 </button>
               </li>
             ))}
@@ -144,7 +155,7 @@ const Learn = () => {
       ) : questions.length > 0 ? (
         <div>
           <h1 className="text-xl font-bold text-gray-800 mb-1">
-            Document: <span className="text-blue-600">{selectedFile}</span>
+            Document: <span className="text-blue-600">{selectedFile?.name}</span>
           </h1>
           <h2 className="text-lg font-semibold mb-2">
             Question {currentQuestion + 1} of {questions.length}

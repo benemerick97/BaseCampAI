@@ -3,19 +3,20 @@ import { FiMoreHorizontal } from "react-icons/fi";
 import { createPortal } from "react-dom";
 
 interface Course {
-  id: number;
-  title: string;
-  category?: string;
-  duration?: string;
-  created_date: string;
-  organisation_id: number;
+  id: string;
+  name: string;
+  description?: string;
+  org_id: number;
+  document_id: string;
+  slides: any[];
+  created_at: string;
 }
 
 interface CourseRowProps {
   course: Course;
   onClick: () => void;
   onEdit: (item: Course) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 const CourseRow: React.FC<CourseRowProps> = ({ course, onClick, onEdit, onDelete }) => {
@@ -84,16 +85,16 @@ const CourseRow: React.FC<CourseRowProps> = ({ course, onClick, onEdit, onDelete
         className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900 cursor-pointer hover:bg-gray-50"
         onClick={onClick}
       >
-        {course.title}
+        {course.name}
       </td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
-        {course.category || "—"}
+        {course.description || "—"}
       </td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
-        {course.duration || "—"}
+        {course.slides?.length ? `${course.slides.length} slides` : "—"}
       </td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-600">
-        {new Date(course.created_date).toLocaleDateString()}
+        {new Date(course.created_at).toLocaleDateString()}
       </td>
       <td
         className="px-4 py-3 border-r border-gray-100 text-right relative"

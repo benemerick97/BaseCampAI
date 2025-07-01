@@ -10,24 +10,19 @@ from services.supervisor import handle_supervised_stream
 
 router = APIRouter()
 
-# 📥 Request model
 class ChatRequest(BaseModel):
     message: str
 
-# 🎯 POST /chat
 @router.post("/chat")
 async def chat_endpoint(
     req: ChatRequest,
     request: Request,
-    x_org_id: str = Header(...)  # ✅ Required org_id header
+    x_org_id: str = Header(...)
 ):
     user_input = req.message.strip()
-
-    # ✅ Use provided org_id directly
     org_id = x_org_id
     session_id = request.client.host or "session_default"
 
-    # 🧠 Static user profile (could later come from auth/session)
     user_profile = {
         "user_department": "Operations",
         "user_role": "Business Improvement Manager",
@@ -35,23 +30,24 @@ async def chat_endpoint(
         "user_seniority": "Mid-level"
     }
 
+    # ✅ Catch setup errors before entering stream
+    try:
+        stream = handle_supervised_stream(
+            user_input=user_input,
+            session_id=session_id,
+            org_id=org_id,
+            user_profile=user_profile,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Stream setup failed: {str(e)}")
+
     async def token_streamer():
+        yield " "  # force-flush stream start
         try:
-            # Start stream immediately
-            yield " "  # prevents buffering in some clients
-
-            stream = handle_supervised_stream(
-                user_input=user_input,
-                session_id=session_id,
-                org_id=org_id,
-                user_profile=user_profile,
-            )
-
             async for chunk in stream:
-                await asyncio.sleep(0.01)  # optional: simulates natural stream
+                await asyncio.sleep(0.01)
                 yield chunk if isinstance(chunk, str) else str(chunk)
-
         except Exception as e:
-            yield f"[Server error] {str(e)}"
+            yield f"\n[Server error] {str(e)}"
 
     return StreamingResponse(token_streamer(), media_type="text/plain")
