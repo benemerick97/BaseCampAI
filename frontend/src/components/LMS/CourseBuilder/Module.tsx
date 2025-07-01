@@ -71,10 +71,10 @@ export default function Module({ setMainPage }: ModuleProps) {
     }
   };
 
-  const handleSelect = (id: number) => {
-    setSelectedEntity({ type: "module", id });
-    setMainPage("moduledetails");
-  };
+ const handleSelect = (id: string | number) => {
+  setSelectedEntity({ type: "module", id });
+  setMainPage("moduledetails");
+};
 
   const handleAddClick = () => {
     setFormData({});
@@ -88,8 +88,8 @@ export default function Module({ setMainPage }: ModuleProps) {
 
   const renderRow = (
     module: Module,
-    _openDropdown: number | null,
-    _setOpenDropdown: (id: number | null) => void,
+    _openDropdown: string | number | null,
+    _setDropdownOpen: (id: string | number | null) => void,
     _openEditModal: (item: Module) => void
   ) => (
     <ModuleRow
@@ -99,6 +99,7 @@ export default function Module({ setMainPage }: ModuleProps) {
       onDelete={handleDelete}
     />
   );
+
 
   return (
     <>

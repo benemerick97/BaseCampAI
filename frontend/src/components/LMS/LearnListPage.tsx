@@ -112,7 +112,7 @@ export default function LearnListPage<T>({
                   className="border-t hover:bg-gray-50 cursor-pointer relative"
                   onClick={() => onSelect(item.id as string | number)}
                 >
-                  {renderRow(item, dropdownOpen, setDropdownOpen, () => {})}
+                  {renderRow(item, dropdownOpen, setDropdownOpen, (_item) => {})}
                 </tr>
               ))}
             </tbody>

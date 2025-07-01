@@ -63,7 +63,7 @@ export default function Skill({ setMainPage }: SkillProps) {
     fetchSkills();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string | number) => {
     const confirmed = confirm("Delete this skill?");
     if (confirmed) {
       await axios.delete(`${BACKEND_URL}/skills/${id}`, {
@@ -73,7 +73,7 @@ export default function Skill({ setMainPage }: SkillProps) {
     }
   };
 
-  const handleSelect = (id: number) => {
+  const handleSelect = (id: string | number)=> {
     setSelectedEntity({ type: "skill", id });
     setMainPage("skilldetails");
   };
@@ -90,8 +90,8 @@ export default function Skill({ setMainPage }: SkillProps) {
 
   const renderRow = (
     skill: Skill,
-    _openDropdown: number | null,
-    _setOpenDropdown: (id: number | null) => void,
+    _openDropdown: string | number | null,
+    _setDropdownOpen: (id: string | number | null) => void,
     _openEditModal: (item: Skill) => void
   ) => (
     <SkillRow
@@ -101,6 +101,7 @@ export default function Skill({ setMainPage }: SkillProps) {
       onDelete={handleDelete}
     />
   );
+  
 
   return (
     <>
