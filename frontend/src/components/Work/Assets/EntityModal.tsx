@@ -1,4 +1,4 @@
-
+// frontend/src/components/Work/Assets/EntityModal.tsx
 
 interface EntityModalProps {
   title: string;

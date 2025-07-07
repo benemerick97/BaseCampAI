@@ -18,7 +18,7 @@ class CourseBase(BaseModel):
 
 
 class CourseCreate(CourseBase):
-    org_id: int
+    pass
 
 
 class CourseOut(CourseBase):
@@ -29,3 +29,10 @@ class CourseOut(CourseBase):
 
     class Config:
         from_attributes = True
+
+
+class CourseUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    document_id: Optional[UUID] = None
+

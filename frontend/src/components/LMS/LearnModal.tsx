@@ -1,3 +1,4 @@
+// frontend/src/components/LMS/LearnModal.tsx
 
 interface Field {
   label: string;
@@ -14,6 +15,7 @@ interface LearnModalProps {
   formData: Record<string, any>;
   setFormData: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   fields: Field[];
+  onFieldChange?: (key: string, value: any) => void; // ✅ NEW
 }
 
 export default function LearnModal({
@@ -24,6 +26,7 @@ export default function LearnModal({
   formData,
   setFormData,
   fields,
+  onFieldChange, // ✅ NEW
 }: LearnModalProps) {
   if (!visible) return null;
 
@@ -31,7 +34,12 @@ export default function LearnModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     key: string
   ) => {
-    setFormData((prev) => ({ ...prev, [key]: e.target.value }));
+    const value = e.target.value;
+    if (onFieldChange) {
+      onFieldChange(key, value); // ✅ use custom logic if provided
+    } else {
+      setFormData((prev) => ({ ...prev, [key]: value }));
+    }
   };
 
   return (

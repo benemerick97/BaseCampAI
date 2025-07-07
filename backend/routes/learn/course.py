@@ -1,19 +1,21 @@
 # backend/routes/learn/course.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-from schemas.learn.course import CourseCreate, CourseOut
+from schemas.learn.course import CourseCreate, CourseOut, CourseUpdate
 from models.document_object import DocumentObject
-from CRUD.learn.course import create_course, get_course, list_courses_by_org
+from CRUD.learn.course import create_course, get_course, list_courses_by_org, delete_course, update_course
 from models.document_object import DocumentObject as DocumentModel
 from databases.database import get_db
-import openai
+from services.context_retriever import get_vector_retriever
+from openai import OpenAI
 import os
 import json
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Initialise OpenAI client (auto-loads API key from environment)
+client = OpenAI()
 
 
 def generate_slides_from_text(text: str) -> list[dict]:
@@ -34,7 +36,7 @@ Document:
 """
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.5,
@@ -45,27 +47,71 @@ Document:
 
 
 @router.post("/", response_model=CourseOut)
-def create_course_route(course_data: CourseCreate, db: Session = Depends(get_db)):
-    # Step 1: Get document content
-    doc: DocumentModel | None = db.query(DocumentModel).filter(DocumentModel.id == course_data.document_id).first()
-    if not doc or not doc.current_file:
-        raise HTTPException(status_code=404, detail="Document or current file not found")
+async def create_course_route(
+    request: Request,
+    course_data: CourseCreate,
+    db: Session = Depends(get_db),
+):
+    try:
+        org_id = request.headers.get("x-org-id")
+        if not org_id:
+            raise HTTPException(status_code=400, detail="Missing organisation ID.")
 
-    # Step 2: Extract document text from current file
-    content = doc.current_file.text_content
-    if not content:
-        raise HTTPException(status_code=400, detail="Document file has no text content")
+        try:
+            org_id_int = int(org_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid organisation ID format.")
 
-    # Step 3: Generate slides using GPT
-    slides = generate_slides_from_text(content)
+        # Step 1: Get document
+        doc = db.query(DocumentModel).filter(DocumentModel.id == course_data.document_id).first()
+        if not doc or not doc.current_file_id or doc.org_id != org_id_int:
+            raise HTTPException(status_code=404, detail="Document not found or not authorised")
 
-    # Step 4: Store course in DB
-    return create_course(db, course_data, slides)
+        # Step 2: Retrieve content via vector retriever
+        filter_metadata = {
+            "source": str(doc.id),
+            "org_id": org_id_int,
+        }
+
+        retriever = get_vector_retriever(
+            org_id=org_id_int,
+            extra_filter=filter_metadata,
+            top_k=10
+        )
+
+        chunks = await retriever.ainvoke("training material")
+        content = "\n\n".join([c.page_content for c in chunks if c.page_content.strip()])
+
+        if not content:
+            raise HTTPException(status_code=404, detail="No content found for this document.")
+
+        # Step 3: Generate slides
+        slides = generate_slides_from_text(content)
+
+        # Step 4: Store course in DB
+        course = create_course(db, course_data, slides, org_id_int)
+        course.slides = slides  # Ensure FastAPI returns a list, not a string
+        return course
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Course creation failed: {str(e)}")
 
 
 @router.get("/", response_model=list[CourseOut])
 def list_courses(org_id: int, db: Session = Depends(get_db)):
-    return list_courses_by_org(db, org_id)
+    courses = list_courses_by_org(db, org_id)
+
+    for course in courses:
+        if isinstance(course.slides, str):
+            try:
+                course.slides = json.loads(course.slides)
+            except json.JSONDecodeError:
+                course.slides = []
+
+    return courses
+
 
 
 @router.get("/{course_id}", response_model=CourseOut)
@@ -75,3 +121,30 @@ def get_course_route(course_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Course not found")
     course.slides = json.loads(course.slides)
     return course
+
+
+@router.delete("/{course_id}", status_code=204)
+def delete_course_route(course_id: str, db: Session = Depends(get_db)):
+    success = delete_course(db, course_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Course not found or could not be deleted")
+    return None
+
+
+@router.put("/{course_id}", response_model=CourseOut)
+def update_course_route(
+    course_id: str,
+    updated_data: CourseUpdate,
+    db: Session = Depends(get_db)
+):
+    updated_course = update_course(db, course_id, updated_data)
+    if not updated_course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    if isinstance(updated_course.slides, str):
+        try:
+            updated_course.slides = json.loads(updated_course.slides)
+        except json.JSONDecodeError:
+            updated_course.slides = []
+
+    return updated_course

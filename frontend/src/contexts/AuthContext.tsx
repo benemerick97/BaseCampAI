@@ -1,3 +1,5 @@
+// frontend/src/contexts/AuthContext.tsx
+
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 
@@ -22,9 +24,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>; // <-- Add this
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   token: string | null;
-  login: (email: string, password: string, onSuccess?: () => void) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refetchUser: () => Promise<void>;
   role: "super_admin" | "admin" | "user";
@@ -32,7 +34,7 @@ interface AuthContextType {
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isUser: boolean;
-  authLoading: boolean; // ✅ NEW: for loading state
+  authLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -40,7 +42,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [authLoading, setAuthLoading] = useState(true); // ✅ NEW: track loading
+  const [authLoading, setAuthLoading] = useState(true);
   const [roleOverride, setRoleOverride] = useState<"super_admin" | "admin" | "user" | null>(
     sessionStorage.getItem("roleOverride") as "super_admin" | "admin" | "user" | null
   );
@@ -83,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [roleOverride]);
 
-  const login = async (email: string, password: string, onSuccess?: () => void) => {
+  const login = async (email: string, password: string) => {
     try {
       const response = await fetch(`${BACKEND_URL}/login`, {
         method: "POST",
@@ -99,8 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("token", data.access_token);
         setToken(data.access_token);
         setRoleOverride(null);
-        await refetchUser();
-        if (onSuccess) onSuccess();
+        await refetchUser(); // User will be updated, and Login.tsx watches for that
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -157,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isSuperAdmin,
         isAdmin,
         isUser,
-        authLoading, // ✅ provide loading state
+        authLoading,
       }}
     >
       {children}

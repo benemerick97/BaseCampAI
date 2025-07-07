@@ -1,3 +1,5 @@
+// frontend/src/components/LMS/CourseBuilder/Course.tsx
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -28,12 +30,18 @@ export default function Course({ setMainPage }: CourseProps) {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [showModal, setShowModal] = useState(false);
-  
+  const [editCourse, setEditCourse] = useState<Course | null>(null);
 
   const fetchCourses = async () => {
+    const orgId = user?.organisation?.id;
+    if (!orgId) {
+      console.warn("No organisation ID found. Skipping course fetch.");
+      return;
+    }
+
     try {
       const response = await axios.get(`${BACKEND_URL}/courses/`, {
-        params: { org_id: user?.organisation?.id },
+        params: { org_id: orgId },
       });
       setCourses(response.data);
     } catch (error) {
@@ -42,15 +50,19 @@ export default function Course({ setMainPage }: CourseProps) {
   };
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    if (user?.organisation?.id) {
+      fetchCourses();
+    }
+  }, [user]);
 
   const handleDelete = async (id: string) => {
     const confirmed = confirm("Delete this course?");
     if (confirmed) {
       try {
         await axios.delete(`${BACKEND_URL}/courses/${id}`, {
-          params: { org_id: user?.organisation?.id },
+          headers: {
+            "x-org-id": user?.organisation?.id,
+          },
         });
         fetchCourses();
       } catch (err) {
@@ -65,10 +77,12 @@ export default function Course({ setMainPage }: CourseProps) {
   };
 
   const handleAddClick = () => {
+    setEditCourse(null);
     setShowModal(true);
   };
 
-  const handleEditClick = () => {
+  const handleEditClick = (course: Course) => {
+    setEditCourse(course);
     setShowModal(true);
   };
 
@@ -81,7 +95,7 @@ export default function Course({ setMainPage }: CourseProps) {
     <CourseRow
       course={course}
       onClick={() => handleSelect(course.id)}
-      onEdit={handleEditClick}
+      onEdit={() => handleEditClick(course)}
       onDelete={handleDelete}
     />
   );
@@ -103,8 +117,12 @@ export default function Course({ setMainPage }: CourseProps) {
 
       <CourseCreate
         visible={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setEditCourse(null);
+        }}
         onCreated={fetchCourses}
+        existingCourse={editCourse ?? undefined}
       />
     </>
   );

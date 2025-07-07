@@ -4,34 +4,51 @@ import { useEffect, useState } from "react";
 import EntityModal from "./LearnModal";
 import { useAuth } from "../../contexts/AuthContext";
 
-
 interface DocumentOption {
   id: string;
   name: string;
+}
+
+interface CourseFormData {
+  name?: string;
+  description?: string;
+  document_id?: string;
 }
 
 interface CourseCreateProps {
   visible: boolean;
   onClose: () => void;
   onCreated: () => void;
+  existingCourse?: CourseFormData & { id?: string };
 }
 
 export default function CourseCreate({
   visible,
   onClose,
   onCreated,
+  existingCourse,
 }: CourseCreateProps) {
   const { user } = useAuth();
   const orgId = user?.organisation?.id?.toString();
 
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<CourseFormData>({});
   const [documents, setDocuments] = useState<DocumentOption[]>([]);
 
   useEffect(() => {
     if (visible && orgId) {
       fetchDocuments();
+
+      if (existingCourse) {
+        setFormData({
+          name: existingCourse.name,
+          description: existingCourse.description,
+          document_id: existingCourse.document_id,
+        });
+      } else {
+        setFormData({});
+      }
     }
-  }, [visible, orgId]);
+  }, [visible, orgId, existingCourse]);
 
   const fetchDocuments = async () => {
     try {
@@ -56,42 +73,62 @@ export default function CourseCreate({
     }
   };
 
-  const handleSubmit = async (data: Record<string, any>) => {
+  const handleFieldChange = (key: string, value: any) => {
+    if (key === "document_id") {
+      const selectedDoc = documents.find((doc) => doc.id === value);
+
+      setFormData((prev) => {
+        const updated: CourseFormData = { ...prev, document_id: value };
+
+        if (!prev.name && selectedDoc?.name) {
+          updated.name = selectedDoc.name.replace(/\.[^/.]+$/, ""); // remove extension
+        }
+
+        return updated;
+      });
+    } else {
+      setFormData((prev) => ({ ...prev, [key]: value }));
+    }
+  };
+
+  const handleSubmit = async (data: CourseFormData) => {
     try {
       if (!orgId) {
         console.error("❌ No organisation selected");
         return;
       }
 
-      const payload = {
-        ...data,
-        org_id: orgId,
-      };
+      const isEditing = !!existingCourse?.id;
+      const endpoint = isEditing
+        ? `${import.meta.env.VITE_API_URL}/courses/${existingCourse.id}`
+        : `${import.meta.env.VITE_API_URL}/courses/`;
+      const method = isEditing ? "PUT" : "POST";
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "x-org-id": orgId,
+        },
+        body: JSON.stringify(data),
+      });
 
       if (!res.ok) {
         const errorBody = await res.text();
-        throw new Error(`Failed to create course: ${res.status} ${errorBody}`);
+        throw new Error(`Failed to ${isEditing ? "update" : "create"} course: ${res.status} ${errorBody}`);
       }
 
       setFormData({});
       onCreated();
       onClose();
     } catch (err) {
-      console.error("Error creating course:", err);
+      console.error("Error submitting course:", err);
     }
   };
 
   return (
     <EntityModal
-      title="Course"
+      title={existingCourse ? "Edit Course" : "Create Course"}
       visible={visible}
       onClose={() => {
         setFormData({});
@@ -100,9 +137,8 @@ export default function CourseCreate({
       onSubmit={handleSubmit}
       formData={formData}
       setFormData={setFormData}
+      onFieldChange={handleFieldChange}
       fields={[
-        { label: "Course Name", key: "name" },
-        { label: "Description", key: "description" },
         {
           label: "Document",
           key: "document_id",
@@ -112,6 +148,8 @@ export default function CourseCreate({
             value: doc.id,
           })),
         },
+        { label: "Course Name", key: "name" },
+        { label: "Description", key: "description" },
       ]}
     />
   );

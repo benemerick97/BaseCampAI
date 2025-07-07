@@ -17,6 +17,7 @@ type EntityType =
 interface SelectedEntity {
   type: EntityType;
   id: number | string;
+  data?: any;
 }
 
 interface SelectedEntityContextType {

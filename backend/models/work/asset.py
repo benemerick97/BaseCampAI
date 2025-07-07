@@ -1,3 +1,5 @@
+#backend/models/work/asset.py
+
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from models.base import Base

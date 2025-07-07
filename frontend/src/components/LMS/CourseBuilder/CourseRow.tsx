@@ -1,3 +1,5 @@
+// frontend/src/components/LMS/CourseBuilder/CourseRow.tsx
+
 import React, { useState, useEffect } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { createPortal } from "react-dom";
@@ -61,7 +63,7 @@ const CourseRow: React.FC<CourseRowProps> = ({ course, onClick, onEdit, onDelete
             setDropdownOpen(false);
             onEdit(course);
           }}
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
         >
           Edit
         </button>
@@ -82,8 +84,8 @@ const CourseRow: React.FC<CourseRowProps> = ({ course, onClick, onEdit, onDelete
   return (
     <>
       <td
-        className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900 cursor-pointer hover:bg-gray-50"
         onClick={onClick}
+        className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900 cursor-pointer"
       >
         {course.name}
       </td>

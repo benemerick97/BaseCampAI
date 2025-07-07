@@ -1,3 +1,5 @@
+// frontend/src/components/Shared/DetailsPage.tsx
+
 import React, { useState, type JSX } from "react";
 
 interface TabConfig {

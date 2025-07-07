@@ -1,3 +1,5 @@
+# backend/CRUD/work/asset.py
+
 from sqlalchemy.orm import Session
 from models.work.asset import Asset
 from schemas.work.asset import AssetCreate, AssetUpdate
