@@ -18,7 +18,7 @@ interface Course {
 
 export default function CourseDetails({ setMainPage }: { setMainPage: (p: string) => void }) {
   const { selectedEntity, clearSelectedEntity, setSelectedEntity } = useSelectedEntity();
-  const { user } = useAuth();
+  useAuth();
   const [course, setCourse] = useState<Course | null>(null);
 
   useEffect(() => {
