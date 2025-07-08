@@ -89,9 +89,33 @@ export default function CourseLearn() {
     }
   };
 
-  const handleQuizComplete = (correct: number) => {
+  const handleQuizComplete = async (correct: number) => {
     setCompleted(true);
     setCorrectAnswers(correct);
+
+    try {
+      if (!user?.id || !course?.id) return;
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        ...(orgId ? { "x-org-id": orgId } : {}),
+      };
+
+      const res = await fetch(`${BACKEND_URL}/learn/complete-course`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          user_id: user.id,
+          course_id: course.id,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to mark course complete");
+
+      console.log("✅ Course marked as complete");
+    } catch (err) {
+      console.error("❌ Error completing course:", err);
+    }
   };
 
   const handleRestart = () => {

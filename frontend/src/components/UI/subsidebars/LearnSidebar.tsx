@@ -11,7 +11,7 @@ const LearnSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) 
       </h2>
       <div className="flex flex-col gap-2 text-gray-700">
         <button 
-
+          onClick={() => setMainPage("mycourses")}          
           className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
           <FiBook /> My Courses
         </button>
@@ -59,6 +59,11 @@ const LearnSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) 
         onClick={() => setMainPage("learn")}
         className="mt-2 text-blue-600 hover:underline text-sm">
         Add a Course
+      </button>
+      <button 
+        onClick={() => setMainPage("assigncourse")}
+        className="mt-2 text-blue-600 hover:underline text-sm">
+        Assign a Course
       </button>
     </>
   );

@@ -29,6 +29,8 @@ import Skill from "../components/LMS/CourseBuilder/Skill";
 import DocumentManager from "../components/Documents/DocumentManager";
 import CourseDetails from "../components/LMS/CourseBuilder/CourseDetails";
 import CourseLearn from "../components/LMS/Quiz/CourseLearn";
+import AssignCourse from "../components/LMS/AssignCourse";
+import MyCourses from "../components/LMS/CourseBuilder/MyCourses";
 
 export const PageRegistry: Record<
   string,
@@ -63,4 +65,6 @@ export const PageRegistry: Record<
   documentmanager : DocumentManager,
   coursedetails : CourseDetails,
   courselearn : CourseLearn,
+  assigncourse : AssignCourse,
+  mycourses : MyCourses,
 };

@@ -5,6 +5,8 @@ from models.learn.assigned_courses import AssignedCourse, AssignmentStatus
 from schemas.learn.assigned_courses import AssignedCourseCreate
 from uuid import uuid4
 from datetime import datetime
+from sqlalchemy.orm import joinedload
+import json
 
 
 def assign_course(db: Session, payload: AssignedCourseCreate) -> AssignedCourse:
@@ -15,10 +17,10 @@ def assign_course(db: Session, payload: AssignedCourseCreate) -> AssignedCourse:
         return existing
 
     assignment = AssignedCourse(
-        id=str(uuid4()),
         user_id=payload.user_id,
         course_id=payload.course_id,
         assigned_by=payload.assigned_by,
+        due_date=payload.due_date,
         status=AssignmentStatus.assigned,
     )
     db.add(assignment)
@@ -42,4 +44,20 @@ def complete_course(db: Session, user_id: str, course_id: str) -> AssignedCourse
 
 
 def get_user_assignments(db: Session, user_id: str) -> list[AssignedCourse]:
-    return db.query(AssignedCourse).filter_by(user_id=user_id).all()
+    assignments = (
+        db.query(AssignedCourse)
+        .join(AssignedCourse.course)  # ⬅ INNER JOIN
+        .filter(AssignedCourse.user_id == user_id)
+        .options(joinedload(AssignedCourse.course))  # ⬅ eager load to avoid N+1
+        .all()
+    )
+
+    for assignment in assignments:
+        course = assignment.course  # ⬅ updated
+        if isinstance(course.slides, str):
+            try:
+                course.slides = json.loads(course.slides)
+            except json.JSONDecodeError:
+                course.slides = []
+
+    return assignments

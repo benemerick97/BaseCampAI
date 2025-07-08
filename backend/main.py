@@ -17,6 +17,7 @@ from routes.work.custom_field_values import router as custom_field_values_router
 from routes.work.assets import router as asset_router
 from routes.document import router as document_router
 from routes.learn.course import router as course_router
+from routes.learn.assigned_courses import router as assigned_courses_router
 
 
 
@@ -59,6 +60,7 @@ app.include_router(custom_field_values_router)
 app.include_router(asset_router)
 app.include_router(document_router)
 app.include_router(course_router)
+app.include_router(assigned_courses_router)
 
 @app.get("/")
 async def root():

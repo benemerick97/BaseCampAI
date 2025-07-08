@@ -8,7 +8,7 @@ from schemas.learn.assigned_courses import (
     AssignedCourseComplete,
     AssignedCourseOut,
 )
-from CRUD import assigned_course as crud
+from CRUD.learn import assigned_courses as crud
 from databases.database import get_db
 
 router = APIRouter(prefix="/learn", tags=["Course Assignments"])

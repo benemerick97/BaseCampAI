@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
+from schemas.learn.course import CourseOut
 
 
 class AssignmentStatus(str, Enum):
@@ -13,9 +15,10 @@ class AssignmentStatus(str, Enum):
 
 
 class AssignedCourseBase(BaseModel):
-    user_id: str
-    course_id: str
-    assigned_by: Optional[str] = None
+    user_id: int
+    course_id: UUID
+    assigned_by: Optional[int] = None
+    due_date: Optional[datetime] = None
 
 
 class AssignedCourseCreate(AssignedCourseBase):
@@ -23,15 +26,16 @@ class AssignedCourseCreate(AssignedCourseBase):
 
 
 class AssignedCourseComplete(BaseModel):
-    user_id: str
-    course_id: str
+    user_id: int
+    course_id: UUID
 
 
 class AssignedCourseOut(AssignedCourseBase):
-    id: str
+    id: int
     status: AssignmentStatus
     assigned_at: datetime
     completed_at: Optional[datetime] = None
+    course: CourseOut
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -10,3 +10,5 @@ from .work.asset import Asset
 from .agent_document import AgentDocument
 from .work.custom_field import CustomField
 from .work.custom_field_value import CustomFieldValue
+from .learn.assigned_courses import AssignedCourse
+from .learn.course import Course

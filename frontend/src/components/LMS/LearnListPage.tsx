@@ -112,6 +112,7 @@ export default function LearnListPage<T>({
                   className="border-t hover:bg-gray-50 cursor-pointer relative"
                   onClick={() => onSelect(item.id as string | number)}
                 >
+                  {/* ⬇️ This now correctly injects <td> elements */}
                   {renderRow(item, dropdownOpen, setDropdownOpen, (_item) => {})}
                 </tr>
               ))}
