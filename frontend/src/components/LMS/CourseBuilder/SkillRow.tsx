@@ -1,24 +1,33 @@
+// frontend/src/components/LMS/SkillBuilder/SkillRow.tsx
+
 import React, { useState, useEffect } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { createPortal } from "react-dom";
 
 interface Skill {
-  id: number;
+  id: string;
   name: string;
-  category?: string;
   description?: string;
-  created_date: string;
-  organisation_id: number;
+  org_id: number;
+  evidence_required: boolean;
+  created_at: string;
 }
 
 interface SkillRowProps {
   skill: Skill;
   onClick: () => void;
   onEdit: (item: Skill) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
+  setMainPage: (page: string) => void;
 }
 
-const SkillRow: React.FC<SkillRowProps> = ({ skill, onClick, onEdit, onDelete }) => {
+const SkillRow: React.FC<SkillRowProps> = ({
+  skill,
+  onClick,
+  onEdit,
+  onDelete,
+  //setMainPage,
+}) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
 
@@ -60,7 +69,7 @@ const SkillRow: React.FC<SkillRowProps> = ({ skill, onClick, onEdit, onDelete })
             setDropdownOpen(false);
             onEdit(skill);
           }}
-          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
         >
           Edit
         </button>
@@ -81,24 +90,21 @@ const SkillRow: React.FC<SkillRowProps> = ({ skill, onClick, onEdit, onDelete })
   return (
     <>
       <td
-        className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900 cursor-pointer hover:bg-gray-50"
         onClick={onClick}
+        className="px-4 py-3 border-r border-gray-100 font-semibold text-gray-900 cursor-pointer"
       >
         {skill.name}
       </td>
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
-        {skill.category || "—"}
-      </td>
-      <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
         {skill.description || "—"}
       </td>
-      <td className="px-4 py-3 border-r border-gray-100 text-gray-600">
-        {new Date(skill.created_date).toLocaleDateString()}
+      <td className="px-4 py-3 border-r border-gray-100 text-center text-gray-700">
+        {skill.evidence_required ? "Yes" : "No"}
       </td>
-      <td
-        className="px-4 py-3 border-r border-gray-100 text-right relative"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+        {new Date(skill.created_at).toLocaleDateString()}
+      </td>
+      <td className="px-4 py-3 border-r border-gray-100 text-right relative">
         <button onClick={handleDropdownToggle} className="p-1 hover:bg-gray-100 rounded">
           <FiMoreHorizontal size={18} className="text-gray-600 hover:text-gray-800" />
         </button>

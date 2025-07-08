@@ -24,6 +24,7 @@ interface CourseRowProps {
   hideAdminActions?: boolean;
   showStatus?: string;
   assignedAt?: string;
+  completedAt?: string;
   dueDate?: string;
 }
 
@@ -37,6 +38,7 @@ const CourseRow: React.FC<CourseRowProps> = ({
   showStatus,
   assignedAt,
   dueDate,
+  completedAt,
 }) => {
   const { setSelectedEntity } = useSelectedEntity();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -132,12 +134,34 @@ const CourseRow: React.FC<CourseRowProps> = ({
       <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
         {course.description || "—"}
       </td>
-      <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
-        {assignedAt ? new Date(assignedAt).toLocaleDateString() : "—"}
-      </td>
-      <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
-        {dueDate ? new Date(dueDate).toLocaleDateString() : "—"}
-      </td>
+
+      {/* Extra columns for admin view */}
+      {!hideAdminActions && (
+        <>
+          <td className="px-4 py-3 border-r border-gray-100 text-gray-700 text-center">
+            {course.slides?.length ?? 0}
+          </td>
+          <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+            {new Date(course.created_at).toLocaleDateString()}
+          </td>
+        </>
+      )}
+
+      {/* User course assignment fields */}
+      {hideAdminActions && (
+        <>
+          <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+            {assignedAt ? new Date(assignedAt).toLocaleDateString() : "—"}
+          </td>
+          <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+            {dueDate ? new Date(dueDate).toLocaleDateString() : "—"}
+          </td>
+          <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+            {completedAt ? new Date(completedAt).toLocaleDateString() : "—"}
+          </td>
+        </>
+      )}
+
       {showStatus !== undefined && (
         <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
           <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-gray-100">
@@ -145,6 +169,7 @@ const CourseRow: React.FC<CourseRowProps> = ({
           </span>
         </td>
       )}
+
       <td className="px-4 py-3 border-r border-gray-100 text-right relative">
         {hideAdminActions ? (
           showStatus === "assigned" ? (

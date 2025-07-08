@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 

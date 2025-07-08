@@ -18,6 +18,7 @@ export interface LearnListPageProps<T> {
   showSearchBar?: boolean;
   onSearch?: (term: string) => void;
   onAddClick?: () => void;
+  headerContent?: React.ReactNode; // ✅ NEW
 }
 
 export default function LearnListPage<T>({
@@ -32,6 +33,7 @@ export default function LearnListPage<T>({
   showSearchBar = true,
   onSearch,
   onAddClick,
+  headerContent,
 }: LearnListPageProps<T>) {
   const [dropdownOpen, setDropdownOpen] = useState<string | number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,7 +68,10 @@ export default function LearnListPage<T>({
         </div>
       </div>
 
-      {/* Search + Filter */}
+      {/* Optional Header Content (e.g. filters, search) */}
+      {headerContent && <div className="mb-4">{headerContent}</div>}
+
+      {/* Search bar (fallback if not using headerContent) */}
       {showSearchBar && (
         <div className="mb-4 flex items-center gap-2">
           <input
@@ -112,7 +117,6 @@ export default function LearnListPage<T>({
                   className="border-t hover:bg-gray-50 cursor-pointer relative"
                   onClick={() => onSelect(item.id as string | number)}
                 >
-                  {/* ⬇️ This now correctly injects <td> elements */}
                   {renderRow(item, dropdownOpen, setDropdownOpen, (_item) => {})}
                 </tr>
               ))}

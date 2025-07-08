@@ -1,3 +1,5 @@
+#backend/CRUD/learn/course.py
+
 from sqlalchemy.orm import Session
 from models.learn.course import Course
 from schemas.learn.course import CourseCreate, CourseUpdate 

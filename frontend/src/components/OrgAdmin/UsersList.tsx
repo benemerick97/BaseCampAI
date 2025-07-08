@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { FiPlus, FiUserX } from "react-icons/fi";
-import { useAuth } from "../contexts/AuthContext";
-import Modal from "./UI/Modal";
-import UserInviteForm from "../components/UserInviteForm";
+import { useAuth } from "../../contexts/AuthContext";
+import Modal from "../UI/Modal";
+import UserInviteForm from "./UserInviteForm";
 
 //interface UsersListProps {
 //  onNavClick: (page: string) => void;

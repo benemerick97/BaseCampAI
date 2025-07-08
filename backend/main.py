@@ -18,6 +18,8 @@ from routes.work.assets import router as asset_router
 from routes.document import router as document_router
 from routes.learn.course import router as course_router
 from routes.learn.assigned_courses import router as assigned_courses_router
+from routes.learn.skill import router as skills_router
+from routes.learn.assigned_skills import router as assigned_skills_router
 
 
 
@@ -61,6 +63,8 @@ app.include_router(asset_router)
 app.include_router(document_router)
 app.include_router(course_router)
 app.include_router(assigned_courses_router)
+app.include_router(skills_router)
+app.include_router(assigned_skills_router)
 
 @app.get("/")
 async def root():

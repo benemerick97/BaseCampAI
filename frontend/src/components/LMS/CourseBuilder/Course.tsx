@@ -97,7 +97,8 @@ export default function Course({ setMainPage }: CourseProps) {
       onClick={() => handleSelect(course.id)}
       onEdit={() => handleEditClick(course)}
       onDelete={handleDelete}
-      setMainPage={setMainPage} // ✅ Add this line
+      setMainPage={setMainPage}
+      hideAdminActions={false}
     />
   );
 

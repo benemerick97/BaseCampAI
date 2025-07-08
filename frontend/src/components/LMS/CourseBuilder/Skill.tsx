@@ -1,20 +1,22 @@
+// frontend/src/components/LMS/SkillBuilder/Skill.tsx
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
 import SkillRow from "./SkillRow";
-import LearnModal from "../LearnModal";
+import SkillCreate from "../SkillCreate";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 interface Skill {
-  id: number;
+  id: string;
   name: string;
-  category?: string;
   description?: string;
-  created_date: string;
-  organisation_id: number;
+  evidence_required: boolean;
+  org_id: number;
+  created_at: string;
 }
 
 interface SkillProps {
@@ -27,64 +29,52 @@ export default function Skill({ setMainPage }: SkillProps) {
 
   const [skills, setSkills] = useState<Skill[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [editSkill, setEditSkill] = useState<Skill | null>(null);
 
   const fetchSkills = async () => {
+    const orgId = user?.organisation?.id;
+    if (!orgId) return;
+
     try {
-      const response = await axios.get(`${BACKEND_URL}/skills/`, {
-        params: { organisation_id: user?.organisation?.id },
+      const res = await axios.get(`${BACKEND_URL}/skills`, {
+        params: { org_id: orgId },
       });
-      setSkills(response.data);
-    } catch (error) {
-      console.error("Error fetching skills:", error);
+      setSkills(res.data);
+    } catch (err) {
+      console.error("Failed to fetch skills:", err);
     }
   };
 
   useEffect(() => {
-    fetchSkills();
-  }, []);
-
-  const handleAddOrEditSkill = async (form: any) => {
-    const payload = {
-      name: form.name,
-      category: form.category,
-      description: form.description,
-      organisation_id: user?.organisation?.id,
-    };
-
-    if (form.id) {
-      await axios.put(`${BACKEND_URL}/skills/${form.id}`, payload);
-    } else {
-      await axios.post(`${BACKEND_URL}/skills/`, payload);
-    }
-
-    setShowModal(false);
-    setFormData({});
-    fetchSkills();
-  };
-
-  const handleDelete = async (id: string | number) => {
-    const confirmed = confirm("Delete this skill?");
-    if (confirmed) {
-      await axios.delete(`${BACKEND_URL}/skills/${id}`, {
-        params: { organisation_id: user?.organisation?.id },
-      });
+    if (user?.organisation?.id) {
       fetchSkills();
     }
+  }, [user]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this skill?")) return;
+    try {
+      await axios.delete(`${BACKEND_URL}/skills/${id}`, {
+        headers: { "x-org-id": user?.organisation?.id },
+      });
+      fetchSkills();
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
   };
 
-  const handleSelect = (id: string | number)=> {
+  const handleSelect = (id: string | number) => {
     setSelectedEntity({ type: "skill", id });
     setMainPage("skilldetails");
   };
 
   const handleAddClick = () => {
-    setFormData({});
+    setEditSkill(null);
     setShowModal(true);
   };
 
   const handleEditClick = (skill: Skill) => {
-    setFormData(skill);
+    setEditSkill(skill);
     setShowModal(true);
   };
 
@@ -97,11 +87,11 @@ export default function Skill({ setMainPage }: SkillProps) {
     <SkillRow
       skill={skill}
       onClick={() => handleSelect(skill.id)}
-      onEdit={handleEditClick}
+      onEdit={() => handleEditClick(skill)}
       onDelete={handleDelete}
+      setMainPage={setMainPage}
     />
   );
-  
 
   return (
     <>
@@ -112,27 +102,20 @@ export default function Skill({ setMainPage }: SkillProps) {
         onFetch={fetchSkills}
         onSelect={handleSelect}
         renderRow={renderRow}
-        columns={["Name", "Category", "Description", "Created", "Actions"]}
+        columns={["Title", "Description", "Evidence Required", "Created", "Actions"]}
         addButtonLabel="Add"
         showSearchBar={true}
         onAddClick={handleAddClick}
       />
 
-      <LearnModal
-        title="Skill"
+      <SkillCreate
         visible={showModal}
         onClose={() => {
-          setFormData({});
           setShowModal(false);
+          setEditSkill(null);
         }}
-        onSubmit={handleAddOrEditSkill}
-        formData={formData}
-        setFormData={setFormData}
-        fields={[
-          { label: "Name", key: "name" },
-          { label: "Category", key: "category" },
-          { label: "Description", key: "description" },
-        ]}
+        onCreated={fetchSkills}
+        existingSkill={editSkill ?? undefined}
       />
     </>
   );

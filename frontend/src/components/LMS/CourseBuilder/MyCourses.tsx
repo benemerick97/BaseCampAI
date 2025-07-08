@@ -39,6 +39,9 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
   const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
   const [assignments, setAssignments] = useState<AssignedCourse[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"assigned" | "completed" | "all">("assigned");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showExtraFilters, setShowExtraFilters] = useState(false);
 
   const fetchAssignments = async () => {
     if (!user?.id) return;
@@ -87,20 +90,81 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
         showStatus={assignment.status}
         assignedAt={assignment.assigned_at}
         dueDate={assignment.due_date}
+        completedAt={assignment.completed_at} 
       />
     );
   };
+
+  const filteredAssignments = assignments.filter((a) => {
+    const matchesStatus = statusFilter === "all" || a.status === statusFilter;
+    const matchesSearch =
+      !searchTerm ||
+      a.course?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.course?.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const headerContent = (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="text"
+          placeholder="Search your courses"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border px-3 py-2 rounded text-sm w-full sm:w-auto flex-grow sm:flex-none"
+        />
+
+        {/* Group +Add Filter and Status buttons side-by-side */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setShowExtraFilters((prev) => !prev)}
+            className="text-sm text-blue-600 font-medium hover:underline border px-3 py-1.5 rounded"
+          >
+            + Add filter
+          </button>
+
+          {/* ✅ Status Filter Buttons beside Add Filter */}
+          {["assigned", "completed", "all"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status as "assigned" | "completed" | "all")}
+              className={`px-3 py-1.5 rounded text-sm font-medium border ${
+                statusFilter === status
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {showExtraFilters && (
+        <div className="bg-gray-50 border border-gray-200 p-3 rounded text-sm text-gray-600">
+          <p className="mb-1 font-medium">Additional filters coming soon!</p>
+          <ul className="list-disc pl-5 text-xs text-gray-500">
+            <li>Date ranges</li>
+            <li>Status toggles</li>
+            <li>Course tags</li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <LearnListPage<AssignedCourse>
       title="My Courses"
       entityType="assignment"
-      items={assignments}
+      items={filteredAssignments}
       onFetch={fetchAssignments}
       onSelect={() => {}}
       renderRow={renderRow}
-      columns={["Title", "Description", "Assigned", "Due", "Status", "Actions"]}
-      showSearchBar={true}
+      columns={["Title", "Description", "Assigned", "Due", "Completed", "Status", "Actions"]}
+      showSearchBar={false} // handled via headerContent
+      headerContent={headerContent}
     />
   );
 }

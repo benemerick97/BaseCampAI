@@ -42,3 +42,5 @@ def get_assigned_courses(user_id: str = Query(...), db: Session = Depends(get_db
         return crud.get_user_assignments(db, user_id=user_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
