@@ -20,6 +20,10 @@ from routes.learn.course import router as course_router
 from routes.learn.assigned_courses import router as assigned_courses_router
 from routes.learn.skill import router as skills_router
 from routes.learn.assigned_skills import router as assigned_skills_router
+from routes.organisation import router as organisation_router
+from routes.learn.assigned_module import router as assigned_module_router
+from routes.learn.assigned_module_progress import router as assigned_module_progress_router
+from routes.learn.module import router as module_router
 
 
 
@@ -65,6 +69,10 @@ app.include_router(course_router)
 app.include_router(assigned_courses_router)
 app.include_router(skills_router)
 app.include_router(assigned_skills_router)
+app.include_router(organisation_router)
+app.include_router(module_router)
+app.include_router(assigned_module_progress_router)
+app.include_router(assigned_module_router)
 
 @app.get("/")
 async def root():

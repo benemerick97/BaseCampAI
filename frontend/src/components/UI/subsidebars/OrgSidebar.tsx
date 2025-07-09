@@ -17,7 +17,7 @@ const OrgSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) =>
           <FiUsers /> Users
         </button>
         <button
-          onClick={() => setMainPage("settings")}
+          onClick={() => setMainPage("orgdetails")}
           className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded"
         >
           <FiSettings /> Settings

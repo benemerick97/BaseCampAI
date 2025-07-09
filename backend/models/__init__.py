@@ -12,3 +12,10 @@ from .work.custom_field import CustomField
 from .work.custom_field_value import CustomFieldValue
 from .learn.assigned_courses import AssignedCourse
 from .learn.course import Course
+from .learn.skill import Skill
+from .organisation import Organisation
+from models.learn.module import Module
+from models.learn.module_course import ModuleCourse
+from models.learn.module_skill import ModuleSkill
+from models.learn.assigned_module import AssignedModule
+from models.learn.assigned_module_progress import AssignedModuleProgress

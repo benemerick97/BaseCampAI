@@ -33,3 +33,5 @@ class AssignedCourse(Base):
     user = relationship("User", foreign_keys=[user_id])
     assigner = relationship("User", foreign_keys=[assigned_by])
     course = relationship("Course", foreign_keys=[course_id])
+
+    

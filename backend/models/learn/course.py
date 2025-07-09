@@ -24,3 +24,6 @@ class Course(Base):
 
     organisation = relationship("Organisation", back_populates="courses")
     document = relationship("DocumentObject")
+    
+    module_links = relationship("ModuleCourse", back_populates="course", cascade="all, delete-orphan")
+

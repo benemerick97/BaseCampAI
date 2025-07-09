@@ -14,3 +14,7 @@ class OrganisationOut(BaseModel):
 class CreateOrgRequest(BaseModel):
     name: str
     short_name: str
+
+class UpdateOrgRequest(BaseModel):
+    name: str
+    short_name: str

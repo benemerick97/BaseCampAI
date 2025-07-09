@@ -97,3 +97,20 @@ def delete_user(
 
     db.delete(user)
     db.commit()
+
+@router.get("/users/{user_id}", response_model=UserOut)
+def get_user_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Ensure the user belongs to the same org
+    if user.organisation_id != current_user.organisation_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    return user

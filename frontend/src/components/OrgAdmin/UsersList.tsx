@@ -5,10 +5,7 @@ import { FiPlus, FiUserX } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal";
 import UserInviteForm from "./UserInviteForm";
-
-//interface UsersListProps {
-//  onNavClick: (page: string) => void;
-//}
+import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
 
 interface User {
   id: number;
@@ -20,10 +17,9 @@ interface User {
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
-// const UsersList = ({ onNavClick }: UsersListProps) => {
-
-const UsersList = () => {
+const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => {
   const { user, token } = useAuth();
+  const { setSelectedEntity } = useSelectedEntity();
   const orgId = user?.organisation?.id?.toString();
 
   const [users, setUsers] = useState<User[]>([]);
@@ -91,27 +87,8 @@ const UsersList = () => {
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
-        <div className="flex items-end gap-2">
-          <h3 className="text-2xl font-semibold leading-tight">Users</h3>
-          <span className="text-sm text-gray-600">
-            ({filteredUsers.length} total)
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
-          >
-            <FiPlus size={16} />
-            Invite User
-          </button>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="mb-4 flex items-center gap-2">
+      {/* Search + Invite Row */}
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
         <input
           type="text"
           placeholder="Search by name or email"
@@ -119,6 +96,13 @@ const UsersList = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <button
+          onClick={() => setShowInviteModal(true)}
+          className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
+        >
+          <FiPlus size={16} />
+          Invite User
+        </button>
       </div>
 
       {/* Table or Empty State */}
@@ -141,30 +125,45 @@ const UsersList = () => {
               </tr>
             </thead>
             <tbody>
-            {filteredUsers.map((userItem) => (
-                <tr key={userItem.id} className="border-t hover:bg-gray-50">
-                <td className="px-4 py-3 border-r border-gray-100 font-medium text-gray-900">
+              {filteredUsers.map((userItem) => (
+                <tr
+                  key={userItem.id}
+                  className="border-t hover:bg-blue-50 cursor-pointer"
+                    onClick={() => {
+                      setSelectedEntity({
+                        type: "user",
+                        id: userItem.id.toString(),
+                        data: userItem,
+                      });
+                      setMainPage("userdetails"); 
+                    }}
+
+                >
+                  <td className="px-4 py-3 border-r border-gray-100 font-medium text-gray-900">
                     {(userItem.first_name ?? "") + " " + (userItem.last_name ?? "")}
-                </td>
-                <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
                     {userItem.email}
-                </td>
-                <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
                     {userItem.role}
-                </td>
-                <td className="px-4 py-3 text-right">
+                  </td>
+                  <td className="px-4 py-3 text-right">
                     {userItem.role !== "super_admin" && (
-                    <button
-                        onClick={() => handleDelete(userItem.id)}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(userItem.id);
+                        }}
                         className="ml-auto bg-red-600 text-white px-3 py-1.5 rounded text-xs hover:bg-red-700 flex items-center gap-1 justify-end"
-                    >
+                      >
                         <FiUserX size={14} />
                         Remove
-                    </button>
+                      </button>
                     )}
-                </td>
+                  </td>
                 </tr>
-            ))}
+              ))}
             </tbody>
           </table>
         </div>

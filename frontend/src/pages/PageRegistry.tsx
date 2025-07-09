@@ -24,7 +24,7 @@ import UsersList from "../components/OrgAdmin/UsersList";
 import ControlPanel from "../components/AdminControls/ControlPanel";
 import WorkflowBuilder from "../components/Work/WorkflowBuilder/WorkflowBuilder"
 import Course from "../components/LMS/CourseBuilder/Course";
-import Module from "../components/LMS/CourseBuilder/Module";
+import Module from "../components/LMS/Module/Module";
 import Skill from "../components/LMS/CourseBuilder/Skill";
 import DocumentManager from "../components/Documents/DocumentManager";
 import CourseDetails from "../components/LMS/CourseBuilder/CourseDetails";
@@ -36,6 +36,9 @@ import SkillCreate from "../components/LMS/SkillCreate";
 import AssignSkill from "../components/LMS/AssignSkill";
 import SkillEvidenceUpload from "../components/LMS/SkillEvidenceUpload";
 import SkillDetails from "../components/LMS/CourseBuilder/SkillDetails";
+import OrgDetails from "../components/OrgAdmin/OrgDetails";
+import UserDetails from "../components/OrgAdmin/UserDetails";
+
 
 
 export const PageRegistry: Record<
@@ -78,5 +81,7 @@ export const PageRegistry: Record<
   skillcreate : SkillCreate,
   skillevidence : SkillEvidenceUpload,
   skilldetails : SkillDetails,
+  orgdetails : OrgDetails,
+  userdetails : UserDetails,
 
 };
