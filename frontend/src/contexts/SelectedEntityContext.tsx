@@ -14,6 +14,7 @@ type EntityType =
   | "user"
   | "assignedSkill"
   | "assignedCourse"
+  | "assignedModule"
   ; 
 
 interface SelectedEntity {

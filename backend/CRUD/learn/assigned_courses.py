@@ -1,11 +1,10 @@
 # backend/CRUD/learn/assigned_courses.py
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from models.learn.assigned_courses import AssignedCourse, AssignmentStatus
 from schemas.learn.assigned_courses import AssignedCourseCreate
 from uuid import uuid4
 from datetime import datetime
-from sqlalchemy.orm import joinedload
 import json
 
 
@@ -40,20 +39,24 @@ def complete_course(db: Session, user_id: str, course_id: str) -> AssignedCourse
     assignment.completed_at = datetime.utcnow()
     db.commit()
     db.refresh(assignment)
+
+    # ✅ Check for module completion if this course is part of one
+    check_and_complete_modules(db, user_id=user_id, item_id=course_id, is_course=True)
+
     return assignment
 
 
 def get_user_assignments(db: Session, user_id: str) -> list[AssignedCourse]:
     assignments = (
         db.query(AssignedCourse)
-        .join(AssignedCourse.course)  # ⬅ INNER JOIN
+        .join(AssignedCourse.course)
         .filter(AssignedCourse.user_id == user_id)
-        .options(joinedload(AssignedCourse.course))  # ⬅ eager load to avoid N+1
+        .options(joinedload(AssignedCourse.course))
         .all()
     )
 
     for assignment in assignments:
-        course = assignment.course  # ⬅ updated
+        course = assignment.course
         if isinstance(course.slides, str):
             try:
                 course.slides = json.loads(course.slides)
@@ -61,3 +64,54 @@ def get_user_assignments(db: Session, user_id: str) -> list[AssignedCourse]:
                 course.slides = []
 
     return assignments
+
+
+# 🔁 Helper function to check and complete any related modules
+def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_course: bool):
+    from models.learn.assigned_module import AssignedModule
+    from models.learn.module_course import ModuleCourse
+    from models.learn.module_skill import ModuleSkill
+    from models.learn.assigned_courses import AssignedCourse
+    from models.learn.assigned_skill import AssignedSkill
+
+    module_ids = (
+        db.query(ModuleCourse.module_id)
+        .filter(ModuleCourse.course_id == item_id)
+        .all() if is_course else
+        db.query(ModuleSkill.module_id)
+        .filter(ModuleSkill.skill_id == item_id)
+        .all()
+    )
+    module_ids = [m[0] for m in module_ids]
+
+    for module_id in module_ids:
+        assigned_module = (
+            db.query(AssignedModule)
+            .filter_by(user_id=user_id, module_id=module_id, status="assigned")
+            .first()
+        )
+        if not assigned_module:
+            continue
+
+        # Check if all module courses are completed
+        all_courses = db.query(ModuleCourse).filter_by(module_id=module_id).all()
+        all_course_ids = [c.course_id for c in all_courses]
+        completed_courses = db.query(AssignedCourse).filter(
+            AssignedCourse.user_id == user_id,
+            AssignedCourse.course_id.in_(all_course_ids),
+            AssignedCourse.status == "completed"
+        ).count()
+
+        # Check if all module skills are completed
+        all_skills = db.query(ModuleSkill).filter_by(module_id=module_id).all()
+        all_skill_ids = [s.skill_id for s in all_skills]
+        completed_skills = db.query(AssignedSkill).filter(
+            AssignedSkill.user_id == user_id,
+            AssignedSkill.skill_id.in_(all_skill_ids),
+            AssignedSkill.status == "completed"
+        ).count()
+
+        if completed_courses == len(all_course_ids) and completed_skills == len(all_skill_ids):
+            assigned_module.status = "completed"
+            assigned_module.completed_at = datetime.utcnow()
+            db.commit()

@@ -22,7 +22,7 @@ const LearnSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) 
           <LuBrain /> My Skills
         </button>
         <button 
- 
+          onClick={() => setMainPage("mymodules")}
           className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
           <FiLayers /> My Modules
         </button>                               
@@ -69,7 +69,12 @@ const LearnSidebar = ({ setMainPage }: { setMainPage: (page: string) => void }) 
         onClick={() => setMainPage("assignskill")}
         className="mt-2 text-blue-600 hover:underline text-sm">
         Assign a Skill
-      </button>      
+      </button>
+      <button 
+        onClick={() => setMainPage("assignmodule")}
+        className="mt-2 text-blue-600 hover:underline text-sm">
+        Assign a Module
+      </button>              
     </>
   );
 };

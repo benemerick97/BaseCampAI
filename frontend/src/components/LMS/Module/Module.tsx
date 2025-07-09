@@ -126,7 +126,7 @@ export default function Module({ setMainPage }: ModuleProps) {
       onClick={() => handleSelect(module.id)}
       onEdit={() => handleEditClick(module)}
       onDelete={handleDelete}
-      setMainPage={setMainPage}
+      //setMainPage={setMainPage}
     />
   );
 

@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import Optional
 from datetime import datetime
 from enum import Enum
+from .module import ModuleOut
 
 class ModuleStatus(str, Enum):
     assigned = "assigned"
@@ -20,6 +21,7 @@ class AssignedModuleOut(AssignedModuleBase):
     assigned_at: datetime
     completed_at: Optional[datetime] = None
     status: ModuleStatus
+    module: Optional[ModuleOut]
 
     class Config:
         from_attributes = True

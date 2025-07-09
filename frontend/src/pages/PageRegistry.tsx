@@ -38,6 +38,10 @@ import SkillEvidenceUpload from "../components/LMS/SkillEvidenceUpload";
 import SkillDetails from "../components/LMS/CourseBuilder/SkillDetails";
 import OrgDetails from "../components/OrgAdmin/OrgDetails";
 import UserDetails from "../components/OrgAdmin/UserDetails";
+import ModuleDetails from "../components/LMS/Module/ModuleDetails";
+import AssignModule from "../components/LMS/Module/AssignModule";
+import MyModules from "../components/LMS/Module/MyModules";
+import MyModuleDetails from "../components/LMS/Module/MyModuleDetails";
 
 
 
@@ -83,5 +87,9 @@ export const PageRegistry: Record<
   skilldetails : SkillDetails,
   orgdetails : OrgDetails,
   userdetails : UserDetails,
+  moduledetails : ModuleDetails,
+  assignmodule : AssignModule,
+  mymodules : MyModules,
+  mymoduledetails : MyModuleDetails,
 
 };

@@ -8,7 +8,7 @@ interface Module {
   id: string;
   name: string;
   description?: string;
-  org_id: string; // ✅ changed from number to string (UUID)
+  org_id: string;
   document_id?: string;
   created_at: string;
 }
@@ -18,7 +18,6 @@ interface ModuleRowProps {
   onClick: () => void;
   onEdit: (item: Module) => void;
   onDelete: (id: string) => void;
-  setMainPage: (page: string) => void;
 }
 
 const ModuleRow: React.FC<ModuleRowProps> = ({
@@ -26,7 +25,6 @@ const ModuleRow: React.FC<ModuleRowProps> = ({
   onClick,
   onEdit,
   onDelete,
-  // setMainPage,
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
