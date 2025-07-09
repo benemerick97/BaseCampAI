@@ -1,9 +1,8 @@
-# backend/routes/learn/assigned_module.py
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
+
 from databases.database import get_db
-import CRUD.learn.assigned_module as assign_crud
+import CRUD.learn.assigned_module as crud
 from schemas.learn.assigned_module import AssignedModuleCreate, AssignedModuleOut
 from models.learn.assigned_module import AssignedModule
 
@@ -12,29 +11,69 @@ router = APIRouter(prefix="/learn/assigned-modules", tags=["Assigned Modules"])
 
 @router.post("/", response_model=AssignedModuleOut)
 def assign_module(data: AssignedModuleCreate, db: Session = Depends(get_db)):
-    return assign_crud.assign_module(db, data)
+    try:
+        return crud.assign_module(db, data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/by-user/{user_id}", response_model=list[AssignedModuleOut])
 def get_user_modules(user_id: int, db: Session = Depends(get_db)):
-    return assign_crud.get_user_modules(db, user_id)
+    try:
+        return crud.get_user_modules(db, user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{assigned_module_id}/complete", response_model=AssignedModuleOut)
 def complete_module(assigned_module_id: int, db: Session = Depends(get_db)):
-    return assign_crud.complete_module(db, assigned_module_id)
+    try:
+        result = crud.complete_module(db, assigned_module_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Assigned module not found")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{assigned_module_id}", response_model=AssignedModuleOut)
 def get_assigned_module(assigned_module_id: int, db: Session = Depends(get_db)):
-    assignment = (
-        db.query(AssignedModule)
-        .options(joinedload(AssignedModule.module))  # ensure module is loaded
-        .filter(AssignedModule.id == assigned_module_id)
-        .first()
-    )
+    try:
+        assignment = (
+            db.query(AssignedModule)
+            .options(joinedload(AssignedModule.module))
+            .filter(AssignedModule.id == assigned_module_id)
+            .first()
+        )
 
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assigned module not found")
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assigned module not found")
 
-    return assignment
+        return assignment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/by-module/{module_id}")
+def get_assigned_users_by_module(module_id: str, db: Session = Depends(get_db)):
+    try:
+        records = crud.get_users_assigned_to_module(db, module_id)
+        return [
+            {
+                "id": a.id,
+                "user_id": u_id,
+                "module_id": a.module_id,
+                "assigned_at": a.assigned_at,
+                "completed_at": a.completed_at,
+                "status": a.status,
+                "user": {
+                    "id": u_id,
+                    "name": f"{first} {last}".strip(),
+                    "email": email,
+                },
+            }
+            for a, u_id, first, last, email in records
+        ]
+    except Exception as e:
+        print("🔥 ERROR in get_assigned_users_by_module:", e)
+        raise HTTPException(status_code=500, detail=str(e))

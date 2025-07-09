@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   FiMessageCircle,
-  FiUpload,
+  //FiUpload,
   FiDatabase,
   FiGrid,
   FiSidebar,
@@ -30,15 +30,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isAdmin, isSuperAdmin }) => {
     { key: "projects", icon: <FiFolder />, label: "Workspaces" },
     { key: "learn", icon: <FiBookOpen />, label: "Learn" },
     { key: "work", icon: <FiClipboard />, label: "Work" },
-    { key: "upload", icon: <FiUpload />, label: "Upload" },
-    { key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
+    //{ key: "upload", icon: <FiUpload />, label: "Upload" },
+    //{ key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
     { key: "documentmanager", icon: <FiDatabase />, label: "DocumentManager" },
-    { key: "organisation", icon: <FiUsers />, label: "Organisation" },
+    { key: "orgdetails", icon: <FiUsers />, label: "Organisation" },
     { key: "controlpanel", icon: <GrUserAdmin />, label: "Control Panel" },
   ];
 
   const visibleNavItems = navItems.filter((item) => {
-    if (item.key === "agents" && !isAdmin) return false;
+    if (["agents", "orgdetails"].includes(item.key) && !isAdmin) return false;
     if (item.key === "controlpanel" && !isSuperAdmin) return false;
     return true;
   });

@@ -1,5 +1,3 @@
-// frontend/src/components/LMS/Tabs/AssignedUsersTab.tsx
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../../../contexts/AuthContext";
@@ -9,7 +7,9 @@ const BACKEND_URL = import.meta.env.VITE_API_URL;
 interface AssignedUser {
   id: number;
   user_id: number;
-  skill_id: string;
+  skill_id?: string;
+  course_id?: string;
+  module_id?: string;
   assigned_by?: number;
   assigned_at: string;
   completed_at?: string;
@@ -28,7 +28,12 @@ interface AvailableUser {
   last_name?: string;
 }
 
-export default function AssignedUsersTab({ skillId }: { skillId: string }) {
+interface Props {
+  id: string;
+  type: "skill" | "course" | "module";
+}
+
+export default function AssignedUsersTab({ id, type }: Props) {
   const { user, token } = useAuth();
   const orgId = user?.organisation?.id?.toString();
 
@@ -49,58 +54,17 @@ export default function AssignedUsersTab({ skillId }: { skillId: string }) {
   const [filter, setFilter] = useState<"all" | "assigned" | "completed">("all");
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
+  const label = {
+    skill: "Skill",
+    course: "Course",
+    module: "Module",
+  }[type];
+
+  const fetchAssignments = async () => {
     if (!headers) return;
-
-    const fetchUsers = async () => {
-      try {
-        const assignedRes = await axios.get(
-          `${BACKEND_URL}/learn/assigned-skills/by-skill/${skillId}`,
-          { headers }
-        );
-        setAssignedUsers(assignedRes.data);
-
-        const allRes = await axios.get(`${BACKEND_URL}/users`, {
-          params: { org_id: orgId },
-          headers,
-        });
-        const all = allRes.data.users || allRes.data;
-
-        const unassigned = all.filter(
-          (u: AvailableUser) => !assignedRes.data.some((a: AssignedUser) => a.user?.id === u.id)
-        );
-
-        setAllUsers(unassigned);
-      } catch (err) {
-        console.error("Failed to fetch users:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, [orgId, skillId]);
-
-  const handleAssign = async () => {
-    if (!headers || !selectedUser?.id) return;
-
     try {
-      await axios.post(
-        `${BACKEND_URL}/learn/assign-skill`,
-        {
-          user_id: selectedUser.id,
-          skill_id: skillId,
-          assigned_by: user?.id,
-        },
-        { headers }
-      );
-
-      setMessage("✅ User assigned successfully.");
-      setSelectedUser(null);
-      setShowAssignModal(false);
-
       const assignedRes = await axios.get(
-        `${BACKEND_URL}/learn/assigned-skills/by-skill/${skillId}`,
+        `${BACKEND_URL}/learn/assigned-${type}s/by-${type}/${id}`,
         { headers }
       );
       setAssignedUsers(assignedRes.data);
@@ -110,14 +74,45 @@ export default function AssignedUsersTab({ skillId }: { skillId: string }) {
         headers,
       });
       const all = allRes.data.users || allRes.data;
+
       const unassigned = all.filter(
         (u: AvailableUser) =>
           !assignedRes.data.some((a: AssignedUser) => a.user?.id === u.id)
       );
+
       setAllUsers(unassigned);
     } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [orgId, id, type]);
+
+  const handleAssign = async () => {
+    if (!headers || !selectedUser?.id) return;
+
+    try {
+      await axios.post(
+        `${BACKEND_URL}/learn/assign-${type}`,
+        {
+          user_id: selectedUser.id,
+          [`${type}_id`]: id,
+          assigned_by: user?.id,
+        },
+        { headers }
+      );
+
+      setMessage(`✅ User assigned to ${label.toLowerCase()} successfully.`);
+      setSelectedUser(null);
+      setShowAssignModal(false);
+      await fetchAssignments();
+    } catch (err) {
       console.error("Failed to assign user:", err);
-      setMessage("❌ Failed to assign user.");
+      setMessage(`❌ Failed to assign user to ${label.toLowerCase()}.`);
     }
   };
 
@@ -199,7 +194,7 @@ export default function AssignedUsersTab({ skillId }: { skillId: string }) {
       {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Assign User to Skill</h2>
+            <h2 className="text-lg font-semibold mb-4">Assign User to {label}</h2>
 
             <label className="block mb-2 text-sm font-medium text-gray-700">
               Select user:

@@ -5,6 +5,7 @@ import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { FiBookOpen, FiUsers, FiEdit2 } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
+import AssignedUsersTab from "./Tabs/AssignedUsersTab";
 
 interface Course {
   id: string;
@@ -75,12 +76,12 @@ export default function CourseDetails({ setMainPage }: { setMainPage: (p: string
             </div>
           ),
         },
-        {
-          key: "students",
-          label: "Enrolled",
-          icon: <FiUsers />,
-          content: <p className="text-sm text-gray-600">No students enrolled yet.</p>,
-        },
+          {
+            key: "assigned",
+            label: "Assigned",
+            icon: <FiUsers />,
+            content: <AssignedUsersTab id={course.id} type="course" />,
+          },
         {
           key: "edit",
           label: "Edit",

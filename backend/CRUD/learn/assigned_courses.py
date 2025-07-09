@@ -6,6 +6,7 @@ from schemas.learn.assigned_courses import AssignedCourseCreate
 from uuid import uuid4
 from datetime import datetime
 import json
+from models.user import User
 
 
 def assign_course(db: Session, payload: AssignedCourseCreate) -> AssignedCourse:
@@ -115,3 +116,14 @@ def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_cours
             assigned_module.status = "completed"
             assigned_module.completed_at = datetime.utcnow()
             db.commit()
+
+
+def get_users_assigned_to_course(db: Session, course_id: str):
+    return (
+        db.query(AssignedCourse)
+        .filter(AssignedCourse.course_id == course_id)
+        .join(User, User.id == AssignedCourse.user_id)
+        .add_columns(User.id, User.first_name, User.last_name, User.email)
+        .all()
+    )
+

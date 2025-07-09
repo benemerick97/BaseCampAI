@@ -88,7 +88,7 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
       key: "assigned",
       label: "Assigned",
       icon: <FiUsers />,
-      content: <AssignedUsersTab skillId={skill.id} />,
+      content: <AssignedUsersTab id={skill.id} type="skill" />,
     },
     {
       key: "edit",

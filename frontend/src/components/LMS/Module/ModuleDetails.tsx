@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
-import { FiBookOpen, FiEdit2 } from "react-icons/fi";
+import { FiBookOpen, FiEdit2, FiUsers } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
+import AssignedUsersTab from "../CourseBuilder/Tabs/AssignedUsersTab";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
@@ -51,6 +52,12 @@ export default function ModuleDetails({ setMainPage }: ModuleDetailsProps) {
         </div>
       ),
     },
+          {
+            key: "assigned",
+            label: "Assigned",
+            icon: <FiUsers />,
+            content: <AssignedUsersTab id={module.id} type="module" />,
+          },    
     {
       key: "edit",
       label: "Edit",

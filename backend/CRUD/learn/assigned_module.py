@@ -9,6 +9,7 @@ from models.learn.module_skill import ModuleSkill
 from models.learn.assigned_courses import AssignedCourse
 from models.learn.assigned_skill import AssignedSkill
 from schemas.learn.assigned_module import AssignedModuleCreate
+from models.user import User
 
 
 def assign_module(db: Session, data: AssignedModuleCreate) -> AssignedModule:
@@ -125,3 +126,13 @@ def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_cours
             assigned_module.status = "completed"
             assigned_module.completed_at = datetime.utcnow()
             db.commit()
+
+
+def get_users_assigned_to_module(db: Session, module_id: str):
+    return (
+        db.query(AssignedModule)
+        .filter(AssignedModule.module_id == module_id)
+        .join(User, User.id == AssignedModule.user_id)
+        .add_columns(User.id, User.first_name, User.last_name, User.email)
+        .all()
+    )
