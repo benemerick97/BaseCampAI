@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { FiUser, FiBookOpen, FiClock } from "react-icons/fi";
-import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
 import { useAuth } from "../../contexts/AuthContext";
 import DetailsPage from "../Shared/DetailsPage";
 import axios from "axios";
@@ -18,20 +17,20 @@ interface User {
 }
 
 interface UserDetailsProps {
-  setMainPage: (page: string) => void;
+  id: string;
+  onBack: () => void;
 }
 
-export default function UserDetails({ setMainPage }: UserDetailsProps) {
-  const { selectedEntity, clearSelectedEntity } = useSelectedEntity();
+export default function UserDetails({ id, onBack }: UserDetailsProps) {
   const { token } = useAuth();
   const [userDetails, setUserDetails] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (!selectedEntity || selectedEntity.type !== "user" || !token) return;
+      if (!id || !token) return;
 
       try {
-        const res = await axios.get(`${BACKEND_URL}/users/${selectedEntity.id}`, {
+        const res = await axios.get(`${BACKEND_URL}/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -43,11 +42,7 @@ export default function UserDetails({ setMainPage }: UserDetailsProps) {
     };
 
     fetchUser();
-  }, [selectedEntity, token]);
-
-  if (!selectedEntity || selectedEntity.type !== "user") {
-    return <div className="p-6 text-gray-600">No user selected.</div>;
-  }
+  }, [id, token]);
 
   if (!userDetails) {
     return <div className="p-6 text-gray-600">Loading user details...</div>;
@@ -85,11 +80,8 @@ export default function UserDetails({ setMainPage }: UserDetailsProps) {
       title={`${userDetails.first_name ?? ""} ${userDetails.last_name ?? ""}`.trim() || userDetails.email}
       breadcrumbs={[
         {
-          label: "Users",
-          onClick: () => {
-            clearSelectedEntity();
-            setMainPage("users");
-          },
+          label: "Back",
+          onClick: onBack,
         },
         { label: userDetails.email },
       ]}

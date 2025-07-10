@@ -1,9 +1,15 @@
+from typing import List
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from databases.database import get_db
 import CRUD.learn.module as module_crud
 from schemas.learn.module import ModuleCreate, ModuleUpdate, ModuleOut
+from schemas.learn.skill import SkillOut
+from CRUD.learn.module import get_module_skills
+from schemas.learn.course import CourseOut
+from CRUD.learn.module import get_module_courses
 
 router = APIRouter(prefix="/learn/modules", tags=["Modules"])
 
@@ -56,3 +62,19 @@ def delete_module(
 ):
     module_crud.delete_module(db, module_id)
     return {"detail": "Module deleted"}
+
+
+@router.get("/{module_id}/skills", response_model=List[SkillOut])
+def list_module_skills(
+    module_id: UUID,
+    db: Session = Depends(get_db),
+):
+    return get_module_skills(db, module_id)
+
+
+@router.get("/{module_id}/courses", response_model=List[CourseOut])
+def list_module_courses(
+    module_id: UUID,
+    db: Session = Depends(get_db),
+):
+    return get_module_courses(db, module_id)

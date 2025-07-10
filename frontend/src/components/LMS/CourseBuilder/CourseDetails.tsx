@@ -1,11 +1,12 @@
 // frontend/src/components/LMS/CourseBuilder/CourseDetails.tsx
 
 import { useEffect, useState } from "react";
-import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { FiBookOpen, FiUsers, FiEdit2 } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
 import AssignedUsersTab from "./Tabs/AssignedUsersTab";
+import UserDetails from "../../OrgAdmin/UserDetails.tsx";
 
 interface Course {
   id: string;
@@ -17,19 +18,22 @@ interface Course {
   created_at: string;
 }
 
-export default function CourseDetails({ setMainPage }: { setMainPage: (p: string) => void }) {
-  const { selectedEntity, clearSelectedEntity, setSelectedEntity } = useSelectedEntity();
+interface CourseDetailsProps {
+  id: string;
+  onBack: () => void;
+}
+
+export default function CourseDetails({ id, onBack }: CourseDetailsProps) {
   useAuth();
+  const { selectedEntity } = useSelectedEntity();
   const [course, setCourse] = useState<Course | null>(null);
+  const [subPage, setSubPage] = useState<"details" | "coursedetails" | "skilldetails" | "userdetails">("details");
 
   useEffect(() => {
     const fetchCourse = async () => {
-      if (!selectedEntity || selectedEntity.type !== "course") return;
-
+      if (!id) return;
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/courses/${selectedEntity.id}`
-        );
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/${id}`);
         const data = await res.json();
         setCourse(data);
       } catch (err) {
@@ -38,20 +42,26 @@ export default function CourseDetails({ setMainPage }: { setMainPage: (p: string
     };
 
     fetchCourse();
-  }, [selectedEntity]);
+  }, [id]);
 
   if (!course) return <div className="p-6">Loading course details...</div>;
+
+  if (subPage === "userdetails") {
+    return (
+      <UserDetails
+        id={String(selectedEntity?.id ?? "")}
+        onBack={() => setSubPage("details")}
+      />
+    );
+  }
 
   return (
     <DetailsPage
       title={course.name}
       breadcrumbs={[
         {
-          label: "Courses",
-          onClick: () => {
-            clearSelectedEntity();
-            setMainPage("course");
-          },
+          label: "Back to Module",
+          onClick: onBack,
         },
         { label: course.name },
       ]}
@@ -67,8 +77,7 @@ export default function CourseDetails({ setMainPage }: { setMainPage: (p: string
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded"
                 onClick={() => {
-                  setSelectedEntity({ type: "course", id: course.id, data: course });
-                  setMainPage("courselearn");
+                  console.log("Start learning");
                 }}
               >
                 Start Learning
@@ -76,12 +85,12 @@ export default function CourseDetails({ setMainPage }: { setMainPage: (p: string
             </div>
           ),
         },
-          {
-            key: "assigned",
-            label: "Assigned",
-            icon: <FiUsers />,
-            content: <AssignedUsersTab id={course.id} type="course" />,
-          },
+        {
+          key: "assigned",
+          label: "Assigned",
+          icon: <FiUsers />,
+          content: <AssignedUsersTab id={course.id} type="course" setMainPage={setSubPage} />,
+        },
         {
           key: "edit",
           label: "Edit",

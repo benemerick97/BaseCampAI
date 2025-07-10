@@ -1,6 +1,9 @@
+// frontend/src/components/LMS/CourseBuilder/Tabs/AssignedUsersTab.tsx
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
@@ -31,10 +34,16 @@ interface AvailableUser {
 interface Props {
   id: string;
   type: "skill" | "course" | "module";
+  setMainPage?: React.Dispatch<
+    React.SetStateAction<
+      "details" | "coursedetails" | "skilldetails" | "userdetails"
+    >
+  >;
 }
 
-export default function AssignedUsersTab({ id, type }: Props) {
+export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   const { user, token } = useAuth();
+  const { setSelectedEntity } = useSelectedEntity();
   const orgId = user?.organisation?.id?.toString();
 
   const headers =
@@ -175,7 +184,16 @@ export default function AssignedUsersTab({ id, type }: Props) {
           </thead>
           <tbody>
             {filteredUsers.map((a) => (
-              <tr key={a.id} className="border-b">
+              <tr
+                key={a.id}
+                className="border-b cursor-pointer hover:bg-gray-100"
+                onClick={() => {
+                  if (a.user?.id) {
+                    setSelectedEntity({ type: "user", id: a.user.id });
+                    setMainPage?.("userdetails");
+                  }
+                }}
+              >
                 <td className="px-4 py-2">{a.user?.name || "Unnamed"}</td>
                 <td className="px-4 py-2">{a.user?.email || "—"}</td>
                 <td className="px-4 py-2 capitalize">{a.status}</td>

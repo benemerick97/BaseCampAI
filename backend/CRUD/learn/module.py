@@ -4,6 +4,8 @@ from models.learn.module import Module
 from models.learn.module_course import ModuleCourse
 from models.learn.module_skill import ModuleSkill
 from schemas.learn.module import ModuleCreate, ModuleUpdate
+from models.learn.skill import Skill
+from models.learn.course import Course
 
 def create_module(db: Session, module_data: ModuleCreate, org_id: UUID) -> Module:
     module = Module(
@@ -62,3 +64,20 @@ def delete_module(db: Session, module_id: UUID):
     if module:
         db.delete(module)
         db.commit()
+
+
+def get_module_skills(db: Session, module_id: UUID):
+    return (
+        db.query(Skill)
+        .join(ModuleSkill, Skill.id == ModuleSkill.skill_id)
+        .filter(ModuleSkill.module_id == module_id)
+        .all()
+    )
+
+def get_module_courses(db: Session, module_id: UUID):
+    return (
+        db.query(Course)
+        .join(ModuleCourse, Course.id == ModuleCourse.course_id)
+        .filter(ModuleCourse.module_id == module_id)
+        .all()
+    )

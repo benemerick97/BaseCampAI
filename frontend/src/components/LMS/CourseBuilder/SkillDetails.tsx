@@ -7,6 +7,7 @@ import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { FiBookOpen, FiUsers, FiEdit2 } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
 import AssignedUsersTab from "./Tabs/AssignedUsersTab";
+import UserDetails from "../../OrgAdmin/UserDetails";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
@@ -21,26 +22,38 @@ interface Skill {
 }
 
 interface SkillDetailsProps {
-  setMainPage: (page: string) => void;
+  id: string;
+  onBack: () => void;
 }
 
-export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
+export default function SkillDetails({ id, onBack }: SkillDetailsProps) {
   const { user } = useAuth();
-  const { selectedEntity, clearSelectedEntity, setSelectedEntity } = useSelectedEntity();
+  const { selectedEntity } = useSelectedEntity();
   const [skill, setSkill] = useState<Skill | null>(null);
+  const [subPage, setSubPage] = useState<"details" | "coursedetails" | "skilldetails" | "userdetails">("details");
 
   useEffect(() => {
-    if (!selectedEntity || selectedEntity.type !== "skill") return;
+    if (!id) return;
 
     axios
-      .get(`${BACKEND_URL}/skills/${selectedEntity.id}`, {
+      .get(`${BACKEND_URL}/skills/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
       .then((res) => setSkill(res.data))
       .catch((err) => console.error("Error loading skill details:", err));
-  }, [selectedEntity]);
+  }, [id]);
 
   if (!skill) return <div className="p-6">Loading skill details...</div>;
+
+  // ✅ Show user details if subPage = "userdetails"
+  if (subPage === "userdetails") {
+    return (
+      <UserDetails
+        id={String(selectedEntity?.id ?? "")}
+        onBack={() => setSubPage("details")}
+      />
+    );
+  }
 
   const tabConfig = [
     {
@@ -56,8 +69,7 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded"
               onClick={() => {
-                setSelectedEntity({ type: "skill", id: skill.id, data: skill });
-                setMainPage("skillevidenceupload");
+                console.log("Upload evidence clicked");
               }}
             >
               Upload Evidence
@@ -72,7 +84,7 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
                     skill_id: skill.id,
                   });
                   alert("Skill marked complete");
-                  setMainPage("myskills");
+                  onBack();
                 } catch (err) {
                   console.error("Failed to mark skill complete:", err);
                 }
@@ -88,7 +100,9 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
       key: "assigned",
       label: "Assigned",
       icon: <FiUsers />,
-      content: <AssignedUsersTab id={skill.id} type="skill" />,
+      content: (
+        <AssignedUsersTab id={skill.id} type="skill" setMainPage={setSubPage} />
+      ),
     },
     {
       key: "edit",
@@ -103,11 +117,8 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
       title={skill.name}
       breadcrumbs={[
         {
-          label: "Skills",
-          onClick: () => {
-            clearSelectedEntity();
-            setMainPage("skill");
-          },
+          label: "Back to Module",
+          onClick: onBack,
         },
         { label: skill.name },
       ]}

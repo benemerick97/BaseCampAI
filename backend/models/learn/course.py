@@ -1,6 +1,6 @@
 # backend/models/course.py
 
-from sqlalchemy import Column, String, Text, ForeignKey, DateTime
+from sqlalchemy import Column, String, Text, ForeignKey, DateTime, JSON 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from models.base import Base
@@ -18,8 +18,8 @@ class Course(Base):
     org_id = Column(ForeignKey("organisations.id", ondelete="CASCADE"), nullable=False)
     document_id = Column(ForeignKey("document_objects.id", ondelete="CASCADE"), nullable=False)
 
-    slides = Column(Text)  # JSON-encoded string: [{"title": ..., "bullets": [...]}, ...]
-
+    slides = Column(JSON, nullable=False, default=[])
+    
     created_at = Column(DateTime, default=datetime.utcnow)
 
     organisation = relationship("Organisation", back_populates="courses")

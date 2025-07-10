@@ -1,12 +1,14 @@
-// frontend/src/components/LMS/ModuleBuilder/ModuleDetails.tsx
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
-import { FiBookOpen, FiEdit2, FiUsers } from "react-icons/fi";
+import { FiBookOpen, FiEdit2, FiUsers, FiBook } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
 import AssignedUsersTab from "../CourseBuilder/Tabs/AssignedUsersTab";
+import AssignedContentTab from "../CourseBuilder/Tabs/AssignedContentTab";
+import CourseDetails from "../CourseBuilder/CourseDetails";
+import SkillDetails from "../CourseBuilder/SkillDetails";
+import UserDetails from "../../OrgAdmin/UserDetails";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
@@ -26,6 +28,9 @@ export default function ModuleDetails({ setMainPage }: ModuleDetailsProps) {
   const { user } = useAuth();
   const { selectedEntity, clearSelectedEntity } = useSelectedEntity();
   const [module, setModule] = useState<Module | null>(null);
+  const [subPage, setSubPage] = useState<
+    "details" | "coursedetails" | "skilldetails" | "userdetails"
+  >("details");
 
   useEffect(() => {
     if (!selectedEntity || selectedEntity.type !== "module") return;
@@ -40,6 +45,34 @@ export default function ModuleDetails({ setMainPage }: ModuleDetailsProps) {
 
   if (!module) return <div className="p-6">Loading module details...</div>;
 
+  // 👇 Conditional rendering for selected sub-pages
+  if (subPage === "coursedetails") {
+    return (
+      <CourseDetails
+        id={String(selectedEntity?.id ?? "")}
+        onBack={() => setSubPage("details")}
+      />
+    );
+  }
+
+  if (subPage === "skilldetails") {
+    return (
+      <SkillDetails
+        id={String(selectedEntity?.id ?? "")}
+        onBack={() => setSubPage("details")}
+      />
+    );
+  }
+
+  if (subPage === "userdetails") {
+    return (
+      <UserDetails
+        id={String(selectedEntity?.id ?? "")}
+        onBack={() => setSubPage("details")}
+      />
+    );
+  }
+
   const tabConfig = [
     {
       key: "overview",
@@ -52,12 +85,18 @@ export default function ModuleDetails({ setMainPage }: ModuleDetailsProps) {
         </div>
       ),
     },
-          {
-            key: "assigned",
-            label: "Assigned",
-            icon: <FiUsers />,
-            content: <AssignedUsersTab id={module.id} type="module" />,
-          },    
+    {
+      key: "content",
+      label: "Content",
+      icon: <FiBook />,
+      content: <AssignedContentTab moduleId={module.id} setMainPage={setSubPage} />,
+    },
+    {
+      key: "assigned",
+      label: "Assigned",
+      icon: <FiUsers />,
+      content: <AssignedUsersTab id={module.id} type="module" setMainPage={setSubPage} />,
+    },
     {
       key: "edit",
       label: "Edit",
