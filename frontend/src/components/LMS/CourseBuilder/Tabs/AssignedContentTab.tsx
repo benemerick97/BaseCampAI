@@ -2,7 +2,7 @@
 
 import { type Dispatch, type SetStateAction } from "react";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import api from "../../../../utils/axiosInstance";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
 
@@ -55,8 +55,8 @@ export default function AssignedContentTab({ moduleId, label = "Content", setMai
       if (!headers) return [];
 
       const [courseRes, skillRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/learn/modules/${moduleId}/courses`, { headers }),
-        axios.get(`${BACKEND_URL}/learn/modules/${moduleId}/skills`, { headers }),
+        api.get(`${BACKEND_URL}/learn/modules/${moduleId}/courses`, { headers }),
+        api.get(`${BACKEND_URL}/learn/modules/${moduleId}/skills`, { headers }),
       ]);
 
       const formattedCourses: DisplayItem[] = courseRes.data.map((course: Course) => ({

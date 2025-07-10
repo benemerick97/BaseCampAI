@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import EntityListPage from "./EntityListPage";
@@ -42,7 +42,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const fetchWorkOrders = async () => {
     try {
-      const res = await axios.get(`${BACKEND_URL}/workorders/`, {
+      const res = await api.get(`${BACKEND_URL}/workorders/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setWorkOrders(res.data);
@@ -53,7 +53,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const fetchAssets = async () => {
     try {
-      const res = await axios.get(`${BACKEND_URL}/assets/`, {
+      const res = await api.get(`${BACKEND_URL}/assets/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setAssets(res.data);
@@ -74,9 +74,9 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
     };
 
     if (form.id) {
-      await axios.put(`${BACKEND_URL}/workorders/${form.id}`, payload);
+      await api.put(`${BACKEND_URL}/workorders/${form.id}`, payload);
     } else {
-      await axios.post(`${BACKEND_URL}/workorders/`, payload);
+      await api.post(`${BACKEND_URL}/workorders/`, payload);
     }
 
     setShowModal(false);
@@ -86,7 +86,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const handleDelete = async (id: number) => {
     if (confirm("Delete this work order?")) {
-      await axios.delete(`${BACKEND_URL}/workorders/${id}`, {
+      await api.delete(`${BACKEND_URL}/workorders/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       });
       fetchWorkOrders();

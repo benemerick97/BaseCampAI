@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import {
@@ -30,7 +30,7 @@ export default function SiteDetails({ setMainPage }: SiteDetailsProps) {
   useEffect(() => {
     if (!selectedEntity || selectedEntity.type !== "site") return;
 
-    axios
+    api
       .get(`${BACKEND_URL}/sites/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })

@@ -2,17 +2,16 @@
 
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
+import api from "../utils/axiosInstance"; // ✅ central API instance
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
-// Organisation interface
+// Interfaces
 interface Organisation {
   id: number;
   name: string;
   short_name?: string;
 }
-
-// User interface
 interface User {
   id: number;
   email: string;
@@ -21,7 +20,6 @@ interface User {
   last_name?: string;
   organisation?: Organisation;
 }
-
 interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
@@ -46,6 +44,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [roleOverride, setRoleOverride] = useState<"super_admin" | "admin" | "user" | null>(
     sessionStorage.getItem("roleOverride") as "super_admin" | "admin" | "user" | null
   );
+
+  // ⬇️ Inject token into axios instance
+  useEffect(() => {
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common["Authorization"];
+    }
+  }, [token]);
 
   useEffect(() => {
     const validateTokenAndFetchUser = async () => {
@@ -146,12 +153,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("roleOverride");
-    setUser(null);
-    setToken(null);
-    setRoleOverride(null);
+  const logout = async () => {
+    try {
+      await fetch(`${BACKEND_URL}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.warn("Logout request failed:", err);
+    } finally {
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("roleOverride");
+      setUser(null);
+      setToken(null);
+      setRoleOverride(null);
+    }
   };
 
   const refetchUser = async () => {

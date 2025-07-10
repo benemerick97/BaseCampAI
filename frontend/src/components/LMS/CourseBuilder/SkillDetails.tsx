@@ -1,7 +1,7 @@
 // frontend/src/components/LMS/SkillBuilder/SkillDetails.tsx
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { FiBookOpen, FiUsers, FiEdit2 } from "react-icons/fi";
@@ -32,7 +32,7 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
   useEffect(() => {
     if (!selectedEntity || selectedEntity.type !== "skill") return;
 
-    axios
+    api
       .get(`${BACKEND_URL}/skills/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
@@ -67,7 +67,7 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
               className="bg-green-600 text-white px-4 py-2 rounded"
               onClick={async () => {
                 try {
-                  await axios.post(`${BACKEND_URL}/learn/complete-skill`, {
+                  await api.post(`${BACKEND_URL}/learn/complete-skill`, {
                     user_id: user?.id,
                     skill_id: skill.id,
                   });

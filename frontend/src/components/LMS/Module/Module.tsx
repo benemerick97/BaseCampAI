@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
@@ -50,7 +50,7 @@ export default function Module({ setMainPage }: ModuleProps) {
     if (!orgId) return;
 
     try {
-      const res = await axios.get(`${BACKEND_URL}/learn/modules`, {
+      const res = await api.get(`${BACKEND_URL}/learn/modules`, {
         params: { org_id: orgId },
       });
       setModules(res.data);
@@ -68,7 +68,7 @@ export default function Module({ setMainPage }: ModuleProps) {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this module?")) return;
     try {
-      await axios.delete(`${BACKEND_URL}/learn/modules/${id}`, {
+      await api.delete(`${BACKEND_URL}/learn/modules/${id}`, {
         headers: { "x-org-id": user?.organisation?.id },
       });
       fetchModules();
@@ -89,7 +89,7 @@ export default function Module({ setMainPage }: ModuleProps) {
 
   const handleEditClick = async (item: ModuleListItem) => {
     try {
-      const res = await axios.get<ModuleDetails>(
+      const res = await api.get<ModuleDetails>(
         `${BACKEND_URL}/learn/modules/${item.id}`,
         {
           headers: {

@@ -1,7 +1,7 @@
 // frontend/src/components/LMS/MyCourses.tsx
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
@@ -46,7 +46,7 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
   const fetchAssignments = async () => {
     if (!user?.id) return;
     try {
-      const res = await axios.get(`${BACKEND_URL}/learn/assigned-courses`, {
+      const res = await api.get(`${BACKEND_URL}/learn/assigned-courses`, {
         params: { user_id: user.id },
       });
       setAssignments(res.data);

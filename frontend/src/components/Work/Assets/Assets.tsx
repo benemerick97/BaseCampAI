@@ -1,7 +1,7 @@
 // frontend/src/components/Work/Assets.tsx
 
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import EntityListPage from "./EntityListPage";
@@ -41,7 +41,7 @@ export default function Assets({ setMainPage }: AssetProps) {
 
   const fetchAssets = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/assets/`, {
+      const response = await api.get(`${BACKEND_URL}/assets/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setAssets(response.data);
@@ -52,7 +52,7 @@ export default function Assets({ setMainPage }: AssetProps) {
 
   const fetchSites = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/sites/`, {
+      const response = await api.get(`${BACKEND_URL}/sites/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setSites(response.data);
@@ -68,7 +68,7 @@ export default function Assets({ setMainPage }: AssetProps) {
 
   const handleAddOrEditAsset = async (form: any) => {
     if (form.id) {
-      await axios.put(`${BACKEND_URL}/assets/${form.id}`, {
+      await api.put(`${BACKEND_URL}/assets/${form.id}`, {
         name: form.name,
         asset_type: form.asset_type,
         serial_number: form.serial_number,
@@ -76,7 +76,7 @@ export default function Assets({ setMainPage }: AssetProps) {
         organisation_id: user?.organisation?.id,
       });
     } else {
-      await axios.post(`${BACKEND_URL}/assets/`, {
+      await api.post(`${BACKEND_URL}/assets/`, {
         name: form.name,
         asset_type: form.asset_type,
         serial_number: form.serial_number,
@@ -92,7 +92,7 @@ export default function Assets({ setMainPage }: AssetProps) {
   const handleDelete = async (id: number) => {
     const confirmed = confirm("Delete this asset?");
     if (confirmed) {
-      await axios.delete(`${BACKEND_URL}/assets/${id}`, {
+      await api.delete(`${BACKEND_URL}/assets/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       });
       fetchAssets();

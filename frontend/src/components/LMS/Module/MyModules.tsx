@@ -1,7 +1,7 @@
 // frontend/src/components/LMS/Module/MyModules.tsx
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import LearnListPage from "../LearnListPage";
 import MyModuleRow from "./MyModulesRow";
@@ -43,7 +43,7 @@ export default function MyModules({ setMainPage }: MyModulesProps) {
   const fetchAssignments = async () => {
     if (!user?.id) return;
     try {
-      const res = await axios.get(`${BACKEND_URL}/learn/assigned-modules/by-user/${user.id}`);
+      const res = await api.get(`${BACKEND_URL}/learn/assigned-modules/by-user/${user.id}`);
       setAssignments(res.data);
     } catch (err) {
       console.error("Failed to fetch assigned modules:", err);

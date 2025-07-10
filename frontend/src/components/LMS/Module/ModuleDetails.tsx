@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { FiBookOpen, FiEdit2, FiUsers, FiBook } from "react-icons/fi";
@@ -35,7 +35,7 @@ export default function ModuleDetails({ setMainPage }: ModuleDetailsProps) {
   useEffect(() => {
     if (!selectedEntity || selectedEntity.type !== "module") return;
 
-    axios
+    api
       .get(`${BACKEND_URL}/learn/modules/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })

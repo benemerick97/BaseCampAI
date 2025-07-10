@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "../../../../utils/axiosInstance";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
 
@@ -71,14 +71,14 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   } = useQuery<AssignmentsResult>({
     queryKey,
     queryFn: async () => {
-      const assignedRes = await axios.get(`${BACKEND_URL}/learn/assigned-${type}s/by-${type}/${id}`, {
+      const assignedRes = await api.get(`${BACKEND_URL}/learn/assigned-${type}s/by-${type}/${id}`, {
         headers: {
           "x-org-id": orgId,
           Authorization: `Bearer ${token!}`,
         },
       });
 
-      const allRes = await axios.get(`${BACKEND_URL}/users`, {
+      const allRes = await api.get(`${BACKEND_URL}/users`, {
         params: { org_id: orgId },
         headers: {
           "x-org-id": orgId,
@@ -104,7 +104,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   const assignMutation = useMutation({
     mutationFn: async () => {
       if (!selectedUser?.id) throw new Error("No user selected");
-      await axios.post(
+      await api.post(
         `${BACKEND_URL}/learn/assign-${type}`,
         {
           user_id: selectedUser.id,

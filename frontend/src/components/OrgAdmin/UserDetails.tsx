@@ -5,7 +5,7 @@ import { FiUser, FiBookOpen, FiClock } from "react-icons/fi";
 import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
 import { useAuth } from "../../contexts/AuthContext";
 import DetailsPage from "../Shared/DetailsPage";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
@@ -31,7 +31,7 @@ export default function UserDetails({ setMainPage }: UserDetailsProps) {
       if (!selectedEntity || selectedEntity.type !== "user" || !token) return;
 
       try {
-        const res = await axios.get(`${BACKEND_URL}/users/${selectedEntity.id}`, {
+        const res = await api.get(`${BACKEND_URL}/users/${selectedEntity.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

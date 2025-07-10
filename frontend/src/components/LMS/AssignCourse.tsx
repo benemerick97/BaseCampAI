@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useAuth } from "../../contexts/AuthContext";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
@@ -40,11 +40,11 @@ export default function AssignCourse() {
       if (!headers) return;
       try {
         const [usersRes, coursesRes] = await Promise.all([
-          axios.get(`${BACKEND_URL}/users/`, {
+          api.get(`${BACKEND_URL}/users/`, {
             params: { org_id: orgId },
             headers,
           }),
-          axios.get(`${BACKEND_URL}/courses/`, {
+          api.get(`${BACKEND_URL}/courses/`, {
             params: { org_id: orgId },
             headers,
           }),
@@ -73,17 +73,17 @@ export default function AssignCourse() {
     console.log("Sending payload:", payload);
 
     try {
-        await axios.post(`${BACKEND_URL}/learn/assign-course`, payload, {
-        headers,
-        });
-        setMessage("✅ Course successfully assigned.");
-    } catch (err) {
-        console.error("Assignment failed", err);
-        if (axios.isAxiosError(err) && err.response?.data?.detail) {
-        setMessage(`❌ ${err.response.data.detail}`);
-        } else {
+      await api.post(`/learn/assign-course`, payload);
+      setMessage("✅ Course successfully assigned.");
+    } catch (err: any) {
+      console.error("Assignment failed", err);
+      if (err?.response?.detail) {
+        setMessage(`❌ ${err.response.detail}`);
+      } else if (err?.message) {
+        setMessage(`❌ ${err.message}`);
+      } else {
         setMessage("❌ Failed to assign course.");
-        }
+      }
     }
     };
 

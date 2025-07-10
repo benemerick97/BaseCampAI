@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
@@ -40,7 +40,7 @@ export default function Module({ setMainPage }: ModuleProps) {
   } = useQuery<Module[]>({
     queryKey,
     queryFn: async () => {
-      const res = await axios.get(`${BACKEND_URL}/modules/`, {
+      const res = await api.get(`${BACKEND_URL}/modules/`, {
         params: { organisation_id: orgId },
         headers: { Authorization: `Bearer ${token!}` },
       });
@@ -59,11 +59,11 @@ export default function Module({ setMainPage }: ModuleProps) {
       };
 
       if (form.id) {
-        return axios.put(`${BACKEND_URL}/modules/${form.id}`, payload, {
+        return api.put(`${BACKEND_URL}/modules/${form.id}`, payload, {
           headers: { Authorization: `Bearer ${token!}` },
         });
       } else {
-        return axios.post(`${BACKEND_URL}/modules/`, payload, {
+        return api.post(`${BACKEND_URL}/modules/`, payload, {
           headers: { Authorization: `Bearer ${token!}` },
         });
       }
@@ -80,7 +80,7 @@ export default function Module({ setMainPage }: ModuleProps) {
 
   const deleteModule = useMutation({
     mutationFn: async (id: number) => {
-      return axios.delete(`${BACKEND_URL}/modules/${id}`, {
+      return api.delete(`${BACKEND_URL}/modules/${id}`, {
         params: { organisation_id: orgId },
         headers: { Authorization: `Bearer ${token!}` },
       });

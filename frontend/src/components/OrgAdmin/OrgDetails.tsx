@@ -1,7 +1,7 @@
 // frontend/src/components/Admin/OrgDetails.tsx
 
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { FiUsers, FiInfo, FiSettings } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import DetailsPage from "../Shared/DetailsPage";
@@ -21,7 +21,7 @@ interface OrgDetailsProps {
 }
 
 const fetchOrganisation = async (orgId: number, token: string): Promise<Organisation> => {
-  const res = await axios.get(`${BACKEND_URL}/organisations/${orgId}`, {
+  const res = await api.get(`${BACKEND_URL}/organisations/${orgId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

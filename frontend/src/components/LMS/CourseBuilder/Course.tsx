@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
@@ -42,7 +42,7 @@ export default function Course({ setMainPage }: CourseProps) {
   } = useQuery<Course[]>({
     queryKey,
     queryFn: async () => {
-      const res = await axios.get(`${BACKEND_URL}/courses/`, {
+      const res = await api.get(`${BACKEND_URL}/courses/`, {
         params: { org_id: orgId },
         headers: {
           Authorization: `Bearer ${token!}`,
@@ -56,7 +56,7 @@ export default function Course({ setMainPage }: CourseProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`${BACKEND_URL}/courses/${id}`, {
+      await api.delete(`${BACKEND_URL}/courses/${id}`, {
         headers: {
           "x-org-id": orgId?.toString() || "",
           Authorization: `Bearer ${token!}`,

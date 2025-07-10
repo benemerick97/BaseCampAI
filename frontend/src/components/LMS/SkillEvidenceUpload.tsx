@@ -1,7 +1,7 @@
 // frontend/src/components/LMS/SkillEvidenceUpload.tsx
 
 import { useState } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
 

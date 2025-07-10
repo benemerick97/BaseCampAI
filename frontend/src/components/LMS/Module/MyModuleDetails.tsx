@@ -1,7 +1,7 @@
 // frontend/src/components/LMS/ModuleBuilder/MyModuleDetails.tsx
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { FiBookOpen } from "react-icons/fi";
@@ -40,7 +40,7 @@ export default function MyModuleDetails({ setMainPage }: MyModuleDetailsProps) {
   useEffect(() => {
     if (!selectedEntity || selectedEntity.type !== "assignedModule") return;
 
-    axios
+    api
       .get(`${BACKEND_URL}/learn/assigned-modules/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })

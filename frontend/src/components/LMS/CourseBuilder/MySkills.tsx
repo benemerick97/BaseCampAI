@@ -1,7 +1,7 @@
 // frontend/src/components/LMS/MySkills.tsx
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
@@ -39,7 +39,7 @@ export default function MySkills({ setMainPage }: { setMainPage: (p: string) => 
   const fetchAssignments = async () => {
     if (!user?.id) return;
     try {
-      const res = await axios.get(`${BACKEND_URL}/learn/assigned-skills`, {
+      const res = await api.get(`${BACKEND_URL}/learn/assigned-skills`, {
         params: { user_id: user.id },
       });
       setAssignments(res.data);
@@ -54,7 +54,7 @@ export default function MySkills({ setMainPage }: { setMainPage: (p: string) => 
 
   const handleMarkComplete = async (skillId: string) => {
     try {
-      await axios.post(`${BACKEND_URL}/learn/complete-skill`, {
+      await api.post(`${BACKEND_URL}/learn/complete-skill`, {
         user_id: user?.id,
         skill_id: skillId,
         evidence_file_url: null,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import EntityListPage from "./EntityListPage";
@@ -30,7 +30,7 @@ export default function Sites({ setMainPage }: SiteProps) {
 
   const fetchSites = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/sites/`, {
+      const response = await api.get(`${BACKEND_URL}/sites/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setSites(response.data);
@@ -45,13 +45,13 @@ export default function Sites({ setMainPage }: SiteProps) {
 
   const handleAddOrEditSite = async (form: any) => {
     if (form.id) {
-      await axios.put(`${BACKEND_URL}/sites/${form.id}`, {
+      await api.put(`${BACKEND_URL}/sites/${form.id}`, {
         name: form.name,
         location: form.location,
         organisation_id: user?.organisation?.id,
       });
     } else {
-      await axios.post(`${BACKEND_URL}/sites/`, {
+      await api.post(`${BACKEND_URL}/sites/`, {
         name: form.name,
         location: form.location,
         organisation_id: user?.organisation?.id,
@@ -65,7 +65,7 @@ export default function Sites({ setMainPage }: SiteProps) {
   const handleDelete = async (id: number) => {
     const confirmed = confirm("Delete this site?");
     if (confirmed) {
-      await axios.delete(`${BACKEND_URL}/sites/${id}`);
+      await api.delete(`${BACKEND_URL}/sites/${id}`);
       fetchSites();
     }
   };

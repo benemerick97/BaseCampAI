@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
@@ -37,7 +37,7 @@ export default function Skill({ setMainPage }: SkillProps) {
   const { data: skills = [], isLoading } = useQuery<Skill[]>({
     queryKey: ["skills", orgId],
     queryFn: async () => {
-      const res = await axios.get(`${BACKEND_URL}/skills`, {
+      const res = await api.get(`${BACKEND_URL}/skills`, {
         params: { org_id: orgId },
       });
       return res.data;
@@ -48,7 +48,7 @@ export default function Skill({ setMainPage }: SkillProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`${BACKEND_URL}/skills/${id}`, {
+      await api.delete(`${BACKEND_URL}/skills/${id}`, {
         headers: { "x-org-id": orgId },
       });
     },

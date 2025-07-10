@@ -1,7 +1,7 @@
 // frontend/src/components/LMS/AssignSkill.tsx
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useAuth } from "../../contexts/AuthContext";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;

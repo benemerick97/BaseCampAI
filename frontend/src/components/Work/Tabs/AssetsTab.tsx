@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import AssetRow from "../Assets/AssetRow";
 import EmptyTab from "./EmptyTab";
 import EntityModal from "../Assets/EntityModal";
@@ -37,7 +37,7 @@ export default function AssetsTab({
 
   const fetchAssets = async () => {
     try {
-      const res = await axios.get(`${BACKEND_URL}/assets`, {
+      const res = await api.get(`${BACKEND_URL}/assets`, {
         params: { site_id: siteId, organisation_id: organisationId },
       });
       setAssets(res.data);
@@ -56,13 +56,13 @@ export default function AssetsTab({
   const handleSubmit = async (form: Partial<Asset>) => {
     try {
       if (form.id) {
-        await axios.put(`${BACKEND_URL}/assets/${form.id}`, {
+        await api.put(`${BACKEND_URL}/assets/${form.id}`, {
           ...form,
           site_id: siteId,
           organisation_id: organisationId,
         });
       } else {
-        await axios.post(`${BACKEND_URL}/assets`, {
+        await api.post(`${BACKEND_URL}/assets`, {
           ...form,
           site_id: siteId,
           organisation_id: organisationId,
@@ -81,7 +81,7 @@ export default function AssetsTab({
     if (!confirmed) return;
 
     try {
-      await axios.delete(`${BACKEND_URL}/assets/${id}`, {
+      await api.delete(`${BACKEND_URL}/assets/${id}`, {
         params: { organisation_id: organisationId },
       });
       fetchAssets();
