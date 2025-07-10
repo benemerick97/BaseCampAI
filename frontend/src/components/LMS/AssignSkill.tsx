@@ -41,11 +41,11 @@ export default function AssignSkill() {
       if (!headers) return;
       try {
         const [usersRes, skillsRes] = await Promise.all([
-          axios.get(`${BACKEND_URL}/users/`, {
+          api.get(`${BACKEND_URL}/users/`, {
             params: { org_id: orgId },
             headers,
           }),
-          axios.get(`${BACKEND_URL}/skills`, {
+          api.get(`${BACKEND_URL}/skills`, {
             params: { org_id: orgId },
             headers,
           }),
@@ -72,12 +72,14 @@ export default function AssignSkill() {
     };
 
     try {
-      await axios.post(`${BACKEND_URL}/learn/assign-skill`, payload, { headers });
+      await api.post(`/learn/assign-skill`, payload);
       setMessage("✅ Skill successfully assigned.");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Assignment failed", err);
-      if (axios.isAxiosError(err) && err.response?.data?.detail) {
-        setMessage(`❌ ${err.response.data.detail}`);
+      if (err?.response?.detail) {
+        setMessage(`❌ ${err.response.detail}`);
+      } else if (err?.message) {
+        setMessage(`❌ ${err.message}`);
       } else {
         setMessage("❌ Failed to assign skill.");
       }
