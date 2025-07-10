@@ -1,6 +1,7 @@
 // frontend/src/components/LMS/CourseBuilder/Course.tsx
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
@@ -25,49 +26,55 @@ interface CourseProps {
 }
 
 export default function Course({ setMainPage }: CourseProps) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
+  const queryClient = useQueryClient();
 
-  const [courses, setCourses] = useState<Course[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editCourse, setEditCourse] = useState<Course | null>(null);
 
-  const fetchCourses = async () => {
-    const orgId = user?.organisation?.id;
-    if (!orgId) {
-      console.warn("No organisation ID found. Skipping course fetch.");
-      return;
-    }
+  const orgId = user?.organisation?.id;
+  const queryKey = ["courses", orgId];
 
-    try {
-      const response = await axios.get(`${BACKEND_URL}/courses/`, {
+  const {
+    data: courses = [],
+    isLoading,
+  } = useQuery<Course[]>({
+    queryKey,
+    queryFn: async () => {
+      const res = await axios.get(`${BACKEND_URL}/courses/`, {
         params: { org_id: orgId },
+        headers: {
+          Authorization: `Bearer ${token!}`,
+        },
       });
-      setCourses(response.data);
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-    }
-  };
+      return res.data;
+    },
+    enabled: !!orgId && !!token,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  useEffect(() => {
-    if (user?.organisation?.id) {
-      fetchCourses();
-    }
-  }, [user]);
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`${BACKEND_URL}/courses/${id}`, {
+        headers: {
+          "x-org-id": orgId?.toString() || "",
+          Authorization: `Bearer ${token!}`,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
+      console.error("Error deleting course:", err);
+    },
+  });
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const confirmed = confirm("Delete this course?");
     if (confirmed) {
-      try {
-        await axios.delete(`${BACKEND_URL}/courses/${id}`, {
-          headers: {
-            "x-org-id": user?.organisation?.id,
-          },
-        });
-        fetchCourses();
-      } catch (err) {
-        console.error("Error deleting course:", err);
-      }
+      deleteMutation.mutate(id);
     }
   };
 
@@ -108,13 +115,14 @@ export default function Course({ setMainPage }: CourseProps) {
         title="Courses"
         entityType="course"
         items={courses}
-        onFetch={fetchCourses}
+        onFetch={() => queryClient.invalidateQueries({ queryKey })}
         onSelect={handleSelect}
         renderRow={renderRow}
         columns={["Title", "Description", "Slides", "Created", "Actions"]}
         addButtonLabel="Add"
         showSearchBar={true}
         onAddClick={handleAddClick}
+        isLoading={isLoading} // ✅ optional if you’ve added it to LearnListPageProps
       />
 
       <CourseCreate
@@ -123,7 +131,7 @@ export default function Course({ setMainPage }: CourseProps) {
           setShowModal(false);
           setEditCourse(null);
         }}
-        onCreated={fetchCourses}
+        onCreated={() => queryClient.invalidateQueries({ queryKey })}
         existingCourse={editCourse ?? undefined}
       />
     </>

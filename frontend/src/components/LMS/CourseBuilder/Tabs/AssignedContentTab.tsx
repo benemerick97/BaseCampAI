@@ -1,4 +1,7 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+// frontend/src/components/LMS/CourseBuilder/Tabs/AssignedContentTab.tsx
+
+import { type Dispatch, type SetStateAction } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
@@ -33,7 +36,6 @@ interface Props {
   label?: string;
 }
 
-
 export default function AssignedContentTab({ moduleId, label = "Content", setMainPage }: Props) {
   const { user, token } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
@@ -47,19 +49,15 @@ export default function AssignedContentTab({ moduleId, label = "Content", setMai
         }
       : undefined;
 
-  const [contentItems, setContentItems] = useState<DisplayItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: contentItems = [], isLoading } = useQuery<DisplayItem[]>({
+    queryKey: ["module-content", moduleId, orgId],
+    queryFn: async () => {
+      if (!headers) return [];
 
-  const fetchData = async () => {
-    if (!headers) return;
-
-    try {
-      const courseRes = await axios.get(`${BACKEND_URL}/learn/modules/${moduleId}/courses`, {
-        headers,
-      });
-      const skillRes = await axios.get(`${BACKEND_URL}/learn/modules/${moduleId}/skills`, {
-        headers,
-      });
+      const [courseRes, skillRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/learn/modules/${moduleId}/courses`, { headers }),
+        axios.get(`${BACKEND_URL}/learn/modules/${moduleId}/skills`, { headers }),
+      ]);
 
       const formattedCourses: DisplayItem[] = courseRes.data.map((course: Course) => ({
         ...course,
@@ -71,30 +69,21 @@ export default function AssignedContentTab({ moduleId, label = "Content", setMai
         type: "Skill",
       }));
 
-      const combined = [...formattedCourses, ...formattedSkills].sort(
+      return [...formattedCourses, ...formattedSkills].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
+    },
+    enabled: !!moduleId && !!orgId && !!token,
+    staleTime: 1000 * 60 * 5,
+  });
 
-      setContentItems(combined);
-    } catch (err) {
-      console.error("Failed to fetch module content:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [moduleId]);
-
-    const handleRowClick = (item: DisplayItem) => {
-    const type = item.type === "Course" ? "course" : "skill"; // assert literal type
+  const handleRowClick = (item: DisplayItem) => {
+    const type = item.type === "Course" ? "course" : "skill";
     setSelectedEntity({ type, id: item.id });
     setMainPage(type === "course" ? "coursedetails" : "skilldetails");
-    };
+  };
 
-
-  if (loading) return <div className="p-4 text-gray-600">Loading {label.toLowerCase()}...</div>;
+  if (isLoading) return <div className="p-4 text-gray-600">Loading {label.toLowerCase()}...</div>;
 
   return (
     <div className="p-4">

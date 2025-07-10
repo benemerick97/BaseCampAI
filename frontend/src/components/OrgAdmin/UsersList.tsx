@@ -1,6 +1,7 @@
 // src/pages/UsersList.tsx
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiPlus, FiUserX } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal";
@@ -17,65 +18,74 @@ interface User {
 
 const BACKEND_URL = import.meta.env.VITE_API_URL;
 
+const fetchUsers = async (orgId: string, token: string): Promise<User[]> => {
+  const res = await fetch(`${BACKEND_URL}/users`, {
+    headers: {
+      "x-org-id": orgId,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to fetch users: ${res.status} - ${errorText}`);
+  }
+  const data = await res.json();
+  return data.users || data;
+};
+
+const deleteUser = async ({
+  userId,
+  orgId,
+  token,
+}: {
+  userId: number;
+  orgId: string;
+  token: string;
+}) => {
+  const res = await fetch(`${BACKEND_URL}/users/${userId}`, {
+    method: "DELETE",
+    headers: {
+      "x-org-id": orgId,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete user");
+  }
+};
+
 const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => {
   const { user, token } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
-  const orgId = user?.organisation?.id?.toString();
+  const orgId = user?.organisation?.id?.toString() || "";
+  const queryClient = useQueryClient();
 
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
 
-  const headers: Record<string, string> | undefined =
-    orgId && token
-      ? {
-          "x-org-id": orgId,
-          Authorization: `Bearer ${token}`,
-        }
-      : undefined;
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["users", orgId],
+    queryFn: () => fetchUsers(orgId!, token!),
+    enabled: !!orgId && !!token,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const fetchUsers = async () => {
-    if (!headers) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${BACKEND_URL}/users`, {
-        method: "GET",
-        headers,
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Failed to fetch users:", res.status, errorText);
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
-      setUsers(data.users || data);
-    } catch (err) {
-      console.error("Error loading users:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (userId: number) => {
-    if (!headers) return;
-    try {
-      await fetch(`${BACKEND_URL}/users/${userId}`, {
-        method: "DELETE",
-        headers,
-      });
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-    } catch (err) {
-      console.error("Delete failed:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, [orgId]);
+  const deleteMutation = useMutation({
+    mutationFn: ({ userId }: { userId: number }) =>
+      deleteUser({ userId, orgId: orgId!, token: token! }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users", orgId] });
+    },
+    onError: (err: any) => {
+      alert(err.message);
+    },
+  });
 
   const filteredUsers = users.filter((u) => {
     const fullName = `${u.first_name ?? ""} ${u.last_name ?? ""}`.toLowerCase();
@@ -106,8 +116,10 @@ const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => 
       </div>
 
       {/* Table or Empty State */}
-      {loading ? (
+      {isLoading ? (
         <p className="text-gray-500">Loading users...</p>
+      ) : isError ? (
+        <p className="text-red-600 text-sm">Error: {(error as Error).message}</p>
       ) : filteredUsers.length === 0 ? (
         <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
           <p className="text-lg font-medium">No users found</p>
@@ -129,15 +141,14 @@ const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => 
                 <tr
                   key={userItem.id}
                   className="border-t hover:bg-blue-50 cursor-pointer"
-                    onClick={() => {
-                      setSelectedEntity({
-                        type: "user",
-                        id: userItem.id.toString(),
-                        data: userItem,
-                      });
-                      setMainPage("userdetails"); 
-                    }}
-
+                  onClick={() => {
+                    setSelectedEntity({
+                      type: "user",
+                      id: userItem.id.toString(),
+                      data: userItem,
+                    });
+                    setMainPage("userdetails");
+                  }}
                 >
                   <td className="px-4 py-3 border-r border-gray-100 font-medium text-gray-900">
                     {(userItem.first_name ?? "") + " " + (userItem.last_name ?? "")}
@@ -153,7 +164,7 @@ const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => 
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(userItem.id);
+                          deleteMutation.mutate({ userId: userItem.id });
                         }}
                         className="ml-auto bg-red-600 text-white px-3 py-1.5 rounded text-xs hover:bg-red-700 flex items-center gap-1 justify-end"
                       >
@@ -178,7 +189,7 @@ const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => 
         <UserInviteForm
           onSuccess={() => {
             setShowInviteModal(false);
-            fetchUsers();
+            queryClient.invalidateQueries({ queryKey: ["users", orgId] });
           }}
         />
       </Modal>

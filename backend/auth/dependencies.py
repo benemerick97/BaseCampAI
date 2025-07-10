@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload  # ✅ import joinedload
 
 from models.user import User
 from databases.database import get_db  
-from auth.jwt import SECRET_KEY, ALGORITHM
+from auth.jwt import ACCESS_SECRET_KEY as SECRET_KEY, ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 

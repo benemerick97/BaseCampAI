@@ -1,3 +1,5 @@
+// frontend/src/components/LMS/LearnListPage.tsx
+
 import React, { useState, useEffect } from "react";
 import { FiPlus } from "react-icons/fi";
 
@@ -18,7 +20,8 @@ export interface LearnListPageProps<T> {
   showSearchBar?: boolean;
   onSearch?: (term: string) => void;
   onAddClick?: () => void;
-  headerContent?: React.ReactNode; // ✅ NEW
+  headerContent?: React.ReactNode;
+  isLoading?: boolean;
 }
 
 export default function LearnListPage<T>({
@@ -34,6 +37,7 @@ export default function LearnListPage<T>({
   onSearch,
   onAddClick,
   headerContent,
+  isLoading = false,
 }: LearnListPageProps<T>) {
   const [dropdownOpen, setDropdownOpen] = useState<string | number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,9 +57,11 @@ export default function LearnListPage<T>({
       <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
         <div className="flex items-end gap-2">
           <h3 className="text-2xl font-semibold leading-tight">{title}</h3>
-          <span className="text-sm text-gray-600">
-            (1 - {items.length} of {items.length})
-          </span>
+          {!isLoading && (
+            <span className="text-sm text-gray-600">
+              (1 - {items.length} of {items.length})
+            </span>
+          )}
         </div>
         <div className="flex gap-2">
           <button
@@ -71,7 +77,7 @@ export default function LearnListPage<T>({
       {/* Optional Header Content (e.g. filters, search) */}
       {headerContent && <div className="mb-4">{headerContent}</div>}
 
-      {/* Search bar (fallback if not using headerContent) */}
+      {/* Search bar */}
       {showSearchBar && (
         <div className="mb-4 flex items-center gap-2">
           <input
@@ -87,8 +93,12 @@ export default function LearnListPage<T>({
         </div>
       )}
 
-      {/* Table */}
-      {items.length === 0 ? (
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
+          <p className="text-lg font-medium">Loading {title.toLowerCase()}...</p>
+        </div>
+      ) : items.length === 0 ? (
         <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
           <p className="text-lg font-medium">No {title.toLowerCase()} added yet</p>
           <p className="text-sm mt-1">

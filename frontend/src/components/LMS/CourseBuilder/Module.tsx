@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+// frontend/src/components/LMS/CourseBuilder/Module.tsx
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
@@ -21,60 +24,90 @@ interface ModuleProps {
 }
 
 export default function Module({ setMainPage }: ModuleProps) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
+  const queryClient = useQueryClient();
+  const orgId = user?.organisation?.id;
 
-  const [modules, setModules] = useState<Module[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
-  const fetchModules = async () => {
-    try {
-      const response = await axios.get(`${BACKEND_URL}/modules/`, {
-        params: { organisation_id: user?.organisation?.id },
+  const queryKey = ["modules", orgId];
+
+  const {
+    data: modules = [],
+    isLoading,
+  } = useQuery<Module[]>({
+    queryKey,
+    queryFn: async () => {
+      const res = await axios.get(`${BACKEND_URL}/modules/`, {
+        params: { organisation_id: orgId },
+        headers: { Authorization: `Bearer ${token!}` },
       });
-      setModules(response.data);
-    } catch (error) {
-      console.error("Error fetching modules:", error);
-    }
+      return res.data;
+    },
+    enabled: !!orgId && !!token,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const upsertModule = useMutation({
+    mutationFn: async (form: any) => {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        organisation_id: orgId,
+      };
+
+      if (form.id) {
+        return axios.put(`${BACKEND_URL}/modules/${form.id}`, payload, {
+          headers: { Authorization: `Bearer ${token!}` },
+        });
+      } else {
+        return axios.post(`${BACKEND_URL}/modules/`, payload, {
+          headers: { Authorization: `Bearer ${token!}` },
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      setShowModal(false);
+      setFormData({});
+    },
+    onError: (err) => {
+      console.error("Add/Edit failed:", err);
+    },
+  });
+
+  const deleteModule = useMutation({
+    mutationFn: async (id: number) => {
+      return axios.delete(`${BACKEND_URL}/modules/${id}`, {
+        params: { organisation_id: orgId },
+        headers: { Authorization: `Bearer ${token!}` },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
+      console.error("Delete failed:", err);
+    },
+  });
+
+  const handleAddOrEditModule = (form: any) => {
+    upsertModule.mutate(form);
   };
 
-  useEffect(() => {
-    fetchModules();
-  }, []);
-
-  const handleAddOrEditModule = async (form: any) => {
-    const payload = {
-      title: form.title,
-      description: form.description,
-      organisation_id: user?.organisation?.id,
-    };
-
-    if (form.id) {
-      await axios.put(`${BACKEND_URL}/modules/${form.id}`, payload);
-    } else {
-      await axios.post(`${BACKEND_URL}/modules/`, payload);
-    }
-
-    setShowModal(false);
-    setFormData({});
-    fetchModules();
-  };
-
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     const confirmed = confirm("Delete this module?");
     if (confirmed) {
-      await axios.delete(`${BACKEND_URL}/modules/${id}`, {
-        params: { organisation_id: user?.organisation?.id },
-      });
-      fetchModules();
+      deleteModule.mutate(id);
     }
   };
 
- const handleSelect = (id: string | number) => {
-  setSelectedEntity({ type: "module", id });
-  setMainPage("moduledetails");
-};
+  const handleSelect = (id: string | number) => {
+    setSelectedEntity({ type: "module", id });
+    setMainPage("moduledetails");
+  };
 
   const handleAddClick = () => {
     setFormData({});
@@ -100,20 +133,20 @@ export default function Module({ setMainPage }: ModuleProps) {
     />
   );
 
-
   return (
     <>
       <LearnListPage<Module>
         title="Modules"
         entityType="module"
         items={modules}
-        onFetch={fetchModules}
+        onFetch={() => queryClient.invalidateQueries({ queryKey })}
         onSelect={handleSelect}
         renderRow={renderRow}
         columns={["Title", "Description", "Created", "Actions"]}
         addButtonLabel="Add"
         showSearchBar={true}
         onAddClick={handleAddClick}
+        isLoading={isLoading}
       />
 
       <LearnModal

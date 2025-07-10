@@ -1,6 +1,7 @@
 // frontend/src/components/LMS/CourseBuilder/Tabs/AssignedUsersTab.tsx
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
@@ -31,34 +32,27 @@ interface AvailableUser {
   last_name?: string;
 }
 
+interface AssignmentsResult {
+  assigned: AssignedUser[];
+  available: AvailableUser[];
+}
+
 interface Props {
   id: string;
   type: "skill" | "course" | "module";
-  setMainPage?: React.Dispatch<
-    React.SetStateAction<
-      "details" | "coursedetails" | "skilldetails" | "userdetails"
-    >
+  setMainPage?: ((page: string) => void) | React.Dispatch<
+    React.SetStateAction<"details" | "coursedetails" | "skilldetails" | "userdetails">
   >;
 }
 
 export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   const { user, token } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
-  const orgId = user?.organisation?.id?.toString();
+  const orgId = user?.organisation?.id?.toString() || "";
+  const queryClient = useQueryClient();
 
-  const headers =
-    orgId && token
-      ? {
-          "x-org-id": orgId,
-          Authorization: `Bearer ${token}`,
-        }
-      : undefined;
-
-  const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>([]);
-  const [allUsers, setAllUsers] = useState<AvailableUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<AvailableUser | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "assigned" | "completed">("all");
   const [message, setMessage] = useState("");
@@ -69,42 +63,47 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
     module: "Module",
   }[type];
 
-  const fetchAssignments = async () => {
-    if (!headers) return;
-    try {
-      const assignedRes = await axios.get(
-        `${BACKEND_URL}/learn/assigned-${type}s/by-${type}/${id}`,
-        { headers }
-      );
-      setAssignedUsers(assignedRes.data);
+  const queryKey = [`assigned-${type}s`, id, orgId];
+
+  const {
+    data: assignments = { assigned: [], available: [] },
+    isLoading,
+  } = useQuery<AssignmentsResult>({
+    queryKey,
+    queryFn: async () => {
+      const assignedRes = await axios.get(`${BACKEND_URL}/learn/assigned-${type}s/by-${type}/${id}`, {
+        headers: {
+          "x-org-id": orgId,
+          Authorization: `Bearer ${token!}`,
+        },
+      });
 
       const allRes = await axios.get(`${BACKEND_URL}/users`, {
         params: { org_id: orgId },
-        headers,
+        headers: {
+          "x-org-id": orgId,
+          Authorization: `Bearer ${token!}`,
+        },
       });
-      const all = allRes.data.users || allRes.data;
 
-      const unassigned = all.filter(
-        (u: AvailableUser) =>
-          !assignedRes.data.some((a: AssignedUser) => a.user?.id === u.id)
+      const allUsers: AvailableUser[] = allRes.data.users || allRes.data;
+
+      const unassigned = allUsers.filter(
+        (u: AvailableUser) => !assignedRes.data.some((a: AssignedUser) => a.user?.id === u.id)
       );
 
-      setAllUsers(unassigned);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return {
+        assigned: assignedRes.data,
+        available: unassigned,
+      };
+    },
+    enabled: !!id && !!orgId && !!token,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  useEffect(() => {
-    fetchAssignments();
-  }, [orgId, id, type]);
-
-  const handleAssign = async () => {
-    if (!headers || !selectedUser?.id) return;
-
-    try {
+  const assignMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedUser?.id) throw new Error("No user selected");
       await axios.post(
         `${BACKEND_URL}/learn/assign-${type}`,
         {
@@ -112,20 +111,26 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
           [`${type}_id`]: id,
           assigned_by: user?.id,
         },
-        { headers }
+        {
+          headers: {
+            "x-org-id": orgId,
+            Authorization: `Bearer ${token!}`,
+          },
+        }
       );
-
+    },
+    onSuccess: () => {
       setMessage(`✅ User assigned to ${label.toLowerCase()} successfully.`);
       setSelectedUser(null);
       setShowAssignModal(false);
-      await fetchAssignments();
-    } catch (err) {
-      console.error("Failed to assign user:", err);
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: () => {
       setMessage(`❌ Failed to assign user to ${label.toLowerCase()}.`);
-    }
-  };
+    },
+  });
 
-  const filteredUsers = assignedUsers.filter((u) => {
+  const filteredUsers = assignments.assigned.filter((u: AssignedUser) => {
     const matchesSearch =
       u.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
       u.user?.email?.toLowerCase().includes(search.toLowerCase());
@@ -133,7 +138,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) return <div className="p-4 text-gray-600">Loading assignments...</div>;
+  if (isLoading) return <div className="p-4 text-gray-600">Loading assignments...</div>;
 
   return (
     <div className="p-4">
@@ -160,9 +165,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
         </div>
 
         <button
-          onClick={() => {
-            setShowAssignModal(true);
-          }}
+          onClick={() => setShowAssignModal(true)}
           className="bg-blue-600 text-white px-4 py-1 rounded text-sm"
         >
           + Assign User
@@ -183,7 +186,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((a) => (
+            {filteredUsers.map((a: AssignedUser) => (
               <tr
                 key={a.id}
                 className="border-b cursor-pointer hover:bg-gray-100"
@@ -222,16 +225,16 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
               value={selectedUser?.id ?? ""}
               onChange={(e) => {
                 const userId = Number(e.target.value);
-                const user = allUsers.find((u) => u.id === userId) || null;
+                const user = assignments.available.find((u: AvailableUser) => u.id === userId) || null;
                 setSelectedUser(user);
               }}
             >
               <option value="" disabled>
                 -- Select a user --
               </option>
-              {allUsers.map((user) => (
+              {assignments.available.map((user: AvailableUser) => (
                 <option key={user.id} value={user.id}>
-                  {user.first_name || user.last_name
+                  {(user.first_name || user.last_name)
                     ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
                     : user.email}
                 </option>
@@ -249,7 +252,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
                 Cancel
               </button>
               <button
-                onClick={handleAssign}
+                onClick={() => assignMutation.mutate()}
                 disabled={!selectedUser}
                 className="px-4 py-1 rounded bg-blue-600 text-white disabled:opacity-50"
               >

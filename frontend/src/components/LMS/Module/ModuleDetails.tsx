@@ -48,28 +48,19 @@ export default function ModuleDetails({ setMainPage }: ModuleDetailsProps) {
   // 👇 Conditional rendering for selected sub-pages
   if (subPage === "coursedetails") {
     return (
-      <CourseDetails
-        id={String(selectedEntity?.id ?? "")}
-        onBack={() => setSubPage("details")}
-      />
-    );
+      <CourseDetails setMainPage={setMainPage} />
+     );
   }
 
   if (subPage === "skilldetails") {
     return (
-      <SkillDetails
-        id={String(selectedEntity?.id ?? "")}
-        onBack={() => setSubPage("details")}
-      />
+      <SkillDetails setMainPage={setMainPage} />
     );
   }
 
   if (subPage === "userdetails") {
     return (
-      <UserDetails
-        id={String(selectedEntity?.id ?? "")}
-        onBack={() => setSubPage("details")}
-      />
+      <UserDetails setMainPage={setMainPage} />
     );
   }
 

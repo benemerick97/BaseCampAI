@@ -1,6 +1,6 @@
 // frontend/src/components/Admin/OrgDetails.tsx
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { FiUsers, FiInfo, FiSettings } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
@@ -20,34 +20,36 @@ interface OrgDetailsProps {
   setMainPage: (page: string) => void;
 }
 
+const fetchOrganisation = async (orgId: number, token: string): Promise<Organisation> => {
+  const res = await axios.get(`${BACKEND_URL}/organisations/${orgId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.data;
+};
+
 export default function OrgDetails({ setMainPage }: OrgDetailsProps) {
   const { user, token } = useAuth();
-  const [org, setOrg] = useState<Organisation | null>(null);
-  const [loading, setLoading] = useState(true);
+  const orgId = user?.organisation?.id;
 
-  useEffect(() => {
-    const fetchOrgDetails = async () => {
-      if (!user?.organisation?.id || !token) return;
+  const {
+    data: org,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["organisation", orgId],
+    queryFn: () => fetchOrganisation(orgId!, token!),
+    enabled: !!orgId && !!token,
+    staleTime: 1000 * 60 * 5,
+  });
 
-      try {
-        const res = await axios.get(`${BACKEND_URL}/organisations/${user.organisation.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setOrg(res.data);
-      } catch (err) {
-        console.error("Failed to load organisation details:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrgDetails();
-  }, [user?.organisation?.id]);
-
-  if (loading) return <div className="p-6">Loading organisation...</div>;
-  if (!org) return <div className="p-6 text-red-500">Organisation not found.</div>;
+  if (isLoading) return <div className="p-6">Loading organisation...</div>;
+  if (isError || !org) {
+    const message = (error as Error)?.message || "Organisation not found.";
+    return <div className="p-6 text-red-500">{message}</div>;
+  }
 
   const tabConfig = [
     {
@@ -65,9 +67,9 @@ export default function OrgDetails({ setMainPage }: OrgDetailsProps) {
       key: "users",
       label: "Users",
       icon: <FiUsers />,
-      content: <UsersList setMainPage={setMainPage} />
+      content: <UsersList setMainPage={setMainPage} />,
     },
-        {
+    {
       key: "settings",
       label: "Settings",
       icon: <FiSettings />,

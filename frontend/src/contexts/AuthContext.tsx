@@ -57,11 +57,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const response = await fetch(`${BACKEND_URL}/me`, {
           headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
 
         if (response.ok) {
           const data = await response.json();
           setUser(data);
+        } else if (response.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken) {
+            const retry = await fetch(`${BACKEND_URL}/me`, {
+              headers: { Authorization: `Bearer ${newToken}` },
+              credentials: "include",
+            });
+            if (retry.ok) {
+              const userData = await retry.json();
+              setUser(userData);
+              setToken(newToken);
+              localStorage.setItem("token", newToken);
+            } else {
+              logout();
+            }
+          } else {
+            logout();
+          }
         } else {
           logout();
         }
@@ -85,12 +104,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [roleOverride]);
 
+  const refreshToken = async (): Promise<string | null> => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) throw new Error("Refresh failed");
+
+      const data = await response.json();
+      return data.access_token;
+    } catch (err) {
+      console.error("Refresh token error:", err);
+      return null;
+    }
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const response = await fetch(`${BACKEND_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
 
       if (!response.ok) throw new Error("Login failed");
@@ -101,7 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("token", data.access_token);
         setToken(data.access_token);
         setRoleOverride(null);
-        await refetchUser(); // User will be updated, and Login.tsx watches for that
+        await refetchUser();
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -123,6 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await fetch(`${BACKEND_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
 
       if (response.ok) {

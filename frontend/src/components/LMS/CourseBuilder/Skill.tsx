@@ -1,6 +1,7 @@
 // frontend/src/components/LMS/SkillBuilder/Skill.tsx
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
@@ -26,41 +27,39 @@ interface SkillProps {
 export default function Skill({ setMainPage }: SkillProps) {
   const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
+  const orgId = user?.organisation?.id;
 
-  const [skills, setSkills] = useState<Skill[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editSkill, setEditSkill] = useState<Skill | null>(null);
 
-  const fetchSkills = async () => {
-    const orgId = user?.organisation?.id;
-    if (!orgId) return;
+  const queryClient = useQueryClient();
 
-    try {
+  const { data: skills = [], isLoading } = useQuery<Skill[]>({
+    queryKey: ["skills", orgId],
+    queryFn: async () => {
       const res = await axios.get(`${BACKEND_URL}/skills`, {
         params: { org_id: orgId },
       });
-      setSkills(res.data);
-    } catch (err) {
-      console.error("Failed to fetch skills:", err);
-    }
-  };
+      return res.data;
+    },
+    enabled: !!orgId,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  useEffect(() => {
-    if (user?.organisation?.id) {
-      fetchSkills();
-    }
-  }, [user]);
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`${BACKEND_URL}/skills/${id}`, {
+        headers: { "x-org-id": orgId },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["skills", orgId] });
+    },
+  });
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this skill?")) return;
-    try {
-      await axios.delete(`${BACKEND_URL}/skills/${id}`, {
-        headers: { "x-org-id": user?.organisation?.id },
-      });
-      fetchSkills();
-    } catch (err) {
-      console.error("Delete failed:", err);
-    }
+    deleteMutation.mutate(id);
   };
 
   const handleSelect = (id: string | number) => {
@@ -99,13 +98,14 @@ export default function Skill({ setMainPage }: SkillProps) {
         title="Skills"
         entityType="skill"
         items={skills}
-        onFetch={fetchSkills}
+        onFetch={() => queryClient.invalidateQueries({ queryKey: ["skills", orgId] })}
         onSelect={handleSelect}
         renderRow={renderRow}
         columns={["Title", "Description", "Evidence Required", "Created", "Actions"]}
         addButtonLabel="Add"
         showSearchBar={true}
         onAddClick={handleAddClick}
+        isLoading={isLoading}
       />
 
       <SkillCreate
@@ -114,7 +114,7 @@ export default function Skill({ setMainPage }: SkillProps) {
           setShowModal(false);
           setEditSkill(null);
         }}
-        onCreated={fetchSkills}
+        onCreated={() => queryClient.invalidateQueries({ queryKey: ["skills", orgId] })}
         existingSkill={editSkill ?? undefined}
       />
     </>

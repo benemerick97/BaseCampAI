@@ -1,4 +1,7 @@
+// frontend/src/components/Agents.tsx
+
 import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import Modal from "./UI/Modal";
 import CreateAgent from "../components/Forms/CreateAgent";
@@ -14,11 +17,38 @@ interface Agent {
   type: string;
 }
 
+const fetchAgents = async (orgId: string): Promise<Agent[]> => {
+  if (!orgId) return [];
+  const res = await fetch(`${BACKEND_URL}/agents`, {
+    headers: {
+      "x-org-id": orgId,
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await res.json();
+  return data.agents || [];
+};
+
+const deleteAgent = async ({ agentKey, orgId }: { agentKey: string; orgId: string }) => {
+  const res = await fetch(`${BACKEND_URL}/agents/${agentKey}`, {
+    method: "DELETE",
+    headers: {
+      "x-org-id": orgId,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to delete agent.");
+  }
+};
+
 const Agents = () => {
   const { user } = useAuth();
   const orgId = user?.organisation?.id?.toString() || "";
+  const queryClient = useQueryClient();
 
-  const [agents, setAgents] = useState<Agent[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -32,26 +62,22 @@ const Agents = () => {
     type: "prompt",
   });
 
-  const headers: Record<string, string> = {
-    "x-org-id": orgId,
-    "Content-Type": "application/json",
-  };
+  const { data: agents = [], isLoading } = useQuery({
+    queryKey: ["agents", orgId],
+    queryFn: () => fetchAgents(orgId),
+    enabled: !!orgId,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const fetchAgents = async () => {
-    if (!orgId) return;
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/agents`, { headers });
-      const data = await res.json();
-      setAgents(data.agents || []);
-    } catch (err) {
-      console.error("Failed to load agents:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchAgents();
-  }, [orgId]);
+  const deleteMutation = useMutation({
+    mutationFn: deleteAgent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agents", orgId] });
+    },
+    onError: (error: any) => {
+      alert("Delete failed: " + error.message);
+    },
+  });
 
   useEffect(() => {
     const handleClickOutside = () => setDropdownOpen(null);
@@ -88,23 +114,7 @@ const Agents = () => {
   const handleDeleteAgent = async (agentKey: string) => {
     const confirmed = confirm("Are you sure you want to delete this agent?");
     if (!confirmed) return;
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/agents/${agentKey}`, {
-        method: "DELETE",
-        headers,
-      });
-
-      if (res.ok) {
-        await fetchAgents();
-      } else {
-        const err = await res.json();
-        alert("Delete failed: " + err.detail);
-      }
-    } catch (err) {
-      console.error("Delete failed:", err);
-      alert("Something went wrong.");
-    }
+    deleteMutation.mutate({ agentKey, orgId });
   };
 
   const handleCancelForm = () => {
@@ -123,6 +133,10 @@ const Agents = () => {
     agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     agent.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return <div className="p-6 text-gray-600">Loading agents...</div>;
+  }
 
   return (
     <div className="p-6">
@@ -281,7 +295,7 @@ const Agents = () => {
           onCancel={handleCancelForm}
           onSuccess={async () => {
             handleCancelForm();
-            await fetchAgents();
+            await queryClient.invalidateQueries({ queryKey: ["agents", orgId] });
           }}
           orgId={orgId}
         />

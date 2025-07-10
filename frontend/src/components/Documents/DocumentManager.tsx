@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+// frontend/src/components/Documents/DocumentManager.tsx
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiPlus, FiEye } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal";
@@ -25,71 +28,70 @@ interface DocumentObject {
   versions: DocumentFile[];
 }
 
+const fetchDocuments = async (orgId: string): Promise<DocumentObject[]> => {
+  const res = await fetch(`${BACKEND_URL}/document-objects`, {
+    headers: { "x-org-id": orgId },
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.detail || "Failed to fetch documents.");
+  if (!Array.isArray(data)) throw new Error("Unexpected response format.");
+  return data;
+};
+
+const deleteDocument = async ({
+  id,
+  orgId,
+}: {
+  id: string;
+  orgId: string;
+}): Promise<void> => {
+  const res = await fetch(`${BACKEND_URL}/document-objects/${id}`, {
+    method: "DELETE",
+    headers: { "x-org-id": orgId },
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data?.detail || "Failed to delete document.");
+  }
+};
+
 const DocumentManager = () => {
   const { user } = useAuth();
-  const orgId = user?.organisation?.id?.toString();
+  const orgId = user?.organisation?.id?.toString() || "";
+  const queryClient = useQueryClient();
 
-  const [documents, setDocuments] = useState<DocumentObject[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchDocuments = async () => {
-    if (!orgId) return;
-    setLoading(true);
-    setError(null);
+  const {
+    data: documents = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["documents", orgId],
+    queryFn: () => fetchDocuments(orgId),
+    enabled: !!orgId,
+    staleTime: 1000 * 60 * 5,
+  });
 
-    try {
-      const res = await fetch(`${BACKEND_URL}/document-objects`, {
-        headers: { "x-org-id": orgId },
-      });
-      const data = await res.json();
+  const deleteMutation = useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", orgId] });
+    },
+    onError: (err: any) => {
+      alert(`❌ ${err.message}`);
+    },
+  });
 
-      if (!res.ok) {
-        throw new Error(data?.detail || "Failed to fetch documents.");
-      }
-
-      if (!Array.isArray(data)) {
-        throw new Error("Unexpected response format.");
-      }
-
-      setDocuments(data);
-    } catch (err: any) {
-      console.error("Failed to fetch documents:", err);
-      setError(err.message || "Unknown error occurred.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, [orgId]);
-
-  const handleDelete = async (documentId: string) => {
+  const handleDelete = (documentId: string) => {
     if (!orgId) return;
     const confirmed = window.confirm("Are you sure you want to delete this document?");
     if (!confirmed) return;
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/document-objects/${documentId}`, {
-        method: "DELETE",
-        headers: {
-          "x-org-id": orgId,
-        },
-      });
-
-      if (res.ok) {
-        setDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
-      } else {
-        const errorData = await res.json();
-        alert(`❌ Failed to delete document: ${errorData.detail || "Unknown error"}`);
-      }
-    } catch (err) {
-      console.error("Delete failed:", err);
-      alert("❌ An error occurred while deleting the document.");
-    }
+    deleteMutation.mutate({ id: documentId, orgId });
   };
 
   const filteredDocs = documents.filter((doc) =>
@@ -130,11 +132,11 @@ const DocumentManager = () => {
       </div>
 
       {/* Loading / Error / Table */}
-      {loading ? (
+      {isLoading ? (
         <p className="text-gray-500">Loading documents...</p>
-      ) : error ? (
+      ) : isError ? (
         <div className="text-red-600 bg-red-100 border border-red-300 p-4 rounded text-sm">
-          <strong>Error:</strong> {error}
+          <strong>Error:</strong> {(error as Error).message}
         </div>
       ) : filteredDocs.length === 0 ? (
         <div className="text-center text-gray-500 py-10 border rounded bg-gray-50">
@@ -206,7 +208,7 @@ const DocumentManager = () => {
         <DocumentUpload
           onUploadComplete={() => {
             setShowUploadModal(false);
-            fetchDocuments();
+            queryClient.invalidateQueries({ queryKey: ["documents", orgId] });
           }}
         />
       </Modal>
