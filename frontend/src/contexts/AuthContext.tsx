@@ -1,6 +1,6 @@
 // frontend/src/contexts/AuthContext.tsx
 
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import api from "../utils/axiosInstance";
 
@@ -45,6 +45,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.getItem("roleOverride") as "super_admin" | "admin" | "user" | null
   );
 
+  const hasAttemptedLogin = useRef(false); // Prevents refresh loop
+
   // Inject token into axios instance
   useEffect(() => {
     if (token) {
@@ -56,10 +58,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const validateTokenAndFetchUser = async () => {
-      if (!token) {
+      if (!token || hasAttemptedLogin.current) {
         setAuthLoading(false);
         return;
       }
+
+      hasAttemptedLogin.current = true;
 
       try {
         const response = await api.get("/me");
@@ -90,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     validateTokenAndFetchUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
@@ -120,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("token", data.access_token);
         setToken(data.access_token);
         setRoleOverride(null);
+        hasAttemptedLogin.current = false; // Reset attempt on manual login
         await refetchUser();
       }
     } catch (error) {
@@ -139,6 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setToken(null);
       setRoleOverride(null);
+      hasAttemptedLogin.current = false;
     }
   };
 
