@@ -67,7 +67,7 @@ export default function Module({ setMainPage }: ModuleProps) {
     if (!confirm("Delete this module?")) return;
     try {
       await api.delete(`/learn/modules/${id}`, {
-        headers: { "x-org-id": user?.organisation?.id },
+        headers: { "x-org-id": user?.organisation?.id ?? "" },
       });
       fetchModules();
     } catch (err) {
@@ -87,14 +87,11 @@ export default function Module({ setMainPage }: ModuleProps) {
 
   const handleEditClick = async (item: ModuleListItem) => {
     try {
-      const res = await api.get<ModuleDetails>(
-        `/learn/modules/${item.id}`,
-        {
-          headers: {
-            "x-org-id": user?.organisation?.id,
-          },
-        }
-      );
+      const res = await api.get<ModuleDetails>(`/learn/modules/${item.id}`, {
+        headers: {
+          "x-org-id": user?.organisation?.id ?? "",
+        },
+      });
 
       const fullModule = res.data;
 
@@ -124,7 +121,6 @@ export default function Module({ setMainPage }: ModuleProps) {
       onClick={() => handleSelect(module.id)}
       onEdit={() => handleEditClick(module)}
       onDelete={handleDelete}
-      //setMainPage={setMainPage}
     />
   );
 
