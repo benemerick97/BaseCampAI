@@ -41,6 +41,10 @@ export default function Module({ setMainPage }: ModuleProps) {
   const { setSelectedEntity } = useSelectedEntity();
   const queryClient = useQueryClient();
 
+    // ✅ Add these logs right after initial hooks
+  console.log("Module.tsx → VITE_API_URL:", import.meta.env.VITE_API_URL);
+  console.log("Module.tsx → api.defaults.baseURL:", api.defaults.baseURL);
+
   const [showModal, setShowModal] = useState(false);
   const [editModule, setEditModule] = useState<(ModuleFormData & { id?: string }) | null>(null);
 
