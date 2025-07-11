@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
@@ -36,42 +37,55 @@ interface ModuleProps {
 }
 
 export default function Module({ setMainPage }: ModuleProps) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
+  const queryClient = useQueryClient();
 
-  const [modules, setModules] = useState<ModuleListItem[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editModule, setEditModule] = useState<(ModuleFormData & { id?: string }) | null>(null);
 
-  const fetchModules = async () => {
-    const orgId = user?.organisation?.id;
-    if (!orgId) return;
+  const orgId = user?.organisation?.id;
+  const queryKey = ["modules", orgId];
 
-    try {
-      const res = await api.get(`/learn/modules`, {
+  const {
+    data: modules = [],
+    isLoading,
+    refetch,
+  } = useQuery<ModuleListItem[]>({
+    queryKey,
+    queryFn: async () => {
+      const res = await api.get("/learn/modules", {
         params: { org_id: orgId },
+        headers: {
+          Authorization: `Bearer ${token!}`,
+        },
       });
-      setModules(res.data);
-    } catch (err) {
-      console.error("Failed to fetch modules:", err);
-    }
-  };
+      return res.data;
+    },
+    enabled: !!orgId && !!token,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  useEffect(() => {
-    if (user?.organisation?.id) {
-      fetchModules();
-    }
-  }, [user]);
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this module?")) return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       await api.delete(`/learn/modules/${id}`, {
-        headers: { "x-org-id": user?.organisation?.id ?? "" },
+        headers: {
+          "x-org-id": orgId ?? "",
+          Authorization: `Bearer ${token!}`,
+        },
       });
-      fetchModules();
-    } catch (err) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
       console.error("Delete failed:", err);
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    if (confirm("Delete this module?")) {
+      deleteMutation.mutate(id);
     }
   };
 
@@ -89,7 +103,8 @@ export default function Module({ setMainPage }: ModuleProps) {
     try {
       const res = await api.get<ModuleDetails>(`/learn/modules/${item.id}`, {
         headers: {
-          "x-org-id": user?.organisation?.id ?? "",
+          "x-org-id": orgId ?? "",
+          Authorization: `Bearer ${token!}`,
         },
       });
 
@@ -130,13 +145,16 @@ export default function Module({ setMainPage }: ModuleProps) {
         title="Modules"
         entityType="module"
         items={modules}
-        onFetch={fetchModules}
+        onFetch={async () => {
+          await refetch();
+        }}
         onSelect={handleSelect}
         renderRow={renderRow}
         columns={["Title", "Description", "Created", "Actions"]}
         addButtonLabel="Add"
         showSearchBar={true}
         onAddClick={handleAddClick}
+        isLoading={isLoading}
       />
 
       <ModuleCreate
@@ -145,7 +163,7 @@ export default function Module({ setMainPage }: ModuleProps) {
           setShowModal(false);
           setEditModule(null);
         }}
-        onCreated={fetchModules}
+        onCreated={refetch}
         existingModule={editModule ?? undefined}
       />
     </>

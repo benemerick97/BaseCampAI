@@ -42,13 +42,13 @@ export default function Login() {
   };
 
   useEffect(() => {
-    if (!authLoading && user && successMessage) {
+    if (!authLoading && user && successMessage && !isSubmitting) {
       const timer = setTimeout(() => {
         navigate("/dashboard");
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [authLoading, user, successMessage, navigate]);
+  }, [authLoading, user, successMessage, isSubmitting, navigate]);
 
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-gray-50 px-4">
