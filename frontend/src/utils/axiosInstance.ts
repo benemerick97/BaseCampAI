@@ -2,8 +2,19 @@
 
 import axios from "axios";
 
+// ✅ Force HTTPS if accidentally using HTTP in the env var
+const rawBaseUrl = import.meta.env.VITE_API_URL;
+const baseURL = rawBaseUrl?.replace(/^http:\/\//, "https://");
+
+if (rawBaseUrl !== baseURL) {
+  console.warn(
+    "[axiosInstance] VITE_API_URL was insecure and has been rewritten to use HTTPS:",
+    baseURL
+  );
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL,
   withCredentials: true,
 });
 
@@ -15,7 +26,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const refreshRes = await axios.post(
-          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+          `${baseURL}/auth/refresh`,  // ✅ Use patched baseURL here too
           {},
           { withCredentials: true }
         );
