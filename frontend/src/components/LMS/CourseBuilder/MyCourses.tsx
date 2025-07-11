@@ -7,8 +7,6 @@ import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
 import CourseRow from "../CourseBuilder/CourseRow";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Course {
   id: string;
   name: string;
@@ -46,7 +44,7 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
   const fetchAssignments = async () => {
     if (!user?.id) return;
     try {
-      const res = await api.get(`${BACKEND_URL}/learn/assigned-courses`, {
+      const res = await api.get(`/learn/assigned-courses`, {
         params: { user_id: user.id },
       });
       setAssignments(res.data);

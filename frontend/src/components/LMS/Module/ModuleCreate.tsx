@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { FiX, FiPlus } from "react-icons/fi";
+import api from "../../../utils/axiosInstance";
 
 interface CourseOption {
   id: string;
@@ -36,7 +37,7 @@ export default function ModuleCreate({
   existingModule,
 }: ModuleCreateProps) {
   const { user } = useAuth();
-  const orgId = user?.organisation?.id;
+  const orgId = user?.organisation?.id?.toString();
 
   const [formData, setFormData] = useState<ModuleFormData>({
     name: "",
@@ -69,32 +70,24 @@ export default function ModuleCreate({
   }, [visible, orgId, existingModule]);
 
   const fetchCourses = async () => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/courses?org_id=${orgId}`,
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-
-    if (res.ok) {
-      setCourses(await res.json());
-    } else {
-      console.error("❌ Failed to fetch courses", await res.text());
+    try {
+      const res = await api.get(`/courses`, {
+        headers: { "x-org-id": orgId || "" },
+      });
+      setCourses(res.data || []);
+    } catch (err) {
+      console.error("❌ Failed to fetch courses", err);
     }
   };
 
   const fetchSkills = async () => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/skills?org_id=${orgId}`,
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-
-    if (res.ok) {
-      setSkills(await res.json());
-    } else {
-      console.error("❌ Failed to fetch skills", await res.text());
+    try {
+      const res = await api.get(`/skills`, {
+        headers: { "x-org-id": orgId || "" },
+      });
+      setSkills(res.data || []);
+    } catch (err) {
+      console.error("❌ Failed to fetch skills", err);
     }
   };
 
@@ -122,28 +115,27 @@ export default function ModuleCreate({
 
     const isEditing = !!existingModule?.id;
     const endpoint = isEditing
-      ? `${import.meta.env.VITE_API_URL}/learn/modules/${existingModule.id}?org_id=${orgId}`
-      : `${import.meta.env.VITE_API_URL}/learn/modules?org_id=${orgId}`;
-    const method = isEditing ? "PUT" : "POST";
+      ? `/learn/modules/${existingModule.id}`
+      : `/learn/modules`;
+    const method = isEditing ? "put" : "post";
 
-    const res = await fetch(endpoint, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    try {
+      await api.request({
+        method,
+        url: endpoint,
+        headers: {
+          "x-org-id": orgId,
+        },
+        data: payload,
+      });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("❌ Module save failed:", errorText);
+      setFormData({ name: "", description: "", course_ids: [], skill_ids: [] });
+      onCreated();
+      onClose();
+    } catch (err: any) {
+      console.error("❌ Module save failed:", err);
       alert("Failed to save module.");
-      return;
     }
-
-    setFormData({ name: "", description: "", course_ids: [], skill_ids: [] });
-    onCreated();
-    onClose();
   };
 
   const filteredCourses = courses.filter(

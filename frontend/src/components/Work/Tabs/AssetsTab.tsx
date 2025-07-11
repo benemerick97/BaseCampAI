@@ -5,8 +5,6 @@ import EmptyTab from "./EmptyTab";
 import EntityModal from "../Assets/EntityModal";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Asset {
   id: number;
   name: string;
@@ -37,7 +35,7 @@ export default function AssetsTab({
 
   const fetchAssets = async () => {
     try {
-      const res = await api.get(`${BACKEND_URL}/assets`, {
+      const res = await api.get(`/assets`, {
         params: { site_id: siteId, organisation_id: organisationId },
       });
       setAssets(res.data);
@@ -56,13 +54,13 @@ export default function AssetsTab({
   const handleSubmit = async (form: Partial<Asset>) => {
     try {
       if (form.id) {
-        await api.put(`${BACKEND_URL}/assets/${form.id}`, {
+        await api.put(`/assets/${form.id}`, {
           ...form,
           site_id: siteId,
           organisation_id: organisationId,
         });
       } else {
-        await api.post(`${BACKEND_URL}/assets`, {
+        await api.post(`/assets`, {
           ...form,
           site_id: siteId,
           organisation_id: organisationId,
@@ -81,7 +79,7 @@ export default function AssetsTab({
     if (!confirmed) return;
 
     try {
-      await api.delete(`${BACKEND_URL}/assets/${id}`, {
+      await api.delete(`/assets/${id}`, {
         params: { organisation_id: organisationId },
       });
       fetchAssets();

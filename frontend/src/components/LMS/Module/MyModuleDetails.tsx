@@ -7,8 +7,6 @@ import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import { FiBookOpen } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Module {
   id: string;
   name: string;
@@ -41,7 +39,7 @@ export default function MyModuleDetails({ setMainPage }: MyModuleDetailsProps) {
     if (!selectedEntity || selectedEntity.type !== "assignedModule") return;
 
     api
-      .get(`${BACKEND_URL}/learn/assigned-modules/${selectedEntity.id}`, {
+      .get(`/learn/assigned-modules/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
       .then((res) => setAssignment(res.data))

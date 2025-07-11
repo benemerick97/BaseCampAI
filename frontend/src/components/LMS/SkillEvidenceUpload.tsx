@@ -5,8 +5,6 @@ import api from "../../utils/axiosInstance";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 export default function SkillEvidenceUpload({
   onComplete = () => {},
 }: {
@@ -53,7 +51,7 @@ export default function SkillEvidenceUpload({
         formData.append("skill_id", assignment.skill.id.toString());
 
       const uploadRes = await api.post(
-        `${BACKEND_URL}/learn/assigned_skills/upload`,
+        `/learn/assigned_skills/upload`,
         formData,
         {
           headers: {
@@ -65,7 +63,7 @@ export default function SkillEvidenceUpload({
       const fileUrl = uploadRes.data.url;
 
       // Step 2: Mark skill complete with the returned file URL
-      await api.post(`${BACKEND_URL}/learn/complete-skill`, {
+      await api.post(`/learn/complete-skill`, {
         user_id: user.id,
         skill_id: assignment.skill.id,
         evidence_file_url: fileUrl,

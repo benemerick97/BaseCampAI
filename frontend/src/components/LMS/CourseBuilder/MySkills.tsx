@@ -6,8 +6,6 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Skill {
   id: string;
   name: string;
@@ -39,7 +37,7 @@ export default function MySkills({ setMainPage }: { setMainPage: (p: string) => 
   const fetchAssignments = async () => {
     if (!user?.id) return;
     try {
-      const res = await api.get(`${BACKEND_URL}/learn/assigned-skills`, {
+      const res = await api.get(`/learn/assigned-skills`, {
         params: { user_id: user.id },
       });
       setAssignments(res.data);
@@ -54,7 +52,7 @@ export default function MySkills({ setMainPage }: { setMainPage: (p: string) => 
 
   const handleMarkComplete = async (skillId: string) => {
     try {
-      await api.post(`${BACKEND_URL}/learn/complete-skill`, {
+      await api.post(`/learn/complete-skill`, {
         user_id: user?.id,
         skill_id: skillId,
         evidence_file_url: null,

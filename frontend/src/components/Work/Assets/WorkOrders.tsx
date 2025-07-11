@@ -6,8 +6,6 @@ import EntityListPage from "./EntityListPage";
 import WorkOrderRow from "./WorkOrderRow";
 import EntityModal from "./EntityModal"; 
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface WorkOrder {
   id: number;
   title: string;
@@ -42,7 +40,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const fetchWorkOrders = async () => {
     try {
-      const res = await api.get(`${BACKEND_URL}/workorders/`, {
+      const res = await api.get(`/workorders/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setWorkOrders(res.data);
@@ -53,7 +51,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const fetchAssets = async () => {
     try {
-      const res = await api.get(`${BACKEND_URL}/assets/`, {
+      const res = await api.get(`/assets/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setAssets(res.data);
@@ -74,9 +72,9 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
     };
 
     if (form.id) {
-      await api.put(`${BACKEND_URL}/workorders/${form.id}`, payload);
+      await api.put(`/workorders/${form.id}`, payload);
     } else {
-      await api.post(`${BACKEND_URL}/workorders/`, payload);
+      await api.post(`/workorders/`, payload);
     }
 
     setShowModal(false);
@@ -86,7 +84,7 @@ export default function WorkOrders({ setMainPage }: WorkOrdersProps) {
 
   const handleDelete = async (id: number) => {
     if (confirm("Delete this work order?")) {
-      await api.delete(`${BACKEND_URL}/workorders/${id}`, {
+      await api.delete(`/workorders/${id}`, {
         params: { organisation_id: user?.organisation?.id },
       });
       fetchWorkOrders();

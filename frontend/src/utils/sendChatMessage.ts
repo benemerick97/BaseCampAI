@@ -1,3 +1,6 @@
+// frontend/src/utils/sendChatMessage.ts
+import api from "./axiosInstance";
+
 interface SendChatOptions {
   message: string;
   agentKey?: string | null;
@@ -5,15 +8,15 @@ interface SendChatOptions {
   onStream: (chunk: string) => void;
 }
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 export async function sendChatMessage({
   message,
   agentKey,
   orgId,
   onStream,
 }: SendChatOptions): Promise<void> {
-  const response = await fetch(`${BACKEND_URL}/chat`, {
+  const baseURL = api.defaults.baseURL || "";
+
+  const response = await fetch(`${baseURL}/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

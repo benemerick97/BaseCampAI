@@ -8,8 +8,6 @@ import { FiBookOpen, FiUsers, FiEdit2 } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
 import AssignedUsersTab from "./Tabs/AssignedUsersTab";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Skill {
   id: string;
   name: string;
@@ -33,7 +31,7 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
     if (!selectedEntity || selectedEntity.type !== "skill") return;
 
     api
-      .get(`${BACKEND_URL}/skills/${selectedEntity.id}`, {
+      .get(`/skills/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
       .then((res) => setSkill(res.data))
@@ -67,7 +65,7 @@ export default function SkillDetails({ setMainPage }: SkillDetailsProps) {
               className="bg-green-600 text-white px-4 py-2 rounded"
               onClick={async () => {
                 try {
-                  await api.post(`${BACKEND_URL}/learn/complete-skill`, {
+                  await api.post(`/learn/complete-skill`, {
                     user_id: user?.id,
                     skill_id: skill.id,
                   });

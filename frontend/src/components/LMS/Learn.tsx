@@ -1,9 +1,6 @@
-// frontend/src/components/LMS/Learn.tsx
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance";
 
 interface FileMeta {
   id: string;
@@ -19,12 +16,11 @@ interface Question {
 }
 
 const Learn = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const orgId = user?.organisation?.id?.toString();
 
   const [files, setFiles] = useState<FileMeta[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileMeta | null>(null);
-
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -32,39 +28,37 @@ const Learn = () => {
   const [correctAnswers, setCorrectAnswers] = useState<number>(0);
   const [completed, setCompleted] = useState(false);
 
-  const headers: Record<string, string> | undefined = orgId
-    ? { "x-org-id": orgId, "Content-Type": "application/json" }
-    : undefined;
-
   const fetchFiles = async () => {
-    if (!headers) return;
+    if (!orgId || !token) return;
     try {
-      const res = await fetch(`${BACKEND_URL}/document-objects`, { headers });
-      const data = await res.json();
-      setFiles(data);
+      const res = await api.get(`/document-objects`, {
+        headers: {
+          "x-org-id": orgId,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setFiles(res.data);
     } catch (err) {
       console.error("Failed to load documents:", err);
     }
   };
 
   const generateQuestions = async (documentId: string) => {
-    if (!headers) return;
-
-    const endpoint = `${BACKEND_URL}/lms/questions`;
-    console.log("📤 Sending POST request to:", endpoint);
-    console.log("📦 Payload:", { document_id: documentId });
+    if (!orgId || !token) return;
 
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ document_id: documentId }),
-      });
+      const res = await api.post(
+        `/lms/questions`,
+        { document_id: documentId },
+        {
+          headers: {
+            "x-org-id": orgId,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (!res.ok) throw new Error("Failed to generate questions");
-
-      const data = await res.json();
-      setQuestions(data.questions);
+      setQuestions(res.data.questions);
       setCurrentQuestion(0);
       setSelectedOption(null);
       setIsSubmitted(false);
@@ -74,7 +68,6 @@ const Learn = () => {
       console.error("❌ Error generating questions:", err);
     }
   };
-
 
   useEffect(() => {
     fetchFiles();

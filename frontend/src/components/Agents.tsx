@@ -7,8 +7,7 @@ import Modal from "./UI/Modal";
 import CreateAgent from "../components/Forms/CreateAgent";
 import AgentCard from "../components/AgentCard";
 import { FiPlus, FiMoreHorizontal } from "react-icons/fi";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../utils/axiosInstance";
 
 interface Agent {
   key: string;
@@ -19,28 +18,27 @@ interface Agent {
 
 const fetchAgents = async (orgId: string): Promise<Agent[]> => {
   if (!orgId) return [];
-  const res = await fetch(`${BACKEND_URL}/agents`, {
+  const res = await api.get(`/agents`, {
     headers: {
       "x-org-id": orgId,
       "Content-Type": "application/json",
     },
   });
-  const data = await res.json();
-  return data.agents || [];
+  return res.data.agents || [];
 };
 
 const deleteAgent = async ({ agentKey, orgId }: { agentKey: string; orgId: string }) => {
-  const res = await fetch(`${BACKEND_URL}/agents/${agentKey}`, {
-    method: "DELETE",
-    headers: {
-      "x-org-id": orgId,
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.detail || "Failed to delete agent.");
+  try {
+    await api.delete(`/agents/${agentKey}`, {
+      headers: {
+        "x-org-id": orgId,
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error: any) {
+    const errDetail =
+      error?.response?.data?.detail || error?.message || "Failed to delete agent.";
+    throw new Error(errDetail);
   }
 };
 
@@ -87,13 +85,11 @@ const Agents = () => {
 
   const handleEditClick = async (agent: Agent) => {
     try {
-      const res = await fetch(`${BACKEND_URL}/agents/${agent.key}`, {
+      const res = await api.get(`/agents/${agent.key}`, {
         headers: { "x-org-id": orgId },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch agent details");
-
-      const fullAgent = await res.json();
+      const fullAgent = res.data;
 
       setForm({
         agent_key: fullAgent.agent_key,

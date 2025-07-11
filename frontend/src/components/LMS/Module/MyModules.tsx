@@ -7,8 +7,6 @@ import LearnListPage from "../LearnListPage";
 import MyModuleRow from "./MyModulesRow";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Module {
   id: string;
   name: string;
@@ -43,7 +41,7 @@ export default function MyModules({ setMainPage }: MyModulesProps) {
   const fetchAssignments = async () => {
     if (!user?.id) return;
     try {
-      const res = await api.get(`${BACKEND_URL}/learn/assigned-modules/by-user/${user.id}`);
+      const res = await api.get(`/learn/assigned-modules/by-user/${user.id}`);
       setAssignments(res.data);
     } catch (err) {
       console.error("Failed to fetch assigned modules:", err);

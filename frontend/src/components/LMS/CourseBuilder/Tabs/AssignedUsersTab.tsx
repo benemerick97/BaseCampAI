@@ -6,8 +6,6 @@ import api from "../../../../utils/axiosInstance";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface AssignedUser {
   id: number;
   user_id: number;
@@ -71,14 +69,14 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   } = useQuery<AssignmentsResult>({
     queryKey,
     queryFn: async () => {
-      const assignedRes = await api.get(`${BACKEND_URL}/learn/assigned-${type}s/by-${type}/${id}`, {
+      const assignedRes = await api.get(`/learn/assigned-${type}s/by-${type}/${id}`, {
         headers: {
           "x-org-id": orgId,
           Authorization: `Bearer ${token!}`,
         },
       });
 
-      const allRes = await api.get(`${BACKEND_URL}/users`, {
+      const allRes = await api.get(`/users`, {
         params: { org_id: orgId },
         headers: {
           "x-org-id": orgId,
@@ -105,7 +103,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
     mutationFn: async () => {
       if (!selectedUser?.id) throw new Error("No user selected");
       await api.post(
-        `${BACKEND_URL}/learn/assign-${type}`,
+        `/learn/assign-${type}`,
         {
           user_id: selectedUser.id,
           [`${type}_id`]: id,

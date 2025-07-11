@@ -7,8 +7,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import DetailsPage from "../Shared/DetailsPage";
 import api from "../../utils/axiosInstance";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface User {
   id: number;
   first_name?: string;
@@ -31,7 +29,7 @@ export default function UserDetails({ setMainPage }: UserDetailsProps) {
       if (!selectedEntity || selectedEntity.type !== "user" || !token) return;
 
       try {
-        const res = await api.get(`${BACKEND_URL}/users/${selectedEntity.id}`, {
+        const res = await api.get(`/users/${selectedEntity.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

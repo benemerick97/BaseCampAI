@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import api from "../../utils/axiosInstance";
 
 interface CreateAgentProps {
   initialValues?: {
@@ -12,8 +13,6 @@ interface CreateAgentProps {
   onSuccess: () => void;
   orgId: string;
 }
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 export default function CreateAgent({
   initialValues,
@@ -39,38 +38,34 @@ export default function CreateAgent({
 
   const handleSubmit = async () => {
     setLoading(true);
-    const method = editingKey ? "PUT" : "POST";
+    const method = editingKey ? "put" : "post";
     const url = editingKey
-      ? `${BACKEND_URL}/agents/${editingKey}`
-      : `${BACKEND_URL}/agents/register`;
+      ? `/agents/${editingKey}`
+      : `/agents/register`;
+
+    const payload = {
+      agent_key: form.agent_key,
+      name: form.name,
+      description: form.description,
+      prompt: form.prompt,
+      filter: { agent_id: form.agent_key },
+      type: form.type,
+    };
 
     try {
-      const res = await fetch(url, {
+      await api.request({
         method,
+        url,
+        data: payload,
         headers: {
           "x-org-id": orgId,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          agent_key: form.agent_key,
-          name: form.name,
-          description: form.description,
-          prompt: form.prompt,
-          filter: { agent_id: form.agent_key },
-          type: form.type,
-        }),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        alert("Error: " + err.detail);
-        return;
-      }
-
       onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save agent failed:", err);
-      alert("Something went wrong.");
+      alert("Error: " + (err.response?.data?.detail || "Something went wrong."));
     } finally {
       setLoading(false);
     }

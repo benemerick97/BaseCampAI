@@ -7,6 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal";
 import UserInviteForm from "./UserInviteForm";
 import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
+import api from "../../utils/axiosInstance"; // ✅ Import your axios instance
 
 interface User {
   id: number;
@@ -16,21 +17,14 @@ interface User {
   role: string;
 }
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 const fetchUsers = async (orgId: string, token: string): Promise<User[]> => {
-  const res = await fetch(`${BACKEND_URL}/users`, {
+  const res = await api.get(`/users`, {
     headers: {
       "x-org-id": orgId,
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch users: ${res.status} - ${errorText}`);
-  }
-  const data = await res.json();
-  return data.users || data;
+  return res.data.users || res.data;
 };
 
 const deleteUser = async ({
@@ -42,17 +36,12 @@ const deleteUser = async ({
   orgId: string;
   token: string;
 }) => {
-  const res = await fetch(`${BACKEND_URL}/users/${userId}`, {
-    method: "DELETE",
+  await api.delete(`/users/${userId}`, {
     headers: {
       "x-org-id": orgId,
       Authorization: `Bearer ${token}`,
     },
   });
-
-  if (!res.ok) {
-    throw new Error("Failed to delete user");
-  }
 };
 
 const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => {

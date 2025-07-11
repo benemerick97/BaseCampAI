@@ -6,8 +6,6 @@ import EntityListPage from "./EntityListPage";
 import SiteRow from "./SiteRow";
 import EntityModal from "./EntityModal";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface SiteItem {
   id: number;
   name: string;
@@ -30,7 +28,7 @@ export default function Sites({ setMainPage }: SiteProps) {
 
   const fetchSites = async () => {
     try {
-      const response = await api.get(`${BACKEND_URL}/sites/`, {
+      const response = await api.get(`/sites/`, {
         params: { organisation_id: user?.organisation?.id },
       });
       setSites(response.data);
@@ -45,13 +43,13 @@ export default function Sites({ setMainPage }: SiteProps) {
 
   const handleAddOrEditSite = async (form: any) => {
     if (form.id) {
-      await api.put(`${BACKEND_URL}/sites/${form.id}`, {
+      await api.put(`/sites/${form.id}`, {
         name: form.name,
         location: form.location,
         organisation_id: user?.organisation?.id,
       });
     } else {
-      await api.post(`${BACKEND_URL}/sites/`, {
+      await api.post(`/sites/`, {
         name: form.name,
         location: form.location,
         organisation_id: user?.organisation?.id,
@@ -65,7 +63,7 @@ export default function Sites({ setMainPage }: SiteProps) {
   const handleDelete = async (id: number) => {
     const confirmed = confirm("Delete this site?");
     if (confirmed) {
-      await api.delete(`${BACKEND_URL}/sites/${id}`);
+      await api.delete(`/sites/${id}`);
       fetchSites();
     }
   };

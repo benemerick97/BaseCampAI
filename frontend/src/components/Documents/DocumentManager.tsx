@@ -1,13 +1,10 @@
-// frontend/src/components/Documents/DocumentManager.tsx
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiPlus, FiEye } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal";
 import DocumentUpload from "./DocumentUpload";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance"; // ✅ replace fetch
 
 interface DocumentFile {
   id: string;
@@ -29,14 +26,10 @@ interface DocumentObject {
 }
 
 const fetchDocuments = async (orgId: string): Promise<DocumentObject[]> => {
-  const res = await fetch(`${BACKEND_URL}/document-objects`, {
+  const res = await api.get(`/document-objects`, {
     headers: { "x-org-id": orgId },
   });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.detail || "Failed to fetch documents.");
-  if (!Array.isArray(data)) throw new Error("Unexpected response format.");
-  return data;
+  return res.data;
 };
 
 const deleteDocument = async ({
@@ -46,15 +39,9 @@ const deleteDocument = async ({
   id: string;
   orgId: string;
 }): Promise<void> => {
-  const res = await fetch(`${BACKEND_URL}/document-objects/${id}`, {
-    method: "DELETE",
+  await api.delete(`/document-objects/${id}`, {
     headers: { "x-org-id": orgId },
   });
-
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data?.detail || "Failed to delete document.");
-  }
 };
 
 const DocumentManager = () => {
@@ -100,7 +87,6 @@ const DocumentManager = () => {
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
         <div className="flex items-end gap-2">
           <h3 className="text-2xl font-semibold leading-tight">Document Manager</h3>
@@ -119,7 +105,6 @@ const DocumentManager = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="mb-4 flex items-center gap-2">
         <input
           type="text"
@@ -131,7 +116,6 @@ const DocumentManager = () => {
         <button className="text-sm text-blue-600 font-medium">+ Add filter</button>
       </div>
 
-      {/* Loading / Error / Table */}
       {isLoading ? (
         <p className="text-gray-500">Loading documents...</p>
       ) : isError ? (
@@ -199,7 +183,6 @@ const DocumentManager = () => {
         </div>
       )}
 
-      {/* Upload Modal */}
       <Modal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}

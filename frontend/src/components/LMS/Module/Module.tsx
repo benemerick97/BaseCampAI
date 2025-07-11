@@ -6,8 +6,6 @@ import LearnListPage from "../LearnListPage";
 import ModuleRow from "./ModuleRow";
 import ModuleCreate from "./ModuleCreate";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface ModuleListItem {
   id: string;
   name: string;
@@ -50,7 +48,7 @@ export default function Module({ setMainPage }: ModuleProps) {
     if (!orgId) return;
 
     try {
-      const res = await api.get(`${BACKEND_URL}/learn/modules`, {
+      const res = await api.get(`/learn/modules`, {
         params: { org_id: orgId },
       });
       setModules(res.data);
@@ -68,7 +66,7 @@ export default function Module({ setMainPage }: ModuleProps) {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this module?")) return;
     try {
-      await api.delete(`${BACKEND_URL}/learn/modules/${id}`, {
+      await api.delete(`/learn/modules/${id}`, {
         headers: { "x-org-id": user?.organisation?.id },
       });
       fetchModules();
@@ -90,7 +88,7 @@ export default function Module({ setMainPage }: ModuleProps) {
   const handleEditClick = async (item: ModuleListItem) => {
     try {
       const res = await api.get<ModuleDetails>(
-        `${BACKEND_URL}/learn/modules/${item.id}`,
+        `/learn/modules/${item.id}`,
         {
           headers: {
             "x-org-id": user?.organisation?.id,

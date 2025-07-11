@@ -9,8 +9,6 @@ import LearnListPage from "../LearnListPage";
 import ModuleRow from "./ModuleRow";
 import LearnModal from "../LearnModal";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Module {
   id: number;
   title: string;
@@ -40,7 +38,7 @@ export default function Module({ setMainPage }: ModuleProps) {
   } = useQuery<Module[]>({
     queryKey,
     queryFn: async () => {
-      const res = await api.get(`${BACKEND_URL}/modules/`, {
+      const res = await api.get(`/modules/`, {
         params: { organisation_id: orgId },
         headers: { Authorization: `Bearer ${token!}` },
       });
@@ -59,11 +57,11 @@ export default function Module({ setMainPage }: ModuleProps) {
       };
 
       if (form.id) {
-        return api.put(`${BACKEND_URL}/modules/${form.id}`, payload, {
+        return api.put(`/modules/${form.id}`, payload, {
           headers: { Authorization: `Bearer ${token!}` },
         });
       } else {
-        return api.post(`${BACKEND_URL}/modules/`, payload, {
+        return api.post(`/modules/`, payload, {
           headers: { Authorization: `Bearer ${token!}` },
         });
       }
@@ -80,7 +78,7 @@ export default function Module({ setMainPage }: ModuleProps) {
 
   const deleteModule = useMutation({
     mutationFn: async (id: number) => {
-      return api.delete(`${BACKEND_URL}/modules/${id}`, {
+      return api.delete(`/modules/${id}`, {
         params: { organisation_id: orgId },
         headers: { Authorization: `Bearer ${token!}` },
       });

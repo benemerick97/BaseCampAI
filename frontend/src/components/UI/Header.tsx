@@ -1,12 +1,11 @@
 // frontend/src/components/Header.tsx
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { FiUser, FiSettings, FiChevronDown, FiBell } from "react-icons/fi";
 import logo from "../../assets/logo/BASECAMP.svg";
 import { useAuth } from "../../contexts/AuthContext";
 import { useOrganisations } from "../../hooks/useOrganisations";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance";
 
 interface Organisation {
   id: number;
@@ -35,31 +34,25 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
   const accountDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
 
-  const onChangeOrganisation = async (org: Organisation) => {
+  const onChangeOrganisation = useCallback(async (org: Organisation) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${BACKEND_URL}/superadmin/switch-org`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ org_id: org.id }),
-      });
-
-      if (!response.ok) throw new Error("Failed to switch organisation");
-
+      await api.post(
+        "/superadmin/switch-org",
+        { org_id: org.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       await refetchUser();
       setShowOrgDropdown(false);
     } catch (error) {
       console.error("Error switching organisation:", error);
     }
-  };
+  }, [refetchUser]);
 
   const handleOrgDropdownToggle = async () => {
     if (isSuperAdmin) {
       setShowOrgDropdown((prev) => !prev);
-      await refetchOrganisations(); // ✅ Live refresh the org list
+      await refetchOrganisations();
     }
   };
 
@@ -89,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
       </div>
 
       {/* Welcome */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 text-xl font-semibold">
+      <div className="absolute left-1/2 -translate-x-1/2 text-xl font-semibold">
         Welcome back {userName}!
       </div>
 
@@ -99,6 +92,8 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         {organisationName && (
           <div className="relative" ref={orgDropdownRef}>
             <button
+              aria-haspopup="true"
+              aria-expanded={showOrgDropdown}
               onClick={handleOrgDropdownToggle}
               className="flex items-center text-sm text-gray-600 font-medium max-w-[220px] truncate hover:text-gray-800"
             >
@@ -143,6 +138,8 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         {isSuperAdmin && (
           <div className="relative" ref={roleDropdownRef}>
             <button
+              aria-haspopup="true"
+              aria-expanded={showRoleDropdown}
               onClick={() => setShowRoleDropdown((prev) => !prev)}
               className="flex items-center text-sm text-gray-600 font-medium hover:text-gray-800"
             >
@@ -173,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
           </div>
         )}
 
-        {/* Notification and Settings */}
+        {/* Notifications */}
         <button
           title="Notifications"
           onClick={() => onNavClick("placeholder")}
@@ -181,6 +178,8 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         >
           <FiBell className="text-base" />
         </button>
+
+        {/* Settings */}
         <button
           title="Settings"
           onClick={() => onNavClick("settings")}
@@ -193,6 +192,8 @@ const Header: React.FC<HeaderProps> = ({ onNavClick, activePage }) => {
         <div className="relative" ref={accountDropdownRef}>
           <button
             title="Account"
+            aria-haspopup="true"
+            aria-expanded={showAccountDropdown}
             onClick={() => setShowAccountDropdown((prev) => !prev)}
             className={`p-2 ${activePage === "account" ? "text-blue-600" : "text-gray-600"}`}
           >

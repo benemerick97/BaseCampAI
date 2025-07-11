@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import EntityModal from "./LearnModal";
 import { useAuth } from "../../contexts/AuthContext";
+import api from "../../utils/axiosInstance";
 
 interface DocumentOption {
   id: string;
@@ -57,17 +58,11 @@ export default function CourseCreate({
         return;
       }
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/document-objects`, {
-        headers: {
-          "Content-Type": "application/json",
-          "x-org-id": orgId,
-        },
+      const res = await api.get("/document-objects", {
+        headers: { "x-org-id": orgId },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch documents");
-
-      const data = await res.json();
-      setDocuments(data);
+      setDocuments(res.data || []);
     } catch (err) {
       console.error("Failed to fetch documents:", err);
     }
@@ -100,23 +95,18 @@ export default function CourseCreate({
 
       const isEditing = !!existingCourse?.id;
       const endpoint = isEditing
-        ? `${import.meta.env.VITE_API_URL}/courses/${existingCourse.id}`
-        : `${import.meta.env.VITE_API_URL}/courses/`;
-      const method = isEditing ? "PUT" : "POST";
+        ? `/courses/${existingCourse.id}`
+        : `/courses/`;
+      const method = isEditing ? "put" : "post";
 
-      const res = await fetch(endpoint, {
+      await api.request({
         method,
+        url: endpoint,
         headers: {
-          "Content-Type": "application/json",
           "x-org-id": orgId,
         },
-        body: JSON.stringify(data),
+        data,
       });
-
-      if (!res.ok) {
-        const errorBody = await res.text();
-        throw new Error(`Failed to ${isEditing ? "update" : "create"} course: ${res.status} ${errorBody}`);
-      }
 
       setFormData({});
       onCreated();

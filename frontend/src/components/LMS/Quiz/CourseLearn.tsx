@@ -3,8 +3,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import MaterialViewer from "./MaterialViewer";
 import QuizViewer from "./QuizViewer";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../../utils/axiosInstance";
 
 interface Slide {
   title: string;
@@ -52,23 +51,18 @@ export default function CourseLearn() {
     isFetching.current = true;
 
     try {
-      const courseRes = await fetch(`${BACKEND_URL}/courses/${courseId}`);
-      const courseData = await courseRes.json();
-      setCourse(courseData);
+      const courseRes = await api.get(`/courses/${courseId}`);
+      setCourse(courseRes.data);
 
-      const quizRes = await fetch(`${BACKEND_URL}/lms/questions`, {
-        method: "POST",
+      const quizRes = await api.post(`/lms/questions`, {
+        document_id: documentId,
+      }, {
         headers: {
-          "Content-Type": "application/json",
           "x-org-id": orgId,
         },
-        body: JSON.stringify({ document_id: documentId }),
       });
 
-      if (!quizRes.ok) throw new Error("Failed to fetch quiz questions");
-
-      const quizData = await quizRes.json();
-      setQuestions(quizData.questions);
+      setQuestions(quizRes.data.questions);
       lastFetchedCourseId.current = String(courseId);
     } catch (err) {
       console.error("Error loading course or quiz:", err);
@@ -96,21 +90,14 @@ export default function CourseLearn() {
     try {
       if (!user?.id || !course?.id) return;
 
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-        ...(orgId ? { "x-org-id": orgId } : {}),
-      };
-
-      const res = await fetch(`${BACKEND_URL}/learn/complete-course`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          user_id: user.id,
-          course_id: course.id,
-        }),
+      await api.post(`/learn/complete-course`, {
+        user_id: user.id,
+        course_id: course.id,
+      }, {
+        headers: {
+          "x-org-id": orgId || "",
+        },
       });
-
-      if (!res.ok) throw new Error("Failed to mark course complete");
 
       console.log("✅ Course marked as complete");
     } catch (err) {

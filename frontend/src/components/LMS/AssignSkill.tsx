@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import api from "../../utils/axiosInstance";
 import { useAuth } from "../../contexts/AuthContext";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 interface User {
   id: number;
@@ -41,11 +40,11 @@ export default function AssignSkill() {
       if (!headers) return;
       try {
         const [usersRes, skillsRes] = await Promise.all([
-          api.get(`${BACKEND_URL}/users/`, {
+          api.get("/users/", {
             params: { org_id: orgId },
             headers,
           }),
-          api.get(`${BACKEND_URL}/skills`, {
+          api.get("/skills", {
             params: { org_id: orgId },
             headers,
           }),

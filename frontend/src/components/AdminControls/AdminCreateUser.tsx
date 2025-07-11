@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance";
 
 interface Organisation {
   id: number;
@@ -43,29 +42,21 @@ export default function AdminCreateUser({
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${BACKEND_URL}/superadmin/create-user`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          role,
-          password,
-          organisation_id: organisationId,
-        }),
+      await api.post("/superadmin/create-user", {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        role,
+        password,
+        organisation_id: organisationId,
       });
 
-      if (!response.ok) throw new Error("Failed to create user");
-
       if (onSuccess) onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("An error occurred while creating the user.");
+      const message =
+        err.response?.data?.detail || "An error occurred while creating the user.";
+      setError(message);
     } finally {
       setLoading(false);
     }

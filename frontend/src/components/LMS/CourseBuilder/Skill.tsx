@@ -9,8 +9,6 @@ import LearnListPage from "../LearnListPage";
 import SkillRow from "./SkillRow";
 import SkillCreate from "../SkillCreate";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Skill {
   id: string;
   name: string;
@@ -37,7 +35,7 @@ export default function Skill({ setMainPage }: SkillProps) {
   const { data: skills = [], isLoading } = useQuery<Skill[]>({
     queryKey: ["skills", orgId],
     queryFn: async () => {
-      const res = await api.get(`${BACKEND_URL}/skills`, {
+      const res = await api.get(`/skills/`, {
         params: { org_id: orgId },
       });
       return res.data;
@@ -48,7 +46,7 @@ export default function Skill({ setMainPage }: SkillProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.delete(`${BACKEND_URL}/skills/${id}`, {
+      await api.delete(`/skills/${id}`, {
         headers: { "x-org-id": orgId },
       });
     },

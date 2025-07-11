@@ -6,8 +6,6 @@ import api from "../../../../utils/axiosInstance";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Course {
   id: string;
   name: string;
@@ -55,8 +53,8 @@ export default function AssignedContentTab({ moduleId, label = "Content", setMai
       if (!headers) return [];
 
       const [courseRes, skillRes] = await Promise.all([
-        api.get(`${BACKEND_URL}/learn/modules/${moduleId}/courses`, { headers }),
-        api.get(`${BACKEND_URL}/learn/modules/${moduleId}/skills`, { headers }),
+        api.get(`/learn/modules/${moduleId}/courses`, { headers }),
+        api.get(`/learn/modules/${moduleId}/skills`, { headers }),
       ]);
 
       const formattedCourses: DisplayItem[] = courseRes.data.map((course: Course) => ({

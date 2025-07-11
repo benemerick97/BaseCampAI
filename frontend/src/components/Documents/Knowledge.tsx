@@ -3,22 +3,15 @@
 import { useState, useEffect } from "react";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
-import Modal from "../UI/Modal"; 
+import Modal from "../UI/Modal";
 import FileUpload from "./FileUpload";
-
-//interface KnowledgeProps {
- // onNavClick: (page: string) => void;
-//}
+import api from "../../utils/axiosInstance";
 
 interface FileMeta {
   filename: string;
   chunks_indexed: number;
   original_name?: string;
 }
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
-//const Knowledge = ({ onNavClick }: KnowledgeProps) => {
 
 const Knowledge = () => {
   const { user } = useAuth();
@@ -29,20 +22,16 @@ const Knowledge = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const headers: Record<string, string> | undefined = orgId
-    ? { "x-org-id": orgId }
-    : undefined;
-
   const fetchFiles = async () => {
-    if (!headers) return;
+    if (!orgId) return;
     setLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/files`, {
-        method: "GET",
-        headers,
+      const res = await api.get("/files", {
+        headers: {
+          "x-org-id": orgId,
+        },
       });
-      const data = await res.json();
-      setFiles(data.files);
+      setFiles(res.data.files || []);
     } catch (err) {
       console.error("Failed to load files:", err);
     } finally {
@@ -51,11 +40,12 @@ const Knowledge = () => {
   };
 
   const handleDelete = async (filename: string) => {
-    if (!headers) return;
+    if (!orgId) return;
     try {
-      await fetch(`${BACKEND_URL}/files/${filename}`, {
-        method: "DELETE",
-        headers,
+      await api.delete(`/files/${filename}`, {
+        headers: {
+          "x-org-id": orgId,
+        },
       });
       setFiles((prev) => prev.filter((f) => f.filename !== filename));
     } catch (err) {

@@ -10,7 +10,7 @@ import CourseDetails from "../CourseBuilder/CourseDetails";
 import SkillDetails from "../CourseBuilder/SkillDetails";
 import UserDetails from "../../OrgAdmin/UserDetails";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 
 interface Module {
   id: string;
@@ -36,7 +36,7 @@ export default function ModuleDetails({ setMainPage }: ModuleDetailsProps) {
     if (!selectedEntity || selectedEntity.type !== "module") return;
 
     api
-      .get(`${BACKEND_URL}/learn/modules/${selectedEntity.id}`, {
+      .get(`/learn/modules/${selectedEntity.id}`, {
         params: { organisation_id: user?.organisation?.id },
       })
       .then((res) => setModule(res.data))

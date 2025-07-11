@@ -8,8 +8,6 @@ import DetailsPage from "../Shared/DetailsPage";
 import UsersList from "./UsersList";
 import Settings from "../Settings";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface Organisation {
   id: number;
   name: string;
@@ -21,7 +19,7 @@ interface OrgDetailsProps {
 }
 
 const fetchOrganisation = async (orgId: number, token: string): Promise<Organisation> => {
-  const res = await api.get(`${BACKEND_URL}/organisations/${orgId}`, {
+  const res = await api.get(`/organisations/${orgId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

@@ -1,6 +1,5 @@
-import  { useEffect, useRef, useState } from "react";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import { useEffect, useRef, useState } from "react";
+import api from "../../utils/axiosInstance";
 
 interface AdminCreateOrgProps {
   onSuccess?: () => void;
@@ -29,22 +28,17 @@ export default function AdminCreateOrg({ onSuccess, onCancel }: AdminCreateOrgPr
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${BACKEND_URL}/superadmin/create-org`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name, short_name: shortName }),
+      await api.post("/superadmin/create-org", {
+        name,
+        short_name: shortName,
       });
 
-      if (!response.ok) throw new Error("Failed to create organisation");
-
       if (onSuccess) onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("An error occurred while creating the organisation.");
+      const message =
+        err.response?.data?.detail || "An error occurred while creating the organisation.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -84,9 +78,7 @@ export default function AdminCreateOrg({ onSuccess, onCancel }: AdminCreateOrgPr
           onClick={handleSubmit}
           disabled={loading}
           className={`text-sm px-4 py-2 rounded text-white ${
-            loading
-              ? "bg-blue-400 cursor-wait"
-              : "bg-blue-600 hover:bg-blue-700"
+            loading ? "bg-blue-400 cursor-wait" : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
           {loading ? "Creating..." : "Create"}

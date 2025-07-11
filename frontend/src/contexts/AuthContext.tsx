@@ -2,9 +2,7 @@
 
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
-import api from "../utils/axiosInstance"; // ✅ central API instance
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../utils/axiosInstance";
 
 // Interfaces
 interface Organisation {
@@ -12,6 +10,7 @@ interface Organisation {
   name: string;
   short_name?: string;
 }
+
 interface User {
   id: number;
   email: string;
@@ -20,6 +19,7 @@ interface User {
   last_name?: string;
   organisation?: Organisation;
 }
+
 interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.getItem("roleOverride") as "super_admin" | "admin" | "user" | null
   );
 
-  // ⬇️ Inject token into axios instance
+  // Inject token into axios instance
   useEffect(() => {
     if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -62,27 +62,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const response = await fetch(`${BACKEND_URL}/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-        } else if (response.status === 401) {
+        const response = await api.get("/me");
+        setUser(response.data);
+      } catch (err: any) {
+        if (err.response?.status === 401) {
           const newToken = await refreshToken();
           if (newToken) {
-            const retry = await fetch(`${BACKEND_URL}/me`, {
-              headers: { Authorization: `Bearer ${newToken}` },
-              credentials: "include",
-            });
-            if (retry.ok) {
-              const userData = await retry.json();
-              setUser(userData);
+            try {
+              const retry = await api.get("/me", {
+                headers: { Authorization: `Bearer ${newToken}` },
+              });
+              setUser(retry.data);
               setToken(newToken);
               localStorage.setItem("token", newToken);
-            } else {
+            } catch {
               logout();
             }
           } else {
@@ -91,9 +84,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           logout();
         }
-      } catch (error) {
-        console.error("Token validation failed:", error);
-        logout();
       } finally {
         setAuthLoading(false);
       }
@@ -113,15 +103,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshToken = async (): Promise<string | null> => {
     try {
-      const response = await fetch(`${BACKEND_URL}/auth/refresh`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!response.ok) throw new Error("Refresh failed");
-
-      const data = await response.json();
-      return data.access_token;
+      const response = await api.post("/auth/refresh");
+      return response.data.access_token;
     } catch (err) {
       console.error("Refresh token error:", err);
       return null;
@@ -130,16 +113,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include",
-      });
-
-      if (!response.ok) throw new Error("Login failed");
-
-      const data = await response.json();
+      const response = await api.post("/login", { email, password });
+      const data = response.data;
 
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
@@ -155,10 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await fetch(`${BACKEND_URL}/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await api.post("/logout");
     } catch (err) {
       console.warn("Logout request failed:", err);
     } finally {
@@ -174,17 +146,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
 
     try {
-      const response = await fetch(`${BACKEND_URL}/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data);
-      } else {
-        logout();
-      }
+      const response = await api.get("/me");
+      setUser(response.data);
     } catch (error) {
       console.error("User refetch failed:", error);
       logout();

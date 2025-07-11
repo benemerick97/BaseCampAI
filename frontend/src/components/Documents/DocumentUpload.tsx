@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { FiUploadCloud } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
-import { apiFetch } from "../../utils/apiFetch";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance";
 
 interface DocumentUploadProps {
   onUploadComplete?: () => void;
@@ -27,16 +25,15 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
   const [reviewDate, setReviewDate] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const { user } = useAuth();
+  const orgId = user?.organisation?.id?.toString() || "";
 
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const res = await apiFetch(
-          `${BACKEND_URL}/agents`,
-          user?.organisation?.id?.toString() || ""
-        );
-        const data = await res.json();
-        const filtered = (data.agents || []).filter((a: Agent) => a.type === "retrieval");
+        const res = await api.get(`/agents`, {
+          headers: { "x-org-id": orgId },
+        });
+        const filtered = (res.data.agents || []).filter((a: Agent) => a.type === "retrieval");
         setAgents(filtered);
       } catch (error) {
         console.error("Failed to fetch agents:", error);
@@ -44,10 +41,10 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
       }
     };
 
-    if (user?.organisation?.id) {
+    if (orgId) {
       fetchAgents();
     }
-  }, [user?.organisation?.id]);
+  }, [orgId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -80,31 +77,30 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
       setUploadProgress(0);
       setMessage("Uploading...");
 
-      const res = await fetch(`${BACKEND_URL}/document-objects`, {
-        method: "POST",
+      const res = await api.post(`/document-objects`, formData, {
         headers: {
-          "org-id": user?.organisation?.id?.toString() || "",
+          "org-id": orgId,
         },
-        body: formData,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percent);
+          }
+        },
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error("Server responded with error:", data);
-        throw new Error(data?.detail || JSON.stringify(data) || "Upload failed");
-      }
+      const data = res.data;
 
       // Optional: assign to agent
       if (selectedAgent) {
         try {
-          await apiFetch(
-            `${BACKEND_URL}/agents/${selectedAgent}/documents`,
-            user?.organisation?.id?.toString() || "",
+          await api.post(
+            `/agents/${selectedAgent}/documents`,
+            { document_id: data.id },
             {
-              method: "POST",
-              body: JSON.stringify({ document_id: data.id }),
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "x-org-id": orgId,
+              },
             }
           );
         } catch (err) {
@@ -134,7 +130,6 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         Enter a name, optionally select a retrieval agent, and upload a document file.
       </p>
 
-      {/* Document Name */}
       <input
         type="text"
         value={documentName}
@@ -143,7 +138,6 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         className="mb-3 w-full px-4 py-2 border rounded-md text-gray-700"
       />
 
-      {/* Review Date (optional) */}
       <input
         type="date"
         value={reviewDate}
@@ -151,7 +145,6 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         className="mb-4 w-full px-4 py-2 border rounded-md text-gray-700"
       />
 
-      {/* Agent Selector */}
       <select
         value={selectedAgent}
         onChange={(e) => setSelectedAgent(e.target.value)}
@@ -165,7 +158,6 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         ))}
       </select>
 
-      {/* Drag-and-Drop Area */}
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -182,7 +174,6 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         </p>
       </div>
 
-      {/* File Selector */}
       <label
         htmlFor="file-upload"
         className="cursor-pointer inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors"
@@ -197,14 +188,12 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         onChange={handleFileChange}
       />
 
-      {/* File Preview */}
       {file && (
         <p className="text-sm text-gray-700 mt-3 flex justify-center items-center gap-2">
           📄 {file.name}
         </p>
       )}
 
-      {/* Upload Button */}
       <div className="mt-4">
         <button
           onClick={handleUpload}
@@ -219,7 +208,6 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         </button>
       </div>
 
-      {/* Upload Progress */}
       {uploadProgress !== null && (
         <div className="w-full bg-gray-200 rounded h-2 mt-4 overflow-hidden">
           <div
@@ -229,7 +217,6 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
         </div>
       )}
 
-      {/* Message */}
       {message && <p className="mt-4 text-sm text-gray-600">{message}</p>}
     </div>
   );

@@ -9,7 +9,7 @@ import LearnListPage from "../LearnListPage";
 import CourseRow from "./CourseRow";
 import CourseCreate from "../CourseCreate";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+
 
 interface Course {
   id: string;
@@ -42,7 +42,7 @@ export default function Course({ setMainPage }: CourseProps) {
   } = useQuery<Course[]>({
     queryKey,
     queryFn: async () => {
-      const res = await api.get(`${BACKEND_URL}/courses/`, {
+      const res = await api.get("/courses/", {
         params: { org_id: orgId },
         headers: {
           Authorization: `Bearer ${token!}`,
@@ -56,7 +56,7 @@ export default function Course({ setMainPage }: CourseProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.delete(`${BACKEND_URL}/courses/${id}`, {
+      await api.delete(`/courses/${id}`, {
         headers: {
           "x-org-id": orgId?.toString() || "",
           Authorization: `Bearer ${token!}`,

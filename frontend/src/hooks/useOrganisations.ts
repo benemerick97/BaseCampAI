@@ -1,5 +1,7 @@
 // src/hooks/useOrganisations.ts
+
 import { useEffect, useState, useCallback } from "react";
+import api from "../utils/axiosInstance"; // ✅ Import axios instance
 
 interface Organisation {
   id: number;
@@ -12,8 +14,6 @@ export function useOrganisations(enabled: boolean) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const BACKEND_URL = import.meta.env.VITE_API_URL;
-
   const fetchOrganisations = useCallback(async () => {
     if (!enabled) return;
 
@@ -22,19 +22,16 @@ export function useOrganisations(enabled: boolean) {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${BACKEND_URL}/superadmin/organisations`, {
+      const response = await api.get("/superadmin/organisations", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch organisations");
-
-      const data = await response.json();
-      setOrganisations(data);
-    } catch (err) {
+      setOrganisations(response.data);
+    } catch (err: any) {
       console.error("Organisation fetch error:", err);
-      setError((err as Error).message);
+      setError(err?.response?.data?.detail || err.message || "Unknown error");
     } finally {
       setLoading(false);
     }

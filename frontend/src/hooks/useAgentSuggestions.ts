@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../utils/axiosInstance"; // ✅ import your Axios wrapper
 
 export function useAgentSuggestions() {
   const { user } = useAuth();
@@ -18,15 +17,14 @@ export function useAgentSuggestions() {
       if (!orgId) return;
 
       try {
-        const res = await fetch(`${BACKEND_URL}/agents`, {
+        const res = await api.get("/agents", {
           headers: {
             "x-org-id": orgId,
             "Content-Type": "application/json",
           },
         });
 
-        const data = await res.json();
-        const agentKeys = (data.agents || []).map((agent: any) => agent.key);
+        const agentKeys = (res.data.agents || []).map((agent: any) => agent.key);
         setKnownAgents(agentKeys);
       } catch (err) {
         console.error("❌ Failed to fetch agent list:", err);

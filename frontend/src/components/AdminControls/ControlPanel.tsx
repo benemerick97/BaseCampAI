@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import AdminCreateOrg from "./AdminCreateOrg";
 import AdminCreateUser from "./AdminCreateUser";
 import AdminModal from "./AdminModal";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance"; // ✅ Ensure correct relative path
 
 interface Organisation {
   id: number;
@@ -16,14 +15,16 @@ export default function ControlPanel() {
   const [showUserModal, setShowUserModal] = useState(false);
 
   const fetchOrgs = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${BACKEND_URL}/superadmin/organisations`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      setOrganisations(data);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await api.get(`/superadmin/organisations`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setOrganisations(res.data);
+    } catch (err) {
+      console.error("❌ Failed to fetch organisations:", err);
     }
   };
 
@@ -36,7 +37,6 @@ export default function ControlPanel() {
       <h1 className="text-2xl font-semibold mb-4">Admin Control Panel</h1>
 
       <div className="flex gap-4 mb-6">
-        {/* Create Organisation Button */}
         <button
           onClick={() => setShowOrgModal(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -44,7 +44,6 @@ export default function ControlPanel() {
           Create Organisation
         </button>
 
-        {/* Create User Button */}
         <button
           onClick={() => setShowUserModal(true)}
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -53,7 +52,6 @@ export default function ControlPanel() {
         </button>
       </div>
 
-      {/* Organisation Modal */}
       {showOrgModal && (
         <AdminModal onClose={() => setShowOrgModal(false)}>
           <AdminCreateOrg
@@ -66,7 +64,6 @@ export default function ControlPanel() {
         </AdminModal>
       )}
 
-      {/* User Modal */}
       {showUserModal && (
         <AdminModal onClose={() => setShowUserModal(false)}>
           <AdminCreateUser

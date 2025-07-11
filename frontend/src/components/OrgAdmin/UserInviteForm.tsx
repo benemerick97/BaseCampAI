@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance";
 
 interface UserInviteFormProps {
   onSuccess: () => void;
@@ -33,24 +32,20 @@ export default function UserInviteForm({ onSuccess }: UserInviteFormProps) {
     setError("");
 
     try {
-      const res = await fetch(`${BACKEND_URL}/users/invite`, {
-        method: "POST",
+      await api.post("/users/invite", formData, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
       });
 
-      if (!res.ok) {
-        const err = await res.text();
-        setError(err || "Invite failed");
-        return;
-      }
-
       onSuccess();
-    } catch (err) {
-      setError("An error occurred.");
+    } catch (err: any) {
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Invite failed";
+      setError(message);
     }
   };
 

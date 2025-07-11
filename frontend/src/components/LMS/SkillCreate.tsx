@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import EntityModal from "./LearnModal";
 import { useAuth } from "../../contexts/AuthContext";
+import api from "../../utils/axiosInstance";
 
 interface DocumentOption {
   id: string;
@@ -56,17 +57,13 @@ export default function SkillCreate({
     try {
       if (!orgId) return;
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/document-objects`, {
+      const res = await api.get("/document-objects", {
         headers: {
-          "Content-Type": "application/json",
           "x-org-id": orgId,
         },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch documents");
-
-      const data = await res.json();
-      setDocuments(data);
+      setDocuments(res.data || []);
     } catch (err) {
       console.error("Failed to fetch documents:", err);
     }
@@ -93,24 +90,17 @@ export default function SkillCreate({
       if (!orgId) return;
 
       const isEditing = !!existingSkill?.id;
-      const endpoint = isEditing
-        ? `${import.meta.env.VITE_API_URL}/skills/${existingSkill.id}`
-        : `${import.meta.env.VITE_API_URL}/skills/`;
-      const method = isEditing ? "PUT" : "POST";
+      const endpoint = isEditing ? `/skills/${existingSkill.id}` : `/skills/`;
+      const method = isEditing ? "put" : "post";
 
-      const res = await fetch(endpoint, {
+      await api.request({
         method,
+        url: endpoint,
         headers: {
-          "Content-Type": "application/json",
           "x-org-id": orgId,
         },
-        body: JSON.stringify(data),
+        data,
       });
-
-      if (!res.ok) {
-        const errorBody = await res.text();
-        throw new Error(`Failed to ${isEditing ? "update" : "create"} skill: ${res.status} ${errorBody}`);
-      }
 
       setFormData({});
       onCreated();

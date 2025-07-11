@@ -6,6 +6,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { FiBookOpen, FiUsers, FiEdit2 } from "react-icons/fi";
 import DetailsPage from "../../Shared/DetailsPage";
 import AssignedUsersTab from "./Tabs/AssignedUsersTab";
+import api from "../../../utils/axiosInstance";
 
 interface Course {
   id: string;
@@ -27,11 +28,8 @@ export default function CourseDetails({ setMainPage }: { setMainPage: (p: string
       if (!selectedEntity || selectedEntity.type !== "course") return;
 
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/courses/${selectedEntity.id}`
-        );
-        const data = await res.json();
-        setCourse(data);
+        const res = await api.get(`/courses/${selectedEntity.id}`);
+        setCourse(res.data);
       } catch (err) {
         console.error("Error loading course:", err);
       }
@@ -90,12 +88,12 @@ export default function CourseDetails({ setMainPage }: { setMainPage: (p: string
             </div>
           ),
         },
-          {
-            key: "assigned",
-            label: "Assigned",
-            icon: <FiUsers />,
-            content: <AssignedUsersTab id={course.id} type="course" setMainPage={setMainPage} />,
-          },
+        {
+          key: "assigned",
+          label: "Assigned",
+          icon: <FiUsers />,
+          content: <AssignedUsersTab id={course.id} type="course" setMainPage={setMainPage} />,
+        },
         {
           key: "edit",
           label: "Edit",

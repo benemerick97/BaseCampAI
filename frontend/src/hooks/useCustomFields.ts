@@ -1,7 +1,8 @@
+// /workspaces/BaseCampAI/frontend/src/hooks/useCustomFields.ts
+
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
+import api from "../utils/axiosInstance";
 
 interface UseCustomFieldsProps {
   entityType: string;
@@ -19,7 +20,6 @@ interface CustomFieldCreateInput {
 
 export function useCustomFields({
   entityType,
- // entityId,
   organisationId,
 }: UseCustomFieldsProps) {
   const { token } = useAuth();
@@ -29,63 +29,44 @@ export function useCustomFields({
   const [error, setError] = useState<string | null>(null);
 
   const headers = {
-    "Content-Type": "application/json",
     "x-org-id": organisationId.toString(),
     Authorization: `Bearer ${token}`,
   };
 
   const fetchFields = async () => {
     try {
-      const url = `${BASE_URL}/custom-fields/?entity_type=${entityType}`;
-      console.log("Fetching custom fields from:", url);
+      const res = await api.get(`/custom-fields`, {
+        headers,
+        params: { entity_type: entityType },
+      });
 
-      const res = await fetch(url, { headers });
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Error response:", text);
-        throw new Error("Failed to fetch custom fields");
-      }
-
-      const data = await res.json();
-      console.log("Fetched custom fields:", data);
-      setFields(data);
+      setFields(res.data);
     } catch (err: any) {
       console.error("Error fetching fields:", err);
-      setError(err.message || "Unknown error");
+      setError(err.response?.data?.detail || err.message || "Unknown error");
     } finally {
       setLoading(false);
     }
   };
 
   const createField = async (fieldData: CustomFieldCreateInput) => {
-    const res = await fetch(`${BASE_URL}/custom-fields/`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(fieldData),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.detail || "Failed to create custom field");
+    try {
+      const res = await api.post("/custom-fields", fieldData, { headers });
+      setFields((prev) => [...prev, res.data]);
+    } catch (err: any) {
+      console.error("Error creating field:", err);
+      throw new Error(err.response?.data?.detail || "Failed to create custom field");
     }
-
-    const newField = await res.json();
-    setFields((prev) => [...prev, newField]);
   };
 
   const deleteField = async (fieldId: number) => {
-    const res = await fetch(`${BASE_URL}/custom-fields/${fieldId}`, {
-      method: "DELETE",
-      headers,
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.detail || "Failed to delete custom field");
+    try {
+      await api.delete(`/custom-fields/${fieldId}`, { headers });
+      setFields((prev) => prev.filter((f) => f.id !== fieldId));
+    } catch (err: any) {
+      console.error("Error deleting field:", err);
+      throw new Error(err.response?.data?.detail || "Failed to delete custom field");
     }
-
-    setFields((prev) => prev.filter((f) => f.id !== fieldId));
   };
 
   useEffect(() => {

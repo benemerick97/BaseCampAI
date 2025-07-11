@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance";
 
 const Account: React.FC = () => {
-  const { user, setUser } = useAuth(); // ✅ Destructure setUser
+  const { user, setUser } = useAuth();
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -19,24 +18,13 @@ const Account: React.FC = () => {
     setSuccess(false);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${BACKEND_URL}//users/${user.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-        }),
+      const response = await api.patch(`/users/${user.id}`, {
+        first_name: firstName,
+        last_name: lastName,
       });
 
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setUser({ ...user, ...updatedUser }); // ✅ Just update in memory
-        setSuccess(true);
-      }
+      setUser({ ...user, ...response.data });
+      setSuccess(true);
     } catch (err) {
       console.error("Failed to update user", err);
     } finally {

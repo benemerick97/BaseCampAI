@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
 interface User {
   id: number;
   email: string;
@@ -39,11 +37,11 @@ export default function AssignModule() {
       if (!headers) return;
       try {
         const [usersRes, modulesRes] = await Promise.all([
-          api.get(`${BACKEND_URL}/users/`, {
+          api.get(`/users/`, {
             params: { org_id: orgId },
             headers,
           }),
-          api.get(`${BACKEND_URL}/learn/modules`, {
+          api.get(`/learn/modules`, {
             params: { org_id: orgId },
             headers,
           }),

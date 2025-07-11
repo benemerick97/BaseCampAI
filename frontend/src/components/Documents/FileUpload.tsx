@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { FiUploadCloud } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
-import { apiFetch } from "../../utils/apiFetch";
-
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosInstance";
 
 interface FileUploadProps {
   onUploadComplete?: () => void;
@@ -25,16 +23,15 @@ const FileUpload = ({ onUploadComplete }: FileUploadProps) => {
   const [selectedAgent, setSelectedAgent] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const { user } = useAuth();
+  const orgId = user?.organisation?.id?.toString() || "";
 
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const res = await apiFetch(
-          `${BACKEND_URL}/agents`,
-          user?.organisation?.id?.toString() || ""
-        );
-        const data = await res.json();
-        const filtered = (data.agents || []).filter((a: Agent) => a.type === "retrieval");
+        const res = await api.get(`/agents`, {
+          headers: { "x-org-id": orgId },
+        });
+        const filtered = (res.data.agents || []).filter((a: Agent) => a.type === "retrieval");
         setAgents(filtered);
       } catch (error) {
         console.error("Failed to fetch agents:", error);
@@ -42,10 +39,10 @@ const FileUpload = ({ onUploadComplete }: FileUploadProps) => {
       }
     };
 
-    if (user?.organisation?.id) {
+    if (orgId) {
       fetchAgents();
     }
-  }, [user?.organisation?.id]);
+  }, [orgId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -72,37 +69,34 @@ const FileUpload = ({ onUploadComplete }: FileUploadProps) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("agent_id", selectedAgent);
-    formData.append("org_id", user?.organisation?.id.toString() || "");
+    formData.append("org_id", orgId);
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${BACKEND_URL}/upload`);
+    try {
+      setUploadProgress(0);
+      setMessage("Uploading...");
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        setUploadProgress(percent);
-      }
-    };
+      await api.post(`/upload`, formData, {
+        headers: {
+          "x-org-id": orgId,
+        },
+        onUploadProgress: (event) => {
+          if (event.total) {
+            const percent = Math.round((event.loaded * 100) / event.total);
+            setUploadProgress(percent);
+          }
+        },
+      });
 
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        setMessage("✅ File uploaded successfully.");
-        setFile(null);
-        setSelectedAgent("");
-        setUploadProgress(null);
-        if (onUploadComplete) onUploadComplete();
-      } else {
-        setMessage("❌ Upload failed. Please try again.");
-        setUploadProgress(null);
-      }
-    };
-
-    xhr.onerror = () => {
-      setMessage("⚠️ An error occurred while uploading.");
+      setMessage("✅ File uploaded successfully.");
+      setFile(null);
+      setSelectedAgent("");
       setUploadProgress(null);
-    };
-
-    xhr.send(formData);
+      if (onUploadComplete) onUploadComplete();
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setMessage("❌ Upload failed. Please try again.");
+      setUploadProgress(null);
+    }
   };
 
   return (
