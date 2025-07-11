@@ -70,9 +70,11 @@ export default function ModuleCreate({
   }, [visible, orgId, existingModule]);
 
   const fetchCourses = async () => {
+    if (!orgId) return;
+
     try {
-      const res = await api.get(`/courses`, {
-        headers: { "x-org-id": orgId || "" },
+      const res = await api.get("/courses", {
+        params: { org_id: orgId }, // ✅ Query param instead of header
       });
       setCourses(res.data || []);
     } catch (err) {
@@ -81,9 +83,11 @@ export default function ModuleCreate({
   };
 
   const fetchSkills = async () => {
+    if (!orgId) return;
+
     try {
-      const res = await api.get(`/skills`, {
-        headers: { "x-org-id": orgId || "" },
+      const res = await api.get("/skills", {
+        params: { org_id: orgId }, // ✅ Query param instead of header
       });
       setSkills(res.data || []);
     } catch (err) {
@@ -124,7 +128,7 @@ export default function ModuleCreate({
         method,
         url: endpoint,
         headers: {
-          "x-org-id": orgId,
+          "x-org-id": orgId, // ✅ Only used here where your backend supports it
         },
         data: payload,
       });
@@ -149,6 +153,14 @@ export default function ModuleCreate({
       s.name.toLowerCase().includes(skillSearch.toLowerCase()) &&
       !formData.skill_ids.includes(s.id)
   );
+
+  if (!orgId) {
+    return (
+      <div className="p-6 text-red-500">
+        Organisation context is not available. Please try again later.
+      </div>
+    );
+  }
 
   return (
     <Dialog open={visible} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">

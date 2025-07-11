@@ -41,30 +41,6 @@ export default function Module({ setMainPage }: ModuleProps) {
   const { setSelectedEntity } = useSelectedEntity();
   const queryClient = useQueryClient();
 
-  // ✅ Log environment + base URL at runtime
-  console.log("Module.tsx → VITE_API_URL:", import.meta.env.VITE_API_URL);
-  console.log("Module.tsx → api.defaults.baseURL:", api.defaults.baseURL);
-
-  // ✅ Hook to log all outgoing XHR and fetch calls
-  useEffect(() => {
-    const originalXHR = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function (method, url) {
-      console.log("🔍 OUTGOING XHR:", method, url);
-      return originalXHR.apply(this, arguments as any);
-    };
-
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      console.log("🔍 OUTGOING fetch:", args[0]);
-      return originalFetch(...args);
-    };
-
-    return () => {
-      XMLHttpRequest.prototype.open = originalXHR;
-      window.fetch = originalFetch;
-    };
-  }, []);
-
   const [showModal, setShowModal] = useState(false);
   const [editModule, setEditModule] = useState<(ModuleFormData & { id?: string }) | null>(null);
 
