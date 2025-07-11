@@ -1,10 +1,8 @@
-# backend/main.py
+#backend/main.py
 
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import all routers
 from routes.chat import router as chat_router
 from routes.upload import router as upload_router
 from routes.auth import router as auth_router
@@ -27,7 +25,9 @@ from routes.learn.assigned_module import router as assigned_module_router
 from routes.learn.assigned_module_progress import router as assigned_module_progress_router
 from routes.learn.module import router as module_router
 
-# Ensure models are loaded
+
+
+# 🧠 Ensure both models are imported BEFORE creating metadata
 import models.user
 import models.organisation
 import models.agent
@@ -39,21 +39,6 @@ Base.metadata.create_all(bind=db_engine)
 
 app = FastAPI()
 
-# 🔐 Force HTTPS
-@app.middleware("http")
-async def force_https(request: Request, call_next):
-    if request.url.scheme == "http":
-        return RedirectResponse(url=str(request.url.replace(scheme="https")))
-    return await call_next(request)
-
-# 📦 Add HSTS header
-@app.middleware("http")
-async def add_hsts_header(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-    return response
-
-# 🌐 CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -67,7 +52,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔌 Routers
 app.include_router(chat_router)
 app.include_router(upload_router)
 app.include_router(auth_router)
