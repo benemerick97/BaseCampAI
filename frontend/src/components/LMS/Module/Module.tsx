@@ -37,7 +37,7 @@ interface ModuleProps {
 }
 
 export default function Module({ setMainPage }: ModuleProps) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
   const queryClient = useQueryClient();
 
@@ -56,13 +56,10 @@ export default function Module({ setMainPage }: ModuleProps) {
     queryFn: async () => {
       const res = await api.get("/learn/modules", {
         params: { org_id: orgId },
-        headers: {
-          Authorization: `Bearer ${token!}`,
-        },
       });
       return res.data;
     },
-    enabled: !!orgId && !!token,
+    enabled: !!orgId,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -70,8 +67,7 @@ export default function Module({ setMainPage }: ModuleProps) {
     mutationFn: async (id: string) => {
       await api.delete(`/learn/modules/${id}`, {
         headers: {
-          "x-org-id": orgId ?? "",
-          Authorization: `Bearer ${token!}`,
+          "x-org-id": orgId?.toString() || "",
         },
       });
     },
@@ -103,8 +99,7 @@ export default function Module({ setMainPage }: ModuleProps) {
     try {
       const res = await api.get<ModuleDetails>(`/learn/modules/${item.id}`, {
         headers: {
-          "x-org-id": orgId ?? "",
-          Authorization: `Bearer ${token!}`,
+          "x-org-id": orgId?.toString() || "",
         },
       });
 

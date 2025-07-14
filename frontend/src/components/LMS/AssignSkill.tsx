@@ -18,16 +18,14 @@ interface Skill {
 }
 
 export default function AssignSkill() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const orgId = user?.organisation?.id?.toString();
 
-  const headers: Record<string, string> | undefined =
-    orgId && token
-      ? {
-          "x-org-id": orgId,
-          Authorization: `Bearer ${token}`,
-        }
-      : undefined;
+  const headers: Record<string, string> | undefined = orgId
+    ? {
+        "x-org-id": orgId,
+      }
+    : undefined;
 
   const [users, setUsers] = useState<User[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);

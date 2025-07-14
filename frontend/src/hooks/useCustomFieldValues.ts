@@ -16,14 +16,12 @@ interface UseCustomFieldValuesProps {
 }
 
 export function useCustomFieldValues({ entityId }: UseCustomFieldValuesProps) {
-  const { token, user } = useAuth();
-
+  const { user } = useAuth(); // ✅ Get user context
   const [values, setValues] = useState<FieldValue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const headers = {
-    Authorization: `Bearer ${token}`,
     "x-org-id": user?.organisation?.id?.toString() || "",
   };
 

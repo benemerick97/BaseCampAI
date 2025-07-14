@@ -1,7 +1,6 @@
 // /workspaces/BaseCampAI/frontend/src/hooks/useCustomFields.ts
 
 import { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
 import api from "../utils/axiosInstance";
 
 interface UseCustomFieldsProps {
@@ -22,15 +21,13 @@ export function useCustomFields({
   entityType,
   organisationId,
 }: UseCustomFieldsProps) {
-  const { token } = useAuth();
-
+  
   const [fields, setFields] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const headers = {
     "x-org-id": organisationId.toString(),
-    Authorization: `Bearer ${token}`,
   };
 
   const fetchFields = async () => {

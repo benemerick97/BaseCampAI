@@ -2,18 +2,15 @@
 
 import axios from "axios";
 
-// Force HTTPS on base URL
+// Force HTTPS if needed
 const rawBaseUrl = import.meta.env.VITE_API_URL;
 const baseURL = rawBaseUrl?.replace(/^http:\/\//, "https://");
 
 if (rawBaseUrl !== baseURL) {
-  console.warn(
-    "[axiosInstance] VITE_API_URL was insecure and has been rewritten to HTTPS:",
-    baseURL
-  );
+  console.warn("[axiosInstance] VITE_API_URL was insecure. Rewritten to:", baseURL);
 }
 
-// Token management
+// Access token (in-memory + localStorage)
 let accessToken: string | null = localStorage.getItem("token") || null;
 
 export const setAccessToken = (token: string | null) => {
@@ -28,13 +25,12 @@ export const setAccessToken = (token: string | null) => {
   }
 };
 
-// Axios instance
 const api = axios.create({
   baseURL,
-  withCredentials: true, // required for sending refresh cookies
+  withCredentials: true, // Needed for refresh token cookie
 });
 
-// Attach token to outgoing requests
+// Inject access token
 api.interceptors.request.use(
   (config) => {
     if (accessToken && config.headers) {
@@ -45,13 +41,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Retry logic on 401 (unauthorized)
+// Retry with refresh on 401
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  (res) => res,
+  async (err) => {
+    const originalRequest = err.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (err.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
@@ -75,7 +71,7 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 

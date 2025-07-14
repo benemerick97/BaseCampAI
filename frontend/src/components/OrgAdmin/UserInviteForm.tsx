@@ -1,7 +1,6 @@
 // src/components/UserInviteForm.tsx
 
 import { useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
 import api from "../../utils/axiosInstance";
 
 interface UserInviteFormProps {
@@ -9,8 +8,6 @@ interface UserInviteFormProps {
 }
 
 export default function UserInviteForm({ onSuccess }: UserInviteFormProps) {
-  const { token } = useAuth();
-
   const [formData, setFormData] = useState({
     email: "",
     first_name: "",
@@ -32,12 +29,7 @@ export default function UserInviteForm({ onSuccess }: UserInviteFormProps) {
     setError("");
 
     try {
-      await api.post("/users/invite", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      await api.post("/users/invite", formData);
       onSuccess();
     } catch (err: any) {
       const message =

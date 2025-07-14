@@ -35,17 +35,11 @@ interface Props {
 }
 
 export default function AssignedContentTab({ moduleId, label = "Content", setMainPage }: Props) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
   const orgId = user?.organisation?.id?.toString();
 
-  const headers =
-    orgId && token
-      ? {
-          "x-org-id": orgId,
-          Authorization: `Bearer ${token}`,
-        }
-      : undefined;
+  const headers = orgId ? { "x-org-id": orgId } : undefined;
 
   const { data: contentItems = [], isLoading } = useQuery<DisplayItem[]>({
     queryKey: ["module-content", moduleId, orgId],
@@ -71,7 +65,7 @@ export default function AssignedContentTab({ moduleId, label = "Content", setMai
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     },
-    enabled: !!moduleId && !!orgId && !!token,
+    enabled: !!moduleId && !!orgId,
     staleTime: 1000 * 60 * 5,
   });
 

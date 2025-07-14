@@ -22,7 +22,7 @@ interface ModuleProps {
 }
 
 export default function Module({ setMainPage }: ModuleProps) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
   const queryClient = useQueryClient();
   const orgId = user?.organisation?.id;
@@ -40,11 +40,10 @@ export default function Module({ setMainPage }: ModuleProps) {
     queryFn: async () => {
       const res = await api.get(`/modules/`, {
         params: { organisation_id: orgId },
-        headers: { Authorization: `Bearer ${token!}` },
       });
       return res.data;
     },
-    enabled: !!orgId && !!token,
+    enabled: !!orgId,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -57,13 +56,9 @@ export default function Module({ setMainPage }: ModuleProps) {
       };
 
       if (form.id) {
-        return api.put(`/modules/${form.id}`, payload, {
-          headers: { Authorization: `Bearer ${token!}` },
-        });
+        return api.put(`/modules/${form.id}`, payload);
       } else {
-        return api.post(`/modules/`, payload, {
-          headers: { Authorization: `Bearer ${token!}` },
-        });
+        return api.post(`/modules/`, payload);
       }
     },
     onSuccess: () => {
@@ -76,11 +71,11 @@ export default function Module({ setMainPage }: ModuleProps) {
     },
   });
 
+
   const deleteModule = useMutation({
     mutationFn: async (id: number) => {
       return api.delete(`/modules/${id}`, {
         params: { organisation_id: orgId },
-        headers: { Authorization: `Bearer ${token!}` },
       });
     },
     onSuccess: () => {
@@ -90,6 +85,7 @@ export default function Module({ setMainPage }: ModuleProps) {
       console.error("Delete failed:", err);
     },
   });
+
 
   const handleAddOrEditModule = (form: any) => {
     upsertModule.mutate(form);

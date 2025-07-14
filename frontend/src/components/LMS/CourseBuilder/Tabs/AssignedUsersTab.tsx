@@ -44,7 +44,7 @@ interface Props {
 }
 
 export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
   const orgId = user?.organisation?.id?.toString() || "";
   const queryClient = useQueryClient();
@@ -69,19 +69,15 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   } = useQuery<AssignmentsResult>({
     queryKey,
     queryFn: async () => {
+      const headers = { "x-org-id": orgId };
+
       const assignedRes = await api.get(`/learn/assigned-${type}s/by-${type}/${id}`, {
-        headers: {
-          "x-org-id": orgId,
-          Authorization: `Bearer ${token!}`,
-        },
+        headers,
       });
 
       const allRes = await api.get(`/users`, {
         params: { org_id: orgId },
-        headers: {
-          "x-org-id": orgId,
-          Authorization: `Bearer ${token!}`,
-        },
+        headers,
       });
 
       const allUsers: AvailableUser[] = allRes.data.users || allRes.data;
@@ -95,7 +91,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
         available: unassigned,
       };
     },
-    enabled: !!id && !!orgId && !!token,
+    enabled: !!id && !!orgId,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -112,8 +108,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
         {
           headers: {
             "x-org-id": orgId,
-            Authorization: `Bearer ${token!}`,
-          },
+            },
         }
       );
     },

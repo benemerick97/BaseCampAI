@@ -1,6 +1,13 @@
 // frontend/src/contexts/AuthContext.tsx
 
-import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  type ReactNode,
+} from "react";
 import api, { setAccessToken } from "../utils/axiosInstance";
 import { isTokenValid } from "../utils/TokenUtils";
 

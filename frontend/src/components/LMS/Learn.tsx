@@ -16,7 +16,7 @@ interface Question {
 }
 
 const Learn = () => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const orgId = user?.organisation?.id?.toString();
 
   const [files, setFiles] = useState<FileMeta[]>([]);
@@ -29,12 +29,11 @@ const Learn = () => {
   const [completed, setCompleted] = useState(false);
 
   const fetchFiles = async () => {
-    if (!orgId || !token) return;
+    if (!orgId) return;
     try {
       const res = await api.get(`/document-objects`, {
         headers: {
           "x-org-id": orgId,
-          Authorization: `Bearer ${token}`,
         },
       });
       setFiles(res.data);
@@ -44,7 +43,7 @@ const Learn = () => {
   };
 
   const generateQuestions = async (documentId: string) => {
-    if (!orgId || !token) return;
+    if (!orgId) return;
 
     try {
       const res = await api.post(
@@ -53,7 +52,6 @@ const Learn = () => {
         {
           headers: {
             "x-org-id": orgId,
-            Authorization: `Bearer ${token}`,
           },
         }
       );

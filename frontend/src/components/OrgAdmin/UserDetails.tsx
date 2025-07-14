@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { FiUser, FiBookOpen, FiClock } from "react-icons/fi";
 import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
-import { useAuth } from "../../contexts/AuthContext";
 import DetailsPage from "../Shared/DetailsPage";
 import api from "../../utils/axiosInstance";
 
@@ -21,19 +20,14 @@ interface UserDetailsProps {
 
 export default function UserDetails({ setMainPage }: UserDetailsProps) {
   const { selectedEntity, clearSelectedEntity } = useSelectedEntity();
-  const { token } = useAuth();
   const [userDetails, setUserDetails] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (!selectedEntity || selectedEntity.type !== "user" || !token) return;
+      if (!selectedEntity || selectedEntity.type !== "user") return;
 
       try {
-        const res = await api.get(`/users/${selectedEntity.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await api.get(`/users/${selectedEntity.id}`);
         setUserDetails(res.data);
       } catch (err) {
         console.error("Failed to fetch user details:", err);
@@ -41,7 +35,7 @@ export default function UserDetails({ setMainPage }: UserDetailsProps) {
     };
 
     fetchUser();
-  }, [selectedEntity, token]);
+  }, [selectedEntity]);
 
   if (!selectedEntity || selectedEntity.type !== "user") {
     return <div className="p-6 text-gray-600">No user selected.</div>;

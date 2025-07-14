@@ -26,7 +26,7 @@ interface CourseProps {
 }
 
 export default function Course({ setMainPage }: CourseProps) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
   const queryClient = useQueryClient();
 
@@ -44,22 +44,19 @@ export default function Course({ setMainPage }: CourseProps) {
     queryFn: async () => {
       const res = await api.get("/courses/", {
         params: { org_id: orgId },
-        headers: {
-          Authorization: `Bearer ${token!}`,
-        },
       });
       return res.data;
     },
-    enabled: !!orgId && !!token,
+    enabled: !!orgId,
     staleTime: 1000 * 60 * 5,
   });
+
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await api.delete(`/courses/${id}`, {
         headers: {
-          "x-org-id": orgId?.toString() || "",
-          Authorization: `Bearer ${token!}`,
+          "x-org-id": user?.organisation?.id?.toString() || "",
         },
       });
     },
@@ -70,6 +67,7 @@ export default function Course({ setMainPage }: CourseProps) {
       console.error("Error deleting course:", err);
     },
   });
+
 
   const handleDelete = (id: string) => {
     const confirmed = confirm("Delete this course?");
