@@ -1,10 +1,12 @@
 // frontend/src/components/Admin/UserDetails.tsx
 
 import { useEffect, useState } from "react";
-import { FiUser, FiBookOpen, FiClock } from "react-icons/fi";
+import { FiUser, FiBookOpen, FiClock, FiSettings } from "react-icons/fi";
 import { useSelectedEntity } from "../../contexts/SelectedEntityContext";
 import DetailsPage from "../Shared/DetailsPage";
 import api from "../../utils/axiosInstance";
+import AccountSettings from "./AccountSettings";
+import UserAssignedTraining from "./UserAssignedTraining";
 
 interface User {
   id: number;
@@ -59,16 +61,28 @@ export default function UserDetails({ setMainPage }: UserDetailsProps) {
       ),
     },
     {
-      key: "courses",
-      label: "Courses",
+      key: "training",
+      label: "Training",
       icon: <FiBookOpen />,
-      content: <p className="p-4 text-gray-500 text-sm">Assigned courses will be shown here.</p>,
+      content: (
+        <UserAssignedTraining
+          userId={userDetails.id.toString()}
+          setMainPage={setMainPage}
+        />
+      ),
     },
+
     {
       key: "activity",
       label: "Activity",
       icon: <FiClock />,
       content: <p className="p-4 text-gray-500 text-sm">Recent activity will be shown here.</p>,
+    },
+    {
+      key: "settings",
+      label: "Settings",
+      icon: <FiSettings />,
+      content: <AccountSettings user={userDetails} />,
     },
   ];
 
@@ -80,7 +94,7 @@ export default function UserDetails({ setMainPage }: UserDetailsProps) {
           label: "Users",
           onClick: () => {
             clearSelectedEntity();
-            setMainPage("users");
+            setMainPage("orgdetails");
           },
         },
         { label: userDetails.email },

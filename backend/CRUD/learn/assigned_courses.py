@@ -7,6 +7,7 @@ from uuid import uuid4
 from datetime import datetime
 import json
 from models.user import User
+from uuid import UUID
 
 
 def assign_course(db: Session, payload: AssignedCourseCreate) -> AssignedCourse:
@@ -127,3 +128,12 @@ def get_users_assigned_to_course(db: Session, course_id: str):
         .all()
     )
 
+def delete_assigned_course(db: Session, user_id: int, course_id: UUID) -> bool:
+    assignment = db.query(AssignedCourse).filter_by(
+        user_id=user_id, course_id=course_id
+    ).first()
+    if not assignment:
+        return False
+    db.delete(assignment)
+    db.commit()
+    return True

@@ -77,3 +77,5 @@ def get_assigned_users_by_module(module_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         print("🔥 ERROR in get_assigned_users_by_module:", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+

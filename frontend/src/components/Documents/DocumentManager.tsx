@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FiPlus, FiEye } from "react-icons/fi";
+import {
+  FiPlus,
+  FiEye,
+  FiMoreHorizontal,
+  FiTrash2,
+  FiArrowUpCircle,
+  FiUserPlus,
+} from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import Modal from "../UI/Modal";
 import DocumentUpload from "./DocumentUpload";
-import api from "../../utils/axiosInstance"; // ✅ replace fetch
+import PortalDropdown from "../UI/PortalDropdown"; // 👈 NEW
+import api from "../../utils/axiosInstance";
 
 interface DocumentFile {
   id: string;
@@ -51,6 +59,8 @@ const DocumentManager = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const anchorRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   const {
     data: documents = [],
@@ -128,7 +138,7 @@ const DocumentManager = () => {
           <p className="text-sm mt-1">Uploaded documents will appear here.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto relative z-0">
           <table className="min-w-full text-sm border border-gray-300 rounded-lg bg-white">
             <thead className="bg-gray-100 text-left text-gray-600 font-medium border-b border-gray-300">
               <tr>
@@ -140,7 +150,7 @@ const DocumentManager = () => {
             </thead>
             <tbody>
               {filteredDocs.map((doc) => (
-                <tr key={doc.id} className="border-t hover:bg-gray-50">
+                <tr key={doc.id} className="border-t hover:bg-gray-50 relative">
                   <td className="px-4 py-3 border-r border-gray-100 font-medium text-gray-900">
                     {doc.name}
                   </td>
@@ -150,31 +160,62 @@ const DocumentManager = () => {
                   <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
                     {doc.versions.length}
                   </td>
-                  <td className="px-4 py-3 text-right space-x-2">
+                  <td className="px-4 py-3 text-right">
                     <button
-                      onClick={() => console.log("View", doc.id)}
-                      className="text-blue-600 hover:underline text-sm"
+                      ref={(el) => {
+                        anchorRefs.current[doc.id] = el;
+                      }}
+                      onClick={() =>
+                        setOpenDropdown((prev) => (prev === doc.id ? null : doc.id))
+                      }
+                      className="text-gray-700 hover:text-black p-1"
                     >
-                      <FiEye className="inline-block mr-1" /> View
+                      <FiMoreHorizontal size={18} />
                     </button>
-                    <button
-                      onClick={() => console.log("Replace", doc.id)}
-                      className="text-green-600 hover:underline text-sm"
-                    >
-                      Replace
-                    </button>
-                    <button
-                      onClick={() => console.log("Assign", doc.id)}
-                      className="text-yellow-600 hover:underline text-sm"
-                    >
-                      Assign
-                    </button>
-                    <button
-                      onClick={() => handleDelete(doc.id)}
-                      className="text-red-600 hover:underline text-sm"
-                    >
-                      Delete
-                    </button>
+
+                    {openDropdown === doc.id && (
+                      <PortalDropdown
+                        anchorRef={{ current: anchorRefs.current[doc.id]! }}
+                        onClose={() => setOpenDropdown(null)}
+                      >
+                        <button
+                          onClick={() => {
+                            console.log("View", doc.id);
+                            setOpenDropdown(null);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"
+                        >
+                          <FiEye size={14} /> View
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log("Replace", doc.id);
+                            setOpenDropdown(null);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"
+                        >
+                          <FiArrowUpCircle size={14} /> Replace
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log("Assign", doc.id);
+                            setOpenDropdown(null);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"
+                        >
+                          <FiUserPlus size={14} /> Assign
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleDelete(doc.id);
+                            setOpenDropdown(null);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-red-600 w-full text-left"
+                        >
+                          <FiTrash2 size={14} /> Delete
+                        </button>
+                      </PortalDropdown>
+                    )}
                   </td>
                 </tr>
               ))}

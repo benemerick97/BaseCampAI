@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from uuid import UUID
 
 from schemas.learn.assigned_courses import (
     AssignedCourseCreate,
@@ -74,3 +75,11 @@ def get_assigned_users_by_course(
         print("🔥 ERROR in get_assigned_users_by_course:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+@router.delete("/assigned-courses/{user_id}/{course_id}", status_code=204)
+def remove_assigned_course(user_id: int, course_id: UUID, db: Session = Depends(get_db)):
+    success = crud.delete_assigned_course(db, user_id, course_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Assigned course not found")
+    return

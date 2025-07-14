@@ -8,7 +8,7 @@ import Agents from "../components/Agents";
 import Knowledge from "../components/Documents/Knowledge";
 import Organisation from "../components/OrgAdmin/Organisation";
 import Projects from "../components/Projects";
-import Learn from "../components/LMS/Learn";
+//import Learn from "../components/LMS/OLDLearn";
 import Account from "../components/OrgAdmin/Account";
 //import WorkflowBuilderContainer from "../components/Work/Builder/WorkflowBuilderContainer";
 import Workflow from "../components/Work/Assets/Workflow";
@@ -42,6 +42,8 @@ import ModuleDetails from "../components/LMS/Module/ModuleDetails";
 import AssignModule from "../components/LMS/Module/AssignModule";
 import MyModules from "../components/LMS/Module/MyModules";
 import MyModuleDetails from "../components/LMS/Module/MyModuleDetails";
+import LMSDashboard from "../components/LMS/LMSDashboard";
+import WorkflowDashboard from "../components/Work/WorkflowDashboard";
 
 
 
@@ -57,7 +59,7 @@ export const PageRegistry: Record<
   knowledge: Knowledge,
   organisation: Organisation,
   projects: Projects,
-  learn: Learn,
+  //learn: Learn,
   account: Account,
   //workflow_builder: WorkflowBuilderContainer,
   workflow: Workflow,
@@ -91,5 +93,7 @@ export const PageRegistry: Record<
   assignmodule : AssignModule,
   mymodules : MyModules,
   mymoduledetails : MyModuleDetails,
+  learn : LMSDashboard,
+  work : WorkflowDashboard,
 
 };

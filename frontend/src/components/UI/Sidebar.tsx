@@ -32,7 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isAdmin, isSuperAdmin }) => {
     { key: "work", icon: <FiClipboard />, label: "Work" },
     //{ key: "upload", icon: <FiUpload />, label: "Upload" },
     //{ key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
-    { key: "documentmanager", icon: <FiDatabase />, label: "DocumentManager" },
+    { key: "documentmanager", icon: <FiDatabase />, label: "Documents" },
     { key: "orgdetails", icon: <FiUsers />, label: "Organisation" },
     { key: "controlpanel", icon: <GrUserAdmin />, label: "Control Panel" },
   ];

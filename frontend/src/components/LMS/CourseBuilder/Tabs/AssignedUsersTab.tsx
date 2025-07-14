@@ -1,10 +1,9 @@
-// frontend/src/components/LMS/CourseBuilder/Tabs/AssignedUsersTab.tsx
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../../utils/axiosInstance";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../../contexts/SelectedEntityContext";
+import AssignedUsersRow from "./AssignedUsersRow";
 
 interface AssignedUser {
   id: number;
@@ -63,33 +62,17 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
 
   const queryKey = [`assigned-${type}s`, id, orgId];
 
-  const {
-    data: assignments = { assigned: [], available: [] },
-    isLoading,
-  } = useQuery<AssignmentsResult>({
+  const { data: assignments = { assigned: [], available: [] }, isLoading } = useQuery<AssignmentsResult>({
     queryKey,
     queryFn: async () => {
       const headers = { "x-org-id": orgId };
-
-      const assignedRes = await api.get(`/learn/assigned-${type}s/by-${type}/${id}`, {
-        headers,
-      });
-
-      const allRes = await api.get(`/users`, {
-        params: { org_id: orgId },
-        headers,
-      });
-
+      const assignedRes = await api.get(`/learn/assigned-${type}s/by-${type}/${id}`, { headers });
+      const allRes = await api.get(`/users`, { params: { org_id: orgId }, headers });
       const allUsers: AvailableUser[] = allRes.data.users || allRes.data;
-
       const unassigned = allUsers.filter(
         (u: AvailableUser) => !assignedRes.data.some((a: AssignedUser) => a.user?.id === u.id)
       );
-
-      return {
-        assigned: assignedRes.data,
-        available: unassigned,
-      };
+      return { assigned: assignedRes.data, available: unassigned };
     },
     enabled: !!id && !!orgId,
     staleTime: 1000 * 60 * 5,
@@ -100,16 +83,8 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
       if (!selectedUser?.id) throw new Error("No user selected");
       await api.post(
         `/learn/assign-${type}`,
-        {
-          user_id: selectedUser.id,
-          [`${type}_id`]: id,
-          assigned_by: user?.id,
-        },
-        {
-          headers: {
-            "x-org-id": orgId,
-            },
-        }
+        { user_id: selectedUser.id, [`${type}_id`]: id, assigned_by: user?.id },
+        { headers: { "x-org-id": orgId } }
       );
     },
     onSuccess: () => {
@@ -124,8 +99,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   });
 
   const filteredUsers = assignments.assigned.filter((u: AssignedUser) => {
-    const matchesSearch =
-      u.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    const matchesSearch = u.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
       u.user?.email?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = filter === "all" || u.status === filter;
     return matchesSearch && matchesStatus;
@@ -176,28 +150,18 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
               <th className="px-4 py-2">Status</th>
               <th className="px-4 py-2">Assigned</th>
               <th className="px-4 py-2">Completed</th>
+              <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.map((a: AssignedUser) => (
-              <tr
+              <AssignedUsersRow
                 key={a.id}
-                className="border-b cursor-pointer hover:bg-gray-100"
-                onClick={() => {
-                  if (a.user?.id) {
-                    setSelectedEntity({ type: "user", id: a.user.id });
-                    setMainPage?.("userdetails");
-                  }
-                }}
-              >
-                <td className="px-4 py-2">{a.user?.name || "Unnamed"}</td>
-                <td className="px-4 py-2">{a.user?.email || "—"}</td>
-                <td className="px-4 py-2 capitalize">{a.status}</td>
-                <td className="px-4 py-2">{new Date(a.assigned_at).toLocaleDateString()}</td>
-                <td className="px-4 py-2">
-                  {a.completed_at ? new Date(a.completed_at).toLocaleDateString() : "—"}
-                </td>
-              </tr>
+                assignment={{ ...a, course_id: id }} // ensure course_id is passed
+                setMainPage={setMainPage}
+                setSelectedEntity={setSelectedEntity}
+                onDeleted={() => queryClient.invalidateQueries({ queryKey })}
+              />
             ))}
           </tbody>
         </table>
@@ -210,22 +174,20 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
           <div className="bg-white rounded shadow-lg p-6 w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">Assign User to {label}</h2>
 
-            <label className="block mb-2 text-sm font-medium text-gray-700">
-              Select user:
-            </label>
+            <label className="block mb-2 text-sm font-medium text-gray-700">Select user:</label>
             <select
               className="w-full px-3 py-2 border rounded text-sm mb-4"
               value={selectedUser?.id ?? ""}
               onChange={(e) => {
                 const userId = Number(e.target.value);
-                const user = assignments.available.find((u: AvailableUser) => u.id === userId) || null;
+                const user = assignments.available.find((u) => u.id === userId) || null;
                 setSelectedUser(user);
               }}
             >
               <option value="" disabled>
                 -- Select a user --
               </option>
-              {assignments.available.map((user: AvailableUser) => (
+              {assignments.available.map((user) => (
                 <option key={user.id} value={user.id}>
                   {(user.first_name || user.last_name)
                     ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()

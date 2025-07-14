@@ -52,3 +52,5 @@ export const useSelectedEntity = () => {
   }
   return context;
 };
+
+export type { SelectedEntity, EntityType }; 
