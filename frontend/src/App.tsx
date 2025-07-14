@@ -1,35 +1,41 @@
 // App.tsx
-import LoadingScreen from "./components/UI/LoadingScreen";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
+import LoadingScreen from "./components/UI/LoadingScreen";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Unauthorised from "./pages/Unauthorised"; // 👈 Create this simple page
+import Unauthorised from "./pages/Unauthorised";
 
-function App() {
+export default function App() {
   const { user, authLoading } = useAuth();
 
   if (authLoading) return <LoadingScreen />;
 
   return (
     <Routes>
+      {/* Entry redirect */}
       <Route path="/" element={<Navigate to={user ? "/dashboard/chat" : "/login"} />} />
+
+      {/* Login screen */}
       <Route path="/login" element={user ? <Navigate to="/dashboard/chat" replace /> : <Login />} />
+
+      {/* Public route */}
       <Route path="/unauthorised" element={<Unauthorised />} />
 
-      {/* General authenticated user access */}
+      {/* Authenticated access */}
       <Route element={<ProtectedRoute requiredRole="user" />}>
-        <Route path="/dashboard/:page" element={<Dashboard />} />
         <Route path="/dashboard" element={<Navigate to="/dashboard/chat" />} />
+        <Route path="/dashboard/:page" element={<Dashboard />} />
       </Route>
 
-      {/* Example: Admin-only route */}
+      {/* Admin-only route */}
       <Route element={<ProtectedRoute requiredRole="admin" />}>
         <Route path="/admin" element={<div>Admin panel here</div>} />
       </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
-
-export default App;

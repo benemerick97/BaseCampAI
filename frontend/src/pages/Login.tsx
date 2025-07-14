@@ -15,40 +15,31 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    emailRef.current?.focus(); // Autofocus on load
+    emailRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/dashboard/chat");
+    }
+  }, [user, authLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setErrorMessage("");
-    setSuccessMessage("");
 
     try {
       await login(email, password);
-      setSuccessMessage("Login successful!");
       toast.success("Welcome back!");
     } catch (err) {
-      setErrorMessage("Invalid email or password. Please try again.");
-      toast.error("Login failed.");
+      toast.error("Invalid email or password.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    if (!authLoading && user && successMessage && !isSubmitting) {
-      const timer = setTimeout(() => {
-        navigate("/dashboard");
-      }, 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [authLoading, user, successMessage, isSubmitting, navigate]);
 
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-gray-50 px-4">
@@ -112,7 +103,6 @@ export default function Login() {
                 />
                 <span className="ml-2">Remember me</span>
               </label>
-
               <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
                 Forgot password?
               </a>
@@ -157,18 +147,6 @@ export default function Login() {
               </button>
             </div>
           </div>
-
-          {/* Error + Success Feedback */}
-          {errorMessage && (
-            <p className="text-red-600 text-sm font-medium text-center mt-4">
-              {errorMessage}
-            </p>
-          )}
-          {successMessage && (
-            <p className="text-green-600 text-sm font-medium text-center mt-4 animate-pulse">
-              {successMessage}
-            </p>
-          )}
         </form>
       </div>
     </div>

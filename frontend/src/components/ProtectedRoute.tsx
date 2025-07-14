@@ -3,13 +3,13 @@ import { useAuth } from "../contexts/AuthContext";
 import LoadingScreen from "./UI/LoadingScreen";
 
 interface ProtectedRouteProps {
-  requiredRole?: "admin" | "super_admin" | "user";
-  redirectTo?: string;
+  requiredRole?: "user" | "admin" | "super_admin";
+  redirectTo?: string; // Optional override, defaults to /login
   children?: React.ReactNode;
 }
 
 export default function ProtectedRoute({
-  requiredRole,
+  requiredRole = "user",
   redirectTo = "/login",
   children,
 }: ProtectedRouteProps) {
@@ -19,15 +19,19 @@ export default function ProtectedRoute({
 
   if (!user) return <Navigate to={redirectTo} replace />;
 
-  if (requiredRole) {
-    const allowed =
-      requiredRole === "user" ||
-      (requiredRole === "admin" && ["admin", "super_admin"].includes(user.role)) ||
-      (requiredRole === "super_admin" && user.role === "super_admin");
+  const roleHierarchy = {
+    user: 1,
+    admin: 2,
+    super_admin: 3,
+  };
 
-    if (!allowed) {
-      return <Navigate to="/unauthorised" replace />;
-    }
+  const userRoleLevel = roleHierarchy[user.role];
+  const requiredRoleLevel = roleHierarchy[requiredRole];
+
+  const isAuthorised = userRoleLevel >= requiredRoleLevel;
+
+  if (!isAuthorised) {
+    return <Navigate to="/unauthorised" replace />;
   }
 
   return <>{children ?? <Outlet />}</>;
