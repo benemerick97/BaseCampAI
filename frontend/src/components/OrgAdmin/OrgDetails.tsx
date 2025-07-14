@@ -18,17 +18,13 @@ interface OrgDetailsProps {
   setMainPage: (page: string) => void;
 }
 
-const fetchOrganisation = async (orgId: number, token: string): Promise<Organisation> => {
-  const res = await api.get(`/organisations/${orgId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+const fetchOrganisation = async (orgId: number): Promise<Organisation> => {
+  const res = await api.get(`/organisations/${orgId}`);
   return res.data;
 };
 
 export default function OrgDetails({ setMainPage }: OrgDetailsProps) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const orgId = user?.organisation?.id;
 
   const {
@@ -38,8 +34,8 @@ export default function OrgDetails({ setMainPage }: OrgDetailsProps) {
     error,
   } = useQuery({
     queryKey: ["organisation", orgId],
-    queryFn: () => fetchOrganisation(orgId!, token!),
-    enabled: !!orgId && !!token,
+    queryFn: () => fetchOrganisation(orgId!),
+    enabled: !!orgId,
     staleTime: 1000 * 60 * 5,
   });
 

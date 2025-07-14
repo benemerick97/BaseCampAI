@@ -17,35 +17,21 @@ interface User {
   role: string;
 }
 
-const fetchUsers = async (orgId: string, token: string): Promise<User[]> => {
+const fetchUsers = async (orgId: string): Promise<User[]> => {
   const res = await api.get(`/users`, {
-    headers: {
-      "x-org-id": orgId,
-      Authorization: `Bearer ${token}`,
-    },
+    params: { org_id: orgId },
   });
   return res.data.users || res.data;
 };
 
-const deleteUser = async ({
-  userId,
-  orgId,
-  token,
-}: {
-  userId: number;
-  orgId: string;
-  token: string;
-}) => {
-  await api.delete(`/users/${userId}`, {
-    headers: {
-      "x-org-id": orgId,
-      Authorization: `Bearer ${token}`,
-    },
-  });
+
+const deleteUser = async (userId: number) => {
+  await api.delete(`/users/${userId}`);
 };
 
+
 const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { setSelectedEntity } = useSelectedEntity();
   const orgId = user?.organisation?.id?.toString() || "";
   const queryClient = useQueryClient();
@@ -60,14 +46,13 @@ const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => 
     error,
   } = useQuery({
     queryKey: ["users", orgId],
-    queryFn: () => fetchUsers(orgId!, token!),
-    enabled: !!orgId && !!token,
+    queryFn: () => fetchUsers(orgId!),
+    enabled: !!orgId,
     staleTime: 1000 * 60 * 5,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: ({ userId }: { userId: number }) =>
-      deleteUser({ userId, orgId: orgId!, token: token! }),
+    mutationFn: ({ userId }: { userId: number }) => deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users", orgId] });
     },
@@ -75,6 +60,7 @@ const UsersList = ({ setMainPage }: { setMainPage: (page: string) => void }) => 
       alert(err.message);
     },
   });
+
 
   const filteredUsers = users.filter((u) => {
     const fullName = `${u.first_name ?? ""} ${u.last_name ?? ""}`.toLowerCase();

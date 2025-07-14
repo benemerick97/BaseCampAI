@@ -31,6 +31,7 @@ type Role = "super_admin" | "admin" | "user";
 
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void; // ✅ Added
   authLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -131,6 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        setUser, // ✅ Added here
         authLoading,
         login,
         logout,
