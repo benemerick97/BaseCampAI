@@ -14,6 +14,7 @@ interface AssignedUser {
   assigned_by?: number;
   assigned_at: string;
   completed_at?: string;
+  due_date?: string;
   status: "assigned" | "completed";
   user: {
     id: number;
@@ -49,6 +50,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   const queryClient = useQueryClient();
 
   const [selectedUser, setSelectedUser] = useState<AvailableUser | null>(null);
+  const [dueDate, setDueDate] = useState<string>("");
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "assigned" | "completed">("all");
@@ -83,7 +85,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
       if (!selectedUser?.id) throw new Error("No user selected");
       await api.post(
         `/learn/assign-${type}`,
-        { user_id: selectedUser.id, [`${type}_id`]: id, assigned_by: user?.id },
+        { user_id: selectedUser.id, [`${type}_id`]: id, assigned_by: user?.id, due_date: dueDate || undefined, },
         { headers: { "x-org-id": orgId } }
       );
     },
@@ -146,10 +148,10 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
           <thead className="bg-gray-100 border-b text-left">
             <tr>
               <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Email</th>
               <th className="px-4 py-2">Status</th>
               <th className="px-4 py-2">Assigned</th>
               <th className="px-4 py-2">Completed</th>
+              <th className="px-4 py-2">Due</th>
               <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
@@ -195,6 +197,15 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
                 </option>
               ))}
             </select>
+
+           {/* ✅ Due date picker */}
+            <label className="block mb-2 text-sm font-medium text-gray-700">Due date (optional):</label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full px-3 py-2 border rounded text-sm mb-4"
+            />
 
             <div className="flex justify-end gap-2">
               <button

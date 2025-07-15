@@ -80,7 +80,7 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
     return (
       <CourseRow
         course={course}
-        onClick={() => handleSelect(course)}
+        onClick={assignment.status === "completed" ? () => {} : () => handleSelect(course)}
         onEdit={() => {}}
         onDelete={() => {}}
         setMainPage={setMainPage}
@@ -88,7 +88,7 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
         showStatus={assignment.status}
         assignedAt={assignment.assigned_at}
         dueDate={assignment.due_date}
-        completedAt={assignment.completed_at} 
+        completedAt={assignment.completed_at}
       />
     );
   };
@@ -160,6 +160,7 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
       onFetch={fetchAssignments}
       onSelect={() => {}}
       renderRow={renderRow}
+      hideAddButton={true}
       columns={["Title", "Description", "Assigned", "Due", "Completed", "Status", "Actions"]}
       showSearchBar={false} // handled via headerContent
       headerContent={headerContent}

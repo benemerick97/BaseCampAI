@@ -62,6 +62,7 @@ def get_assigned_users_by_course(
                 "assigned_by": a.assigned_by,
                 "assigned_at": a.assigned_at,
                 "completed_at": a.completed_at,
+                "due_date": a.due_date,
                 "status": a.status,
                 "user": {
                     "id": u_id,

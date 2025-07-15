@@ -22,6 +22,7 @@ export interface LearnListPageProps<T> {
   onAddClick?: () => void;
   headerContent?: React.ReactNode;
   isLoading?: boolean;
+  hideAddButton?: boolean;
 }
 
 export default function LearnListPage<T>({
@@ -38,6 +39,7 @@ export default function LearnListPage<T>({
   onAddClick,
   headerContent,
   isLoading = false,
+  hideAddButton = false,
 }: LearnListPageProps<T>) {
   const [dropdownOpen, setDropdownOpen] = useState<string | number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,15 +65,17 @@ export default function LearnListPage<T>({
             </span>
           )}
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => onAddClick && onAddClick()}
-            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
-          >
-            <FiPlus size={16} />
-            {addButtonLabel} {title.slice(0, -1)}
-          </button>
-        </div>
+        {!hideAddButton && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => onAddClick && onAddClick()}
+              className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700"
+            >
+              <FiPlus size={16} />
+              {addButtonLabel} {title.slice(0, -1)}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Optional Header Content (e.g. filters, search) */}

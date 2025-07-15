@@ -109,15 +109,6 @@ const CourseRow: React.FC<CourseRowProps> = ({
             </button>
           </>
         )}
-        <button
-          onClick={() => {
-            setDropdownOpen(false);
-            handleStartCourse();
-          }}
-          className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
-        >
-          Start Course
-        </button>
       </div>,
       portalRoot
     );
@@ -180,7 +171,7 @@ const CourseRow: React.FC<CourseRowProps> = ({
               Start Course
             </button>
           ) : (
-            <span className="text-sm text-gray-400">—</span>
+            <span className="text-sm text-gray-400">Done</span>
           )
         ) : (
           <>

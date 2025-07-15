@@ -13,7 +13,6 @@ interface DocumentOption {
 interface SkillFormData {
   name?: string;
   description?: string;
-  document_id?: string;
   evidence_required?: boolean;
 }
 
@@ -44,7 +43,6 @@ export default function SkillCreate({
         setFormData({
           name: existingSkill.name,
           description: existingSkill.description,
-          document_id: existingSkill.document_id,
           evidence_required: existingSkill.evidence_required ?? false,
         });
       } else {
@@ -74,7 +72,7 @@ export default function SkillCreate({
       const selectedDoc = documents.find((doc) => doc.id === value);
 
       setFormData((prev) => {
-        const updated: SkillFormData = { ...prev, document_id: value };
+        const updated: SkillFormData = { ...prev };
         if (!prev.name && selectedDoc?.name) {
           updated.name = selectedDoc.name.replace(/\.[^/.]+$/, ""); // Remove extension
         }
@@ -123,15 +121,6 @@ export default function SkillCreate({
       setFormData={setFormData}
       onFieldChange={handleFieldChange}
       fields={[
-        {
-          label: "Document (optional)",
-          key: "document_id",
-          type: "select",
-          options: documents.map((doc) => ({
-            label: doc.name,
-            value: doc.id,
-          })),
-        },
         { label: "Skill Name", key: "name" },
         { label: "Description", key: "description" },
         {

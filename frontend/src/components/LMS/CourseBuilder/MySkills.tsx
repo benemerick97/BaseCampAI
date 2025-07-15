@@ -178,6 +178,7 @@ export default function MySkills({ setMainPage }: { setMainPage: (p: string) => 
       onFetch={fetchAssignments}
       onSelect={() => {}}
       renderRow={renderRow}
+      hideAddButton={true}
       columns={["Title", "Description", "Completed", "Status", "Actions"]}
       showSearchBar={false}
       headerContent={headerContent}

@@ -198,6 +198,7 @@ const DocumentUpload = ({ onUploadComplete }: DocumentUploadProps) => {
             type="date"
             value={reviewDate}
             onChange={(e) => setReviewDate(e.target.value)}
+            placeholder="Review Date"
             className="mb-3 w-full px-4 py-2 border rounded-md text-gray-700"
           />
 

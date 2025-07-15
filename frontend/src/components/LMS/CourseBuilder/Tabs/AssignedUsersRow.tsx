@@ -1,26 +1,27 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import type { SelectedEntity } from "../../../../contexts/SelectedEntityContext";
-import api from "../../../../utils/axiosInstance"; // ✅ Axios instance
+import api from "../../../../utils/axiosInstance";
 
 interface AssignedUser {
   id: number;
   assigned_at: string;
   completed_at?: string;
+  due_date?: string; // ✅ New field
   status: "assigned" | "completed";
   user: {
     id: number;
     name: string;
     email: string;
   };
-  course_id: string; // ✅ Make sure this is passed from parent
+  course_id: string;
 }
 
 interface Props {
   assignment: AssignedUser;
   setMainPage?: ((page: string) => void) | React.Dispatch<React.SetStateAction<any>>;
   setSelectedEntity: (entity: SelectedEntity) => void;
-  onDeleted?: () => void; // ✅ Optional refresh callback
+  onDeleted?: () => void;
 }
 
 export default function AssignedUsersRow({
@@ -33,6 +34,27 @@ export default function AssignedUsersRow({
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+
+    if (openDropdown === assignment.id) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openDropdown, assignment.id]);
+
   const handleDelete = async () => {
     const confirmed = confirm(`Remove ${assignment.user.name} from this course?`);
     if (!confirmed) return;
@@ -40,7 +62,7 @@ export default function AssignedUsersRow({
     setDeleting(true);
     try {
       await api.delete(`/learn/assigned-courses/${assignment.user.id}/${assignment.course_id}`);
-      onDeleted?.(); // ⏮ Trigger refresh in parent if provided
+      onDeleted?.();
     } catch (err) {
       console.error("Failed to delete assigned course", err);
       alert("Error deleting assigned course.");
@@ -62,12 +84,16 @@ export default function AssignedUsersRow({
       }}
     >
       <td className="px-4 py-2">{assignment.user?.name || "Unnamed"}</td>
-      <td className="px-4 py-2">{assignment.user?.email || "—"}</td>
       <td className="px-4 py-2 capitalize">{assignment.status}</td>
       <td className="px-4 py-2">{new Date(assignment.assigned_at).toLocaleDateString()}</td>
       <td className="px-4 py-2">
         {assignment.completed_at
           ? new Date(assignment.completed_at).toLocaleDateString()
+          : "—"}
+      </td>
+      <td className="px-4 py-2">
+        {assignment.due_date
+          ? new Date(assignment.due_date).toLocaleDateString()
           : "—"}
       </td>
       <td

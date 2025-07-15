@@ -129,6 +129,7 @@ export default function MyModules({ setMainPage }: MyModulesProps) {
       onFetch={fetchAssignments}
       onSelect={(id) => handleSelect(id as number)}
       renderRow={renderRow}
+      hideAddButton={true}
       columns={["Title", "Description", "Assigned", "Due", "Completed", "Status", "Actions"]}
       showSearchBar={false}
       headerContent={headerContent}
