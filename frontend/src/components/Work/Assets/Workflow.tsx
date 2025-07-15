@@ -29,7 +29,7 @@ export default function Workflow({ setMainPage }: WorkflowProps) {
     queryFn: async () => {
       const res = await api.get("/workflows", {
         headers: {
-          "x-org-id": user?.organisation?.id.toString(),
+          "x-org-id": user?.organisation?.id?.toString() ?? "",
         },
       });
       return res.data;

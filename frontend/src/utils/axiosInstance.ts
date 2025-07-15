@@ -4,7 +4,9 @@ import axios from "axios";
 
 // Force HTTPS if needed
 const rawBaseUrl = import.meta.env.VITE_API_URL;
-const baseURL = rawBaseUrl?.replace(/^http:\/\//, "https://");
+const baseURL = rawBaseUrl?.startsWith("https://")
+  ? rawBaseUrl
+  : rawBaseUrl?.replace(/^http:\/\//, "https://");
 
 if (rawBaseUrl !== baseURL) {
   console.warn("[axiosInstance] VITE_API_URL was insecure. Rewritten to:", baseURL);
