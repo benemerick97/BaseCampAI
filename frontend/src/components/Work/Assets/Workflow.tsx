@@ -27,7 +27,7 @@ export default function Workflow({ setMainPage }: WorkflowProps) {
   const { data: workflows = [], refetch } = useQuery<WorkflowItem[]>({
     queryKey: ["workflows", user?.organisation?.id],
     queryFn: async () => {
-      const res = await api.get("/workflows", {
+      const res = await api.get("/workflows/", {
         headers: {
           "x-org-id": user?.organisation?.id?.toString() ?? "",
         },
