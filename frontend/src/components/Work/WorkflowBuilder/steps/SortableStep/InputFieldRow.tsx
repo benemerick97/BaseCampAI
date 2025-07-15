@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RiDraggable } from "react-icons/ri";
-import { FiToggleLeft, FiToggleRight } from "react-icons/fi";
+import { FiToggleLeft, FiToggleRight, FiX } from "react-icons/fi";
 import type { InputField } from "../../types/InputField";
 import InputTextField from "../InputTypes/InputTextField";
 import InputDateField from "../InputTypes/InputDateField";
@@ -77,7 +77,7 @@ export default function InputFieldRow({
           className="text-red-500 text-sm px-2 hover:text-red-700"
           title="Remove field"
         >
-          ✕
+          <FiX />
         </button>
       </div>
 

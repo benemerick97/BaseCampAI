@@ -1,12 +1,13 @@
-// frontend/src/components/Work/WorkflowBuilder/WorkflowBuilder.tsx 
+// frontend/src/components/Work/WorkflowBuilder/WorkflowBuilder.tsx
 
 import { useState } from "react";
 import { ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
 import ListEditor from "./ListEditor/ListEditor";
-// import { useWorkflowStore } from "./context/useWorkflowStore";
 import { FiEdit3, FiMoreHorizontal } from "react-icons/fi";
+import { useWorkflowStore } from "./context/useWorkflowStore";
+import api from "../../../utils/axiosInstance";
 
 interface WorkflowBuilderProps {
   setMainPage: (page: string) => void;
@@ -16,9 +17,74 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
   const [mode, setMode] = useState<"list" | "flow">("list");
   const [workflowTitle, setWorkflowTitle] = useState("Untitled Workflow");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
-//  const addGroup = useWorkflowStore((state) => state.addGroup);
-//  const addStep = useWorkflowStore((state) => state.addStep);
+  const { stepsById, groupsById, groupOrder } = useWorkflowStore();
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+
+    try {
+      const orgId = localStorage.getItem("org_id");
+
+      if (!orgId) {
+        alert("Organisation ID not found. Please log in again.");
+        setIsPublishing(false);
+        return;
+      }
+
+      // Map groupId strings to numeric indexes
+      const groupIdToIndexMap = groupOrder.reduce((map, groupId, index) => {
+        map[groupId] = index;
+        return map;
+      }, {} as Record<string, number>);
+
+      const groups = groupOrder.map((groupId, index) => {
+        const group = groupsById[groupId];
+        return {
+          name: group.label,
+          order: index,
+        };
+      });
+
+      const steps = Object.values(stepsById).map((step, index) => ({
+        title: step.label,
+        instructions: step.instructions,
+        order: index,
+        group_index: groupIdToIndexMap[step.groupId],
+        inputs: step.inputFields.map((input) => ({
+          label: input.label,
+          input_type: input.type,
+          required: input.required ?? false,
+          options: input.options?.length ? { values: input.options } : undefined,
+        })),
+      }));
+
+      const payload = {
+        name: workflowTitle,
+        description: "",
+        is_template: false,
+        groups,
+        steps,
+      };
+
+      const res = await api.post("/workflows", payload, {
+        headers: {
+          "x-org-id": orgId,
+        },
+      });
+
+      console.log("Workflow published:", res.data);
+      alert("Workflow published successfully!");
+      setMainPage("workflow");
+    } catch (err: any) {
+      console.error("Failed to publish workflow", err);
+      console.error("Response data:", err.response?.data);
+      alert("Failed to publish workflow.");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <div className="relative h-full flex flex-col">
@@ -71,10 +137,11 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
             <FiMoreHorizontal className="text-md text-gray-700" />
           </button>
           <button
-            onClick={() => console.log("Publish")}
-            className="flex items-center gap-1 bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-green-700"
+            onClick={handlePublish}
+            disabled={isPublishing}
+            className="flex items-center gap-1 bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50"
           >
-            Publish
+            {isPublishing ? "Publishing..." : "Publish"}
           </button>
         </div>
       </div>

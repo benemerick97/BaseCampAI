@@ -5,7 +5,8 @@ import React, { createContext, useContext, useState } from "react";
 type EntityType = 
   | "site"
   | "asset" 
-  | "workorder" 
+  | "workorder"
+  | "workflow" 
   | "project" 
   | "file"
   | "course"

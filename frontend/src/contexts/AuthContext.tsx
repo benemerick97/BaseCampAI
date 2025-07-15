@@ -79,15 +79,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchUser = async () => {
     try {
       const res = await api.get("/me");
-      setUser(res.data);
+      const fetchedUser = res.data;
+
+      setUser(fetchedUser);
+
+      if (fetchedUser.organisation?.id) {
+        localStorage.setItem("org_id", fetchedUser.organisation.id.toString());
+      } else {
+        localStorage.removeItem("org_id");
+      }
+
     } catch (err) {
       console.warn("Failed to fetch user:", err);
       setUser(null);
       setAccessToken(null);
+      localStorage.removeItem("org_id");
     } finally {
       setAuthLoading(false);
     }
   };
+
 
   const login = async (email: string, password: string) => {
     const res = await api.post("/login", { email, password });
@@ -110,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setRoleOverride(null);
       hasAttemptedLogin.current = false;
+      localStorage.removeItem("org_id");
     }
   };
 

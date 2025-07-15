@@ -24,6 +24,7 @@ from routes.organisation import router as organisation_router
 from routes.learn.assigned_module import router as assigned_module_router
 from routes.learn.assigned_module_progress import router as assigned_module_progress_router
 from routes.learn.module import router as module_router
+from routes.work.workflow import router as worflow_router
 
 
 
@@ -73,6 +74,7 @@ app.include_router(organisation_router)
 app.include_router(module_router)
 app.include_router(assigned_module_progress_router)
 app.include_router(assigned_module_router)
+app.include_router(worflow_router)
 
 @app.get("/")
 async def root():
