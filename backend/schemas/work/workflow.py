@@ -2,6 +2,15 @@
 
 from pydantic import BaseModel
 from typing import List, Optional
+from enum import Enum
+
+
+# ----------- Status Enum -----------
+
+class WorkflowStatus(str, Enum):
+    draft = "draft"
+    published = "published"
+    archived = "archived"
 
 
 # ----------- Input Fields -----------
@@ -46,6 +55,7 @@ class StepCreate(BaseModel):
 
 class StepOut(StepCreate):
     id: int
+    group_id: int
     inputs: List[InputFieldOut]
 
     class Config:
@@ -54,12 +64,21 @@ class StepOut(StepCreate):
 
 # ----------- Workflows -----------
 
-class WorkflowCreate(BaseModel):
+class WorkflowBase(BaseModel):
     name: str
     description: Optional[str]
     is_template: bool = False
+
+
+class WorkflowCreate(WorkflowBase):
     groups: List[StepGroupCreate] = []
     steps: List[StepCreate]
+
+
+class WorkflowUpdate(WorkflowBase):
+    status: Optional[WorkflowStatus] = None
+    groups: Optional[List[StepGroupCreate]] = None
+    steps: Optional[List[StepCreate]] = None
 
 
 class WorkflowOut(BaseModel):
@@ -67,6 +86,7 @@ class WorkflowOut(BaseModel):
     name: str
     description: Optional[str]
     is_template: bool
+    status: WorkflowStatus
     groups: List[StepGroupOut]
     steps: List[StepOut]
 

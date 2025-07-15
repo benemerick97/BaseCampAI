@@ -3,18 +3,25 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from uuid import UUID
 
-from schemas.work.workflow import WorkflowCreate, WorkflowOut
+from schemas.work.workflow import (
+    WorkflowCreate,
+    WorkflowUpdate,
+    WorkflowOut
+)
 from CRUD.work.workflow import (
     create_workflow,
     list_workflows,
     get_workflow,
     update_workflow,
-    delete_workflow
+    delete_workflow,
+    save_draft_workflow,
+    autosave_workflow,
+    publish_workflow
 )
 from databases.database import get_db
-from dependencies.org import get_org_id  
+from dependencies.org import get_org_id
+
 router = APIRouter(prefix="/workflows", tags=["Workflows"])
 
 
@@ -51,7 +58,7 @@ def get_workflow_route(
 @router.put("/{workflow_id}", response_model=WorkflowOut)
 def update_workflow_route(
     workflow_id: int,
-    data: WorkflowCreate,
+    data: WorkflowUpdate,
     db: Session = Depends(get_db),
     organisation_id: int = Depends(get_org_id)
 ):
@@ -59,6 +66,40 @@ def update_workflow_route(
     if not updated:
         raise HTTPException(status_code=404, detail="Workflow not found")
     return updated
+
+
+@router.patch("/{workflow_id}/autosave", response_model=WorkflowOut)
+def autosave_workflow_route(
+    workflow_id: int,
+    partial_data: dict,
+    db: Session = Depends(get_db),
+    organisation_id: int = Depends(get_org_id)
+):
+    result = autosave_workflow(db, workflow_id, organisation_id, partial_data)
+    if not result:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return result
+
+
+@router.post("/save_draft", response_model=WorkflowOut)
+def save_draft_workflow_route(
+    data: WorkflowCreate,
+    db: Session = Depends(get_db),
+    organisation_id: int = Depends(get_org_id)
+):
+    return save_draft_workflow(db, data, organisation_id)
+
+
+@router.post("/{workflow_id}/publish", response_model=WorkflowOut)
+def publish_workflow_route(
+    workflow_id: int,
+    db: Session = Depends(get_db),
+    organisation_id: int = Depends(get_org_id)
+):
+    result = publish_workflow(db, workflow_id, organisation_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return result
 
 
 @router.delete("/{workflow_id}")

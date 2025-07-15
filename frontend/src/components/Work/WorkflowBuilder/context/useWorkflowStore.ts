@@ -1,5 +1,3 @@
-// frontend/src/components/Work/WorkflowBuilder/context/useWorkflowStore.ts
-
 import { create } from "zustand";
 import type { WorkflowData, Step, Group } from "../types/index";
 
@@ -13,9 +11,11 @@ interface WorkflowStore extends WorkflowData {
   renameGroup: (groupId: string, newLabel: string) => void;
   renameStep: (stepId: string, newLabel: string) => void;
   updateStepInstructions: (stepId: string, newInstructions: string) => void;
-
   deleteStep: (stepId: string) => void;
   duplicateStep: (stepId: string) => void;
+
+  resetWorkflow: () => void;
+  loadWorkflowFromData: (data: any) => void;
 }
 
 export const useWorkflowStore = create<WorkflowStore>((set) => ({
@@ -64,16 +64,12 @@ export const useWorkflowStore = create<WorkflowStore>((set) => ({
 
       const isSameGroup = step.groupId === toGroupId;
 
-      // Remove from current group
       const filteredStepIds = fromGroup.stepIds.filter((id) => id !== stepId);
-
-      // If index is undefined or out of bounds, default to the end
       const insertIndex =
         typeof index === "number" && index >= 0 && index <= toGroup.stepIds.length
           ? index
           : toGroup.stepIds.length;
 
-      // Insert into correct group
       const newStepIds = [...(isSameGroup ? filteredStepIds : toGroup.stepIds)];
       newStepIds.splice(insertIndex, 0, stepId);
 
@@ -98,7 +94,6 @@ export const useWorkflowStore = create<WorkflowStore>((set) => ({
         },
       };
     }),
-
 
   reorderGroups: (oldIndex, newIndex) =>
     set((state) => {
@@ -211,54 +206,104 @@ export const useWorkflowStore = create<WorkflowStore>((set) => ({
       };
     }),
 
-    deleteStep: (stepId: string) =>
-  set((state) => {
-    const step = state.stepsById[stepId];
-    if (!step) return {};
-
-    const group = state.groupsById[step.groupId];
-    return {
-      stepsById: Object.fromEntries(
-        Object.entries(state.stepsById).filter(([id]) => id !== stepId)
-      ),
-      groupsById: {
-        ...state.groupsById,
-        [group.id]: {
-          ...group,
-          stepIds: group.stepIds.filter((id) => id !== stepId),
-        },
-      },
-    };
-  }),
-
-    duplicateStep: (stepId: string ) =>
+  deleteStep: (stepId: string) =>
     set((state) => {
-        const step = state.stepsById[stepId];
-        if (!step) return {};
+      const step = state.stepsById[stepId];
+      if (!step) return {};
 
-        const newId = `step-${crypto.randomUUID()}`;
-        const newStep = {
+      const group = state.groupsById[step.groupId];
+      return {
+        stepsById: Object.fromEntries(
+          Object.entries(state.stepsById).filter(([id]) => id !== stepId)
+        ),
+        groupsById: {
+          ...state.groupsById,
+          [group.id]: {
+            ...group,
+            stepIds: group.stepIds.filter((id) => id !== stepId),
+          },
+        },
+      };
+    }),
+
+  duplicateStep: (stepId: string) =>
+    set((state) => {
+      const step = state.stepsById[stepId];
+      if (!step) return {};
+
+      const newId = `step-${crypto.randomUUID()}`;
+      const newStep = {
         ...step,
         id: newId,
         label: `${step.label} (Copy)`,
-        };
+      };
 
-        return {
+      return {
         stepsById: {
-            ...state.stepsById,
-            [newId]: newStep,
+          ...state.stepsById,
+          [newId]: newStep,
         },
         groupsById: {
-            ...state.groupsById,
-            [step.groupId]: {
+          ...state.groupsById,
+          [step.groupId]: {
             ...state.groupsById[step.groupId],
             stepIds: [...state.groupsById[step.groupId].stepIds, newId],
-            },
+          },
         },
-        };
+      };
     }),
 
+  resetWorkflow: () =>
+    set(() => ({
+      stepsById: {},
+      groupsById: {},
+      groupOrder: [],
+    })),
 
+  loadWorkflowFromData: (data) =>
+    set(() => {
+      const groupOrder: string[] = [];
+      const groupsById: Record<string, Group> = {};
+      const stepsById: Record<string, Step> = {};
 
+      data.groups
+        .sort((a: any, b: any) => a.order - b.order)
+        .forEach((group: any, i: number) => {
+          const groupId = `group-${group.id}`;
+          groupOrder.push(groupId);
+          groupsById[groupId] = {
+            id: groupId,
+            label: group.name || `Section ${i + 1}`,
+            stepIds: [],
+          };
+        });
+
+      data.steps
+        .sort((a: any, b: any) => a.order - b.order)
+        .forEach((step: any) => {
+          const stepId = `step-${step.id}`;
+          const groupId = `group-${step.group_id}`;
+
+          stepsById[stepId] = {
+            id: stepId,
+            label: step.title,
+            instructions: step.instructions,
+            groupId,
+            inputFields: step.inputs.map((input: any) => ({
+              label: input.label,
+              type: input.input_type,
+              required: input.required ?? false,
+              options: input.options?.values || [],
+            })),
+          };
+
+          groupsById[groupId].stepIds.push(stepId);
+        });
+
+      return {
+        groupOrder,
+        groupsById,
+        stepsById,
+      };
+    }),
 }));
-

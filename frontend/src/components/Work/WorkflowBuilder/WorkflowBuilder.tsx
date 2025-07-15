@@ -1,6 +1,6 @@
 // frontend/src/components/Work/WorkflowBuilder/WorkflowBuilder.tsx
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -8,44 +8,82 @@ import ListEditor from "./ListEditor/ListEditor";
 import { FiEdit3, FiMoreHorizontal } from "react-icons/fi";
 import { useWorkflowStore } from "./context/useWorkflowStore";
 import api from "../../../utils/axiosInstance";
+import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
+import debounce from "lodash/debounce";
 
 interface WorkflowBuilderProps {
   setMainPage: (page: string) => void;
 }
+
+type WorkflowStatus = "draft" | "published" | "archived";
+type SaveState = "idle" | "autosaving" | "saving" | "saved" | "error";
 
 export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
   const [mode, setMode] = useState<"list" | "flow">("list");
   const [workflowTitle, setWorkflowTitle] = useState("Untitled Workflow");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus>("draft");
+  const [saveStatus, setSaveStatus] = useState<SaveState>("idle");
 
-  const { stepsById, groupsById, groupOrder } = useWorkflowStore();
+  const { stepsById, groupsById, groupOrder, resetWorkflow } = useWorkflowStore();
+  const { selectedEntity } = useSelectedEntity();
 
-  const handlePublish = async () => {
-    setIsPublishing(true);
-
-    try {
-      const orgId = localStorage.getItem("org_id");
-
-      if (!orgId) {
-        alert("Organisation ID not found. Please log in again.");
-        setIsPublishing(false);
-        return;
+  useEffect(() => {
+    if (selectedEntity?.type === "workflow" && selectedEntity.data?.name) {
+      setWorkflowTitle(selectedEntity.data.name);
+      if (selectedEntity.data?.status) {
+        setWorkflowStatus(selectedEntity.data.status);
       }
+    } else {
+      resetWorkflow();
+      setWorkflowTitle("Untitled Workflow");
+    }
+  }, [selectedEntity, resetWorkflow]);
 
-      // Map groupId strings to numeric indexes
-      const groupIdToIndexMap = groupOrder.reduce((map, groupId, index) => {
-        map[groupId] = index;
+  const debouncedAutosaveTitle = useRef(
+    debounce(async (partial: any) => {
+      try {
+        setSaveStatus("autosaving");
+
+        await api.patch(`/workflows/${selectedEntity?.id}/autosave`, partial, {
+          headers: {
+            "x-org-id": localStorage.getItem("org_id")!,
+          },
+        });
+
+        setSaveStatus("saved");
+      } catch (err) {
+        console.error("Autosave failed", err);
+        setSaveStatus("error");
+      }
+    }, 2000)
+  ).current;
+
+  useEffect(() => {
+    if (
+      selectedEntity?.type === "workflow" &&
+      typeof selectedEntity.id === "number" &&
+      workflowTitle.trim() !== ""
+    ) {
+      debouncedAutosaveTitle({ name: workflowTitle });
+    }
+  }, [workflowTitle]);
+
+  const handleManualSave = async () => {
+    try {
+      setSaveStatus("saving");
+
+      const orgId = localStorage.getItem("org_id")!;
+      const groupIdToIndexMap = groupOrder.reduce((map, id, index) => {
+        map[id] = index;
         return map;
       }, {} as Record<string, number>);
 
-      const groups = groupOrder.map((groupId, index) => {
-        const group = groupsById[groupId];
-        return {
-          name: group.label,
-          order: index,
-        };
-      });
+      const groups = groupOrder.map((id, i) => ({
+        name: groupsById[id].label,
+        order: i,
+      }));
 
       const steps = Object.values(stepsById).map((step, index) => ({
         title: step.label,
@@ -64,23 +102,47 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
         name: workflowTitle,
         description: "",
         is_template: false,
+        status: workflowStatus,
         groups,
         steps,
       };
 
-      const res = await api.post("/workflows", payload, {
+      const res = await api.put(`/workflows/${selectedEntity?.id}`, payload, {
         headers: {
           "x-org-id": orgId,
         },
       });
 
-      console.log("Workflow published:", res.data);
-      alert("Workflow published successfully!");
+      setWorkflowStatus(res.data.status);
+      setSaveStatus("saved");
+    } catch (err) {
+      console.error("Manual save failed", err);
+      setSaveStatus("error");
+    }
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+
+    try {
+      const orgId = localStorage.getItem("org_id");
+
+      if (!orgId || !selectedEntity?.id) {
+        alert("Missing organisation or workflow ID");
+        setIsPublishing(false);
+        return;
+      }
+
+      await api.post(`/workflows/${selectedEntity.id}/publish`, null, {
+        headers: { "x-org-id": orgId },
+      });
+
+      setWorkflowStatus("published");
+      alert("Workflow published!");
       setMainPage("workflow");
-    } catch (err: any) {
-      console.error("Failed to publish workflow", err);
-      console.error("Response data:", err.response?.data);
-      alert("Failed to publish workflow.");
+    } catch (err) {
+      console.error("Failed to publish", err);
+      alert("Publish failed.");
     } finally {
       setIsPublishing(false);
     }
@@ -90,7 +152,7 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
     <div className="relative h-full flex flex-col">
       {/* Header */}
       <div className="h-[72px] px-6 py-4 border-b bg-white shadow-sm flex items-center justify-between">
-        {/* Left: Back Button */}
+        {/* Left */}
         <div className="w-1/3 flex items-center gap-3">
           <button
             onClick={() => setMainPage("workflow")}
@@ -100,8 +162,8 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
           </button>
         </div>
 
-        {/* Center: Title */}
-        <div className="w-1/3 flex justify-center">
+        {/* Center: Title and Status */}
+        <div className="w-1/3 flex flex-col items-center justify-center gap-1">
           {isEditingTitle ? (
             <input
               type="text"
@@ -123,9 +185,30 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
               <FiEdit3 className="text-gray-500 group-hover:text-gray-700" />
             </div>
           )}
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs px-2 py-1 rounded-full ${
+                workflowStatus === "draft"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : workflowStatus === "published"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {workflowStatus}
+            </span>
+
+            <div className="text-xs text-gray-400">
+              {saveStatus === "saving" && "Saving..."}
+              {saveStatus === "autosaving" && "Autosaving..."}
+              {saveStatus === "saved" && "Changes saved ✓"}
+              {saveStatus === "error" && "Error saving changes ⚠"}
+            </div>
+          </div>
         </div>
 
-        {/* Right: Actions + Mode Switch */}
+        {/* Right: Actions */}
         <div className="w-1/3 flex justify-end items-center gap-4">
           <button
             onClick={() => setMode((prev) => (prev === "list" ? "flow" : "list"))}
@@ -135,6 +218,12 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
           </button>
           <button className="p-2 rounded hover:bg-gray-100">
             <FiMoreHorizontal className="text-md text-gray-700" />
+          </button>
+          <button
+            onClick={handleManualSave}
+            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            Save
           </button>
           <button
             onClick={handlePublish}
@@ -151,7 +240,6 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
         <div className="max-w-4xl mx-auto space-y-4">
           {mode === "flow" ? (
             <ReactFlowProvider>
-              {/* Flow View Component Placeholder */}
               <div className="text-center text-gray-500">
                 Flow view coming soon...
               </div>

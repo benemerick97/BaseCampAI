@@ -1,8 +1,16 @@
 # models/work/workflow.py
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, JSON, DateTime, Enum
 from sqlalchemy.orm import relationship
 from models.base import Base
+from datetime import datetime
+import enum
+
+
+class WorkflowStatus(enum.Enum):
+    draft = "draft"
+    published = "published"
+    archived = "archived"
 
 
 class Workflow(Base):
@@ -13,6 +21,10 @@ class Workflow(Base):
     description = Column(String, nullable=True)
     is_template = Column(Boolean, default=False)
 
+    status = Column(Enum(WorkflowStatus), default=WorkflowStatus.draft, nullable=False)
+    last_saved_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    autosaved_at = Column(DateTime, nullable=True)
+
     # Ownership
     organisation_id = Column(Integer, ForeignKey("organisations.id"), nullable=False)
     organisation = relationship("Organisation", back_populates="workflows")
@@ -20,6 +32,7 @@ class Workflow(Base):
     # Relationships
     groups = relationship("StepGroup", back_populates="workflow", cascade="all, delete-orphan")
     steps = relationship("Step", back_populates="workflow", cascade="all, delete-orphan")
+
 
 class StepGroup(Base):
     __tablename__ = "step_groups"
