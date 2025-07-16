@@ -58,7 +58,7 @@ export default function CourseLearn() {
         document_id: documentId,
       }, {
         headers: {
-          "x-org-id": orgId,
+          "x-org-id": orgId?.toString() || "",
         },
       });
 
