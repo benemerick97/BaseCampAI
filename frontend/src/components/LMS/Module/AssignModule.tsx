@@ -37,7 +37,7 @@ export default function AssignModule() {
             params: { org_id: orgId },
             headers,
           }),
-          api.get(`/learn/modules`, {
+          api.get(`/learn/modules/`, {
             params: { org_id: orgId },
             headers,
           }),

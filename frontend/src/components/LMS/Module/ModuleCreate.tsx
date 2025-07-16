@@ -120,7 +120,7 @@ export default function ModuleCreate({
     const isEditing = !!existingModule?.id;
     const endpoint = isEditing
       ? `/learn/modules/${existingModule.id}`
-      : `/learn/modules`;
+      : `/learn/modules/`;
     const method = isEditing ? "put" : "post";
 
     try {
