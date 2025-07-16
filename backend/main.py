@@ -38,7 +38,7 @@ from databases.database import engine as db_engine
 
 Base.metadata.create_all(bind=db_engine)
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=True)
 
 app.add_middleware(
     CORSMiddleware,
