@@ -27,9 +27,11 @@ import Placeholder from "../Placeholder";
 
 interface LearnDetailsProps {
   setMainPage: (page: string) => void;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
-export default function LearnDetails({ setMainPage }: LearnDetailsProps) {
+export default function LearnDetails({ setMainPage, isAdmin, isSuperAdmin }: LearnDetailsProps) {
   const tabConfig = [
     {
       key: "dashboard",
@@ -54,18 +56,21 @@ export default function LearnDetails({ setMainPage }: LearnDetailsProps) {
       label: "Projects",
       icon: <FiPlay />,
       content: <Projects setMainPage={setMainPage} />,
+      access: "admin",
     },
     {
       key: "tasks",
       label: "Tasks",
       icon: <FiCheckSquare />,
       content: <Tasks setMainPage={setMainPage} />,
+      access: "admin",
     },
     {
       key: "automations",
       label: "Automations",
       icon: <FiLink />,
       content: <Placeholder />,
+      access: "super_admin",
     },
     {
       key: "assets",
@@ -84,14 +89,24 @@ export default function LearnDetails({ setMainPage }: LearnDetailsProps) {
       label: "Content",
       icon: <FiPaperclip />,
       content: <Content setMainPage={setMainPage} />,
+      access: "admin",
     },
   ];
+
+    const visibleTabs = tabConfig.filter((tab) => {
+    const access = tab.access;
+
+    if (access === "admin" && !(isAdmin || isSuperAdmin)) return false;
+    if (access === "super_admin" && !isSuperAdmin) return false;
+
+    return true;
+    });
 
   return (
     <DetailsPage
       title="Work Centre"
       breadcrumbs={[]}
-      tabs={tabConfig}
+      tabs={visibleTabs}
     />
   );
 }

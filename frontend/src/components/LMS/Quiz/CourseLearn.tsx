@@ -54,7 +54,7 @@ export default function CourseLearn() {
       const courseRes = await api.get(`/courses/${courseId}`);
       setCourse(courseRes.data);
 
-      const quizRes = await api.post(`/lms/questions`, {
+      const quizRes = await api.post(`/lms/questions/`, {
         document_id: documentId,
       }, {
         headers: {
@@ -90,7 +90,7 @@ export default function CourseLearn() {
     try {
       if (!user?.id || !course?.id) return;
 
-      await api.post(`/learn/complete-course`, {
+      await api.post(`/learn/complete-course/`, {
         user_id: user.id,
         course_id: course.id,
       }, {
