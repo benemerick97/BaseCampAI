@@ -6,7 +6,7 @@ import { FiUsers, FiInfo, FiSettings } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import DetailsPage from "../Shared/DetailsPage";
 import UsersList from "./UsersList";
-import Settings from "../Settings";
+import Settings from "./Settings";
 
 interface Organisation {
   id: number;

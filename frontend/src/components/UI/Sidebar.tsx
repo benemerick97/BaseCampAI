@@ -13,6 +13,10 @@ import {
 import { GrUserAdmin } from "react-icons/gr";
 import clsx from "clsx";
 import { useNavigate, useParams } from "react-router-dom";
+import { GrConnect } from "react-icons/gr";
+import { LuShieldPlus, LuSquareUser } from "react-icons/lu";
+import { MdOutlineAccountBalance } from "react-icons/md";
+
 
 interface SidebarProps {
   isAdmin: boolean;
@@ -28,18 +32,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isAdmin, isSuperAdmin }) => {
     { key: "chat", icon: <FiMessageCircle />, label: "Chat" },
     { key: "agents", icon: <FiGrid />, label: "Agents" },
     { key: "projects", icon: <FiFolder />, label: "Workspaces" },
-    { key: "learn", icon: <FiBookOpen />, label: "Learn" },
-    { key: "work", icon: <FiClipboard />, label: "Work" },
-    //{ key: "upload", icon: <FiUpload />, label: "Upload" },
-    //{ key: "knowledge", icon: <FiDatabase />, label: "Knowledge" },
+    { key: "learnhome", icon: <FiBookOpen />, label: "Learn" },
+    { key: "workhome", icon: <FiClipboard />, label: "Work" },
+    { key: "safetyhome", icon: <LuShieldPlus />, label: "Safety" },
+    { key: "hrhome", icon: <LuSquareUser />, label: "HR" },
+    { key: "financehome", icon: <MdOutlineAccountBalance />, label: "Finance" },
     { key: "documentmanager", icon: <FiDatabase />, label: "Documents" },
+    { key: "automations", icon: <GrConnect />, label: "Automations" },
     { key: "orgdetails", icon: <FiUsers />, label: "Organisation" },
     { key: "controlpanel", icon: <GrUserAdmin />, label: "Control Panel" },
   ];
 
   const visibleNavItems = navItems.filter((item) => {
     if (["agents", "orgdetails"].includes(item.key) && !isAdmin) return false;
-    if (item.key === "controlpanel" && !isSuperAdmin) return false;
+    if (["controlpanel", "safetyhome", "automations", "hrhome", "financehome" ].includes(item.key) && !isSuperAdmin) return false;
     return true;
   });
 

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../contexts/AuthContext";
-import Modal from "./UI/Modal";
-import CreateAgent from "../components/Forms/CreateAgent";
-import AgentCard from "../components/AgentCard";
+import { useAuth } from "../../contexts/AuthContext";
+import Modal from "../UI/Modal";
+import CreateAgent from "../Forms/CreateAgent";
+import AgentCard from "./AgentCard";
 import { FiPlus, FiMoreHorizontal } from "react-icons/fi";
-import api from "../utils/axiosInstance";
+import api from "../../utils/axiosInstance";
 
 interface Agent {
   key: string;

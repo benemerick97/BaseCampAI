@@ -44,6 +44,8 @@ const DashboardContent = () => {
     const props = {
       setMainPage: handleNavClick, // optional compatibility
       onNavClick: handleNavClick,
+      isAdmin,
+      isSuperAdmin,
     };
 
     return (

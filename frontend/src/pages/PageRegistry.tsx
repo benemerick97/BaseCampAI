@@ -1,13 +1,13 @@
 // src/pages/PageRegistry.tsx
 
 import Chat from "../components/Chat/Chat";
-import Settings from "../components/Settings";
+import Settings from "../components/OrgAdmin/Settings";
 import FileUpload from "../components/Documents/FileUpload";
 import Placeholder from "../components/Placeholder";
-import Agents from "../components/Agents";
+import Agents from "../components/Agents/Agents";
 import Knowledge from "../components/Documents/Knowledge";
 import Organisation from "../components/OrgAdmin/Organisation";
-import Projects from "../components/Projects";
+import Projects from "../components/Workspaces/Projects";
 //import Learn from "../components/LMS/OLDLearn";
 import Account from "../components/OrgAdmin/Account";
 //import WorkflowBuilderContainer from "../components/Work/Builder/WorkflowBuilderContainer";
@@ -44,6 +44,11 @@ import MyModules from "../components/LMS/Module/MyModules";
 import MyModuleDetails from "../components/LMS/Module/MyModuleDetails";
 import LMSDashboard from "../components/LMS/LMSDashboard";
 import WorkflowDashboard from "../components/Work/WorkflowDashboard";
+import LearnDetails from "../components/LMS/LearnDetails";
+import WorkflowDetails from "../components/Work/WorkflowDetails";
+import HRDetails from "../components/HumanResources/HRDetails";
+import SafetyDetails from "../components/Safety/SafetyDetails";
+import FinanceDetails from "../components/Finance/FinanceDetails";
 
 
 
@@ -93,7 +98,12 @@ export const PageRegistry: Record<
   assignmodule : AssignModule,
   mymodules : MyModules,
   mymoduledetails : MyModuleDetails,
-  learn : LMSDashboard,
-  work : WorkflowDashboard,
+  learndashboard : LMSDashboard,
+  workdashboard : WorkflowDashboard,
+  learnhome : LearnDetails,
+  workhome : WorkflowDetails,
+  hrhome : HRDetails,
+  financehome : FinanceDetails,
+  safetyhome : SafetyDetails,
 
 };
