@@ -54,7 +54,7 @@ export default function CourseLearn() {
       const courseRes = await api.get(`/courses/${courseId}`);
       setCourse(courseRes.data);
 
-      const quizRes = await api.post(`/lms/questions/`, {
+      const quizRes = await api.post("/lms/questions/", {
         document_id: documentId,
       }, {
         headers: {
