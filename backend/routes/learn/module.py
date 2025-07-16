@@ -11,7 +11,7 @@ from CRUD.learn.module import get_module_skills
 from schemas.learn.course import CourseOut
 from CRUD.learn.module import get_module_courses
 
-router = APIRouter(prefix="/learn/modules", tags=["Modules"])
+router = APIRouter(prefix="/learn/modules/", tags=["Modules"])
 
 
 @router.post("/", response_model=ModuleOut)
