@@ -54,7 +54,7 @@ export default function Module({ setMainPage }: ModuleProps) {
   } = useQuery<ModuleListItem[]>({
     queryKey,
     queryFn: async () => {
-      const res = await api.get("/learn/modules", {
+      const res = await api.get("/learn/modules/", {
         params: { org_id: orgId },
       });
       return res.data;
