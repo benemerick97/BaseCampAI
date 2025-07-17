@@ -1,22 +1,21 @@
 // frontend/src/components/Work/WorkflowBuilder/WorkflowBuilder.tsx
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
 import ListEditor from "./ListEditor/ListEditor";
 import { FiEdit3, FiMoreHorizontal } from "react-icons/fi";
 import { useWorkflowStore } from "./context/useWorkflowStore";
-import api from "../../../utils/axiosInstance";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
-import debounce from "lodash/debounce";
+
+import { buildPayload } from "./SaveLoadLogic/buildPayload";
+import { useWorkflowSave } from "./SaveLoadLogic/useWorkflowSave";
+import type { WorkflowStatus } from "./SaveLoadLogic/types";
 
 interface WorkflowBuilderProps {
   setMainPage: (page: string) => void;
 }
-
-type WorkflowStatus = "draft" | "published" | "archived";
-type SaveState = "idle" | "autosaving" | "saving" | "saved" | "error";
 
 export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
   const [mode, setMode] = useState<"list" | "flow">("list");
@@ -24,120 +23,55 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus>("draft");
-  const [saveStatus, setSaveStatus] = useState<SaveState>("idle");
 
-  const { stepsById, groupsById, groupOrder, resetWorkflow } = useWorkflowStore();
+  const { stepsById, groupsById, groupOrder } = useWorkflowStore();
   const { selectedEntity } = useSelectedEntity();
 
-  useEffect(() => {
-    if (selectedEntity?.type === "workflow" && selectedEntity.data?.name) {
-      setWorkflowTitle(selectedEntity.data.name);
-      if (selectedEntity.data?.status) {
-        setWorkflowStatus(selectedEntity.data.status);
-      }
-    } else {
-      resetWorkflow();
-      setWorkflowTitle("Untitled Workflow");
-    }
-  }, [selectedEntity, resetWorkflow]);
+  const selectedId = selectedEntity?.type === "workflow" && typeof selectedEntity.id === "number"
+  ? selectedEntity.id
+  : undefined;
+  const isNewWorkflow = !selectedId;
 
-  const debouncedAutosaveTitle = useRef(
-    debounce(async (partial: any) => {
-      try {
-        setSaveStatus("autosaving");
-
-        await api.patch(`/workflows/${selectedEntity?.id}/autosave`, partial, {
-          headers: {
-            "x-org-id": localStorage.getItem("org_id")!,
-          },
-        });
-
-        setSaveStatus("saved");
-      } catch (err) {
-        console.error("Autosave failed", err);
-        setSaveStatus("error");
-      }
-    }, 2000)
-  ).current;
+  const { saveStatus, debouncedAutosave, handleManualSave } = useWorkflowSave(selectedId);
 
   useEffect(() => {
-    if (
-      selectedEntity?.type === "workflow" &&
-      typeof selectedEntity.id === "number" &&
-      workflowTitle.trim() !== ""
-    ) {
-      debouncedAutosaveTitle({ name: workflowTitle });
-    }
-  }, [workflowTitle]);
+    if (!selectedId) return;
+    const payload = buildPayload(workflowTitle, workflowStatus, groupOrder, stepsById, groupsById);
+    debouncedAutosave(payload);
+  }, [workflowTitle, stepsById, groupOrder]);
 
-  const handleManualSave = async () => {
+  const handleManualSaveClick = async () => {
+    const payload = buildPayload(workflowTitle, workflowStatus, groupOrder, stepsById, groupsById);
+    const updatedStatus = await handleManualSave(payload);
+    if (updatedStatus) setWorkflowStatus(updatedStatus);
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
     try {
-      setSaveStatus("saving");
-
+      const payload = buildPayload(workflowTitle, "draft", groupOrder, stepsById, groupsById);
       const orgId = localStorage.getItem("org_id")!;
-      const groupIdToIndexMap = groupOrder.reduce((map, id, index) => {
-        map[id] = index;
-        return map;
-      }, {} as Record<string, number>);
 
-      const groups = groupOrder.map((id, i) => ({
-        name: groupsById[id].label,
-        order: i,
-      }));
+      // Save draft
+      const draft = await fetch(`/workflows/save_draft`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-org-id": orgId,
+        },
+        body: JSON.stringify(payload),
+      }).then((res) => res.json());
 
-      const steps = Object.values(stepsById).map((step, index) => ({
-        title: step.label,
-        instructions: step.instructions,
-        order: index,
-        group_index: groupIdToIndexMap[step.groupId],
-        inputs: step.inputFields.map((input) => ({
-          label: input.label,
-          input_type: input.type,
-          required: input.required ?? false,
-          options: input.options?.length ? { values: input.options } : undefined,
-        })),
-      }));
+      const newId = draft.id;
 
-      const payload = {
-        name: workflowTitle,
-        description: "",
-        is_template: false,
-        status: workflowStatus,
-        groups,
-        steps,
-      };
-
-      const res = await api.put(`/workflows/${selectedEntity?.id}`, payload, {
+      // Publish
+      await fetch(`/workflows/${newId}/publish`, {
+        method: "POST",
         headers: {
           "x-org-id": orgId,
         },
       });
 
-      setWorkflowStatus(res.data.status);
-      setSaveStatus("saved");
-    } catch (err) {
-      console.error("Manual save failed", err);
-      setSaveStatus("error");
-    }
-  };
-
-  const handlePublish = async () => {
-    setIsPublishing(true);
-
-    try {
-      const orgId = localStorage.getItem("org_id");
-
-      if (!orgId || !selectedEntity?.id) {
-        alert("Missing organisation or workflow ID");
-        setIsPublishing(false);
-        return;
-      }
-
-      await api.post(`/workflows/${selectedEntity.id}/publish`, null, {
-        headers: { "x-org-id": orgId },
-      });
-
-      setWorkflowStatus("published");
       alert("Workflow published!");
       setMainPage("workflow");
     } catch (err) {
@@ -219,19 +153,22 @@ export default function WorkflowBuilder({ setMainPage }: WorkflowBuilderProps) {
           <button className="p-2 rounded hover:bg-gray-100">
             <FiMoreHorizontal className="text-md text-gray-700" />
           </button>
-          <button
-            onClick={handleManualSave}
-            className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
-            Save
-          </button>
-          <button
-            onClick={handlePublish}
-            disabled={isPublishing}
-            className="flex items-center gap-1 bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-          >
-            {isPublishing ? "Publishing..." : "Publish"}
-          </button>
+          {isNewWorkflow ? (
+            <button
+              onClick={handlePublish}
+              disabled={isPublishing}
+              className="flex items-center gap-1 bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            >
+              {isPublishing ? "Publishing..." : "Publish"}
+            </button>
+          ) : (
+            <button
+              onClick={handleManualSaveClick}
+              className="flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              Save
+            </button>
+          )}
         </div>
       </div>
 
