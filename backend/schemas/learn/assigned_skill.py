@@ -39,3 +39,12 @@ class AssignedSkillOut(AssignedSkillBase):
 
     class Config:
         from_attributes = True
+
+
+class AssignedSkillUpdate(BaseModel):
+    user_id: int
+    skill_id: UUID
+    status: Optional[SkillAssignmentStatus] = None
+    evidence_file_url: Optional[str] = None
+    completed_at: Optional[datetime] = None  # Optional manual override
+

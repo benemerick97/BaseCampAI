@@ -8,6 +8,7 @@ from schemas.learn.assigned_courses import (
     AssignedCourseCreate,
     AssignedCourseComplete,
     AssignedCourseOut,
+    AssignedCourseUpdate,
 )
 from CRUD.learn import assigned_courses as crud
 from databases.database import get_db
@@ -84,3 +85,15 @@ def remove_assigned_course(user_id: int, course_id: UUID, db: Session = Depends(
     if not success:
         raise HTTPException(status_code=404, detail="Assigned course not found")
     return
+
+
+@router.patch("/assigned-courses", response_model=AssignedCourseOut)
+def update_assigned_course(payload: AssignedCourseUpdate, db: Session = Depends(get_db)):
+    try:
+        updates = payload.dict(exclude_unset=True)
+        assignment = crud.update_assigned_course(db, payload.user_id, payload.course_id, updates)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        return assignment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

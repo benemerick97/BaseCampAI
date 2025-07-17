@@ -1,5 +1,6 @@
 # backend/CRUD/learn/assigned_module.py
 
+from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
 
@@ -136,3 +137,26 @@ def get_users_assigned_to_module(db: Session, module_id: str):
         .add_columns(User.id, User.first_name, User.last_name, User.email)
         .all()
     )
+
+
+def update_assigned_module(db: Session, user_id: int, module_id: UUID, updates: dict) -> AssignedModule | None:
+    assignment = db.query(AssignedModule).filter_by(user_id=user_id, module_id=module_id).first()
+    if not assignment:
+        return None
+
+    for key, value in updates.items():
+        if hasattr(assignment, key) and value is not None:
+            setattr(assignment, key, value)
+
+    db.commit()
+    db.refresh(assignment)
+    return assignment
+
+
+def delete_assigned_module(db: Session, user_id: int, module_id: UUID) -> bool:
+    assignment = db.query(AssignedModule).filter_by(user_id=user_id, module_id=module_id).first()
+    if not assignment:
+        return False
+    db.delete(assignment)
+    db.commit()
+    return True

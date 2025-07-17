@@ -137,3 +137,17 @@ def delete_assigned_course(db: Session, user_id: int, course_id: UUID) -> bool:
     db.delete(assignment)
     db.commit()
     return True
+
+
+def update_assigned_course(db: Session, user_id: int, course_id: UUID, updates: dict) -> AssignedCourse | None:
+    assignment = db.query(AssignedCourse).filter_by(user_id=user_id, course_id=course_id).first()
+    if not assignment:
+        return None
+
+    for key, value in updates.items():
+        if hasattr(assignment, key) and value is not None:
+            setattr(assignment, key, value)
+
+    db.commit()
+    db.refresh(assignment)
+    return assignment

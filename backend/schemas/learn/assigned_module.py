@@ -25,3 +25,8 @@ class AssignedModuleOut(AssignedModuleBase):
 
     class Config:
         from_attributes = True
+
+
+class AssignedModuleUpdate(AssignedModuleBase):
+    status: Optional[ModuleStatus] = None
+    completed_at: Optional[datetime] = None

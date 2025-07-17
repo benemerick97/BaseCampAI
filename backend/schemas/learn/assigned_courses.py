@@ -39,3 +39,10 @@ class AssignedCourseOut(AssignedCourseBase):
 
     class Config:
         from_attributes = True
+
+
+class AssignedCourseUpdate(BaseModel):
+    user_id: int
+    course_id: UUID
+    due_date: Optional[datetime] = None
+    status: Optional[AssignmentStatus] = None

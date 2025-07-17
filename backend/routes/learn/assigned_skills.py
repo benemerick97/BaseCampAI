@@ -1,5 +1,6 @@
 # routes/learn/assigned_skills.py
 
+from uuid import UUID
 from fastapi import (
     APIRouter,
     Depends,
@@ -15,6 +16,7 @@ from schemas.learn.assigned_skill import (
     AssignedSkillCreate,
     AssignedSkillComplete,
     AssignedSkillOut,
+    AssignedSkillUpdate,
 )
 from CRUD.learn import assigned_skill as crud
 from databases.database import get_db
@@ -112,3 +114,26 @@ def get_assigned_users_by_skill(skill_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         print("🔥 ERROR in get_assigned_users_by_skill:", e)
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.patch("/assigned-skills", response_model=AssignedSkillOut)
+def update_assigned_skill(payload: AssignedSkillUpdate, db: Session = Depends(get_db)):
+    try:
+        updates = payload.dict(exclude_unset=True)
+        assignment = crud.update_assigned_skill(db, payload.user_id, payload.skill_id, updates)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        return assignment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/assigned-skills/{user_id}/{skill_id}", status_code=204)
+def remove_assigned_skill(user_id: int, skill_id: UUID, db: Session = Depends(get_db)):
+    assignment = db.query(crud.AssignedSkill).filter_by(user_id=user_id, skill_id=skill_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assigned skill not found")
+
+    db.delete(assignment)
+    db.commit()
+    return

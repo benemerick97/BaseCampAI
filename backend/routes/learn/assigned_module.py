@@ -1,9 +1,10 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from databases.database import get_db
 import CRUD.learn.assigned_module as crud
-from schemas.learn.assigned_module import AssignedModuleCreate, AssignedModuleOut
+from schemas.learn.assigned_module import AssignedModuleCreate, AssignedModuleOut, AssignedModuleUpdate
 from models.learn.assigned_module import AssignedModule
 
 router = APIRouter(prefix="/learn/assigned-modules", tags=["Assigned Modules"])
@@ -79,3 +80,21 @@ def get_assigned_users_by_module(module_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.patch("/", response_model=AssignedModuleOut)
+def update_assigned_module(payload: AssignedModuleUpdate, db: Session = Depends(get_db)):
+    try:
+        updates = payload.dict(exclude_unset=True)
+        assignment = crud.update_assigned_module(db, payload.user_id, payload.module_id, updates)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        return assignment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{user_id}/{module_id}", status_code=204)
+def delete_assigned_module(user_id: int, module_id: UUID, db: Session = Depends(get_db)):
+    success = crud.delete_assigned_module(db, user_id, module_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Assigned module not found")
+    return

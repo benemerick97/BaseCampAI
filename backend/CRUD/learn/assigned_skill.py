@@ -1,5 +1,6 @@
 # crud/learn/assigned_skill.py
 
+from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
 from models.learn.assigned_skill import AssignedSkill, SkillAssignmentStatus
 from schemas.learn.assigned_skill import AssignedSkillCreate
@@ -116,3 +117,17 @@ def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_cours
             assigned_module.status = "completed"
             assigned_module.completed_at = datetime.utcnow()
             db.commit()
+
+
+def update_assigned_skill(db: Session, user_id: int, skill_id: UUID, updates: dict) -> AssignedSkill | None:
+    assignment = db.query(AssignedSkill).filter_by(user_id=user_id, skill_id=skill_id).first()
+    if not assignment:
+        return None
+
+    for key, value in updates.items():
+        if hasattr(assignment, key) and value is not None:
+            setattr(assignment, key, value)
+
+    db.commit()
+    db.refresh(assignment)
+    return assignment
