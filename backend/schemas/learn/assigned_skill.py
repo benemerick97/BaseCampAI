@@ -3,7 +3,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from enum import Enum
 from schemas.learn.skill import SkillOut
 
@@ -19,7 +19,7 @@ class AssignedSkillBase(BaseModel):
     user_id: int
     skill_id: UUID
     assigned_by: Optional[int] = None
-    due_date: Optional[datetime] = None
+    due_date: Optional[date] = None
     expiry_duration: Optional[timedelta] = None
     expired_at: Optional[datetime] = None
 
@@ -55,3 +55,4 @@ class AssignedSkillUpdate(BaseModel):
     evidence_file_url: Optional[str] = None
     completed_at: Optional[datetime] = None  # Optional manual override
     expiry_duration: Optional[timedelta] = None
+    due_date: Optional[date] = None

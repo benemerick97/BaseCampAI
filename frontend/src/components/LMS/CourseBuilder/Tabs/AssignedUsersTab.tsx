@@ -166,7 +166,12 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
             {filteredUsers.map((a: AssignedUser) => (
               <AssignedUsersRow
                 key={a.id}
-                assignment={{ ...a, course_id: id }} // ensure course_id is passed
+                assignment={{ 
+                  ...a, 
+                  course_id: type === "course" ? id : a.course_id,
+                  skill_id: type === "skill" ? id : a.skill_id,
+                  module_id: type === "module" ? id : a.module_id,
+                }}// ensure course_id is passed
                 setMainPage={setMainPage}
                 setSelectedEntity={setSelectedEntity}
                 onDeleted={() => queryClient.invalidateQueries({ queryKey })}
