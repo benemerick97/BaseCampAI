@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
+import StatusBadge from "../../Shared/StatusBadge";
 
 interface Course {
   id: string;
@@ -155,15 +156,13 @@ const CourseRow: React.FC<CourseRowProps> = ({
 
       {showStatus !== undefined && (
         <td className="px-4 py-3 border-r border-gray-100 text-gray-700">
-          <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-gray-100">
-            {showStatus}
-          </span>
+          <StatusBadge status={showStatus as "assigned" | "completed" | "overdue" | "expired"} />
         </td>
       )}
 
       <td className="px-4 py-3 border-r border-gray-100 text-right relative">
         {hideAdminActions ? (
-          showStatus === "assigned" ? (
+          showStatus === "assigned" || showStatus === "overdue" ? (
             <button
               onClick={handleStartCourse}
               className="text-sm px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"

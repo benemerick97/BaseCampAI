@@ -12,50 +12,48 @@ from models.learn.assigned_skill import AssignedSkill
 from schemas.learn.assigned_module import AssignedModuleCreate
 from models.user import User
 
+from schemas.learn.assigned_courses import AssignedCourseCreate
+from schemas.learn.assigned_skill import AssignedSkillCreate
+from .assigned_courses import assign_course
+from .assigned_skill import assign_skill
+
 
 def assign_module(db: Session, data: AssignedModuleCreate) -> AssignedModule:
-    # Step 1: Assign the module
     assigned = AssignedModule(
         user_id=data.user_id,
         module_id=data.module_id,
         assigned_at=datetime.utcnow(),
-        status="assigned"
+        status="assigned",
+        expiry_duration=data.expiry_duration,
+        due_date=data.due_date,
+        assigned_by=data.assigned_by
     )
     db.add(assigned)
     db.commit()
     db.refresh(assigned)
 
-    # Step 2: Assign all linked courses to the user
+    # Assign linked courses using existing logic
     module_courses = db.query(ModuleCourse).filter_by(module_id=data.module_id).all()
     for mc in module_courses:
-        exists = db.query(AssignedCourse).filter_by(
+        assign_course(db, AssignedCourseCreate(
             user_id=data.user_id,
-            course_id=mc.course_id
-        ).first()
-        if not exists:
-            db.add(AssignedCourse(
-                user_id=data.user_id,
-                course_id=mc.course_id,
-                assigned_at=datetime.utcnow(),
-                status="assigned"
-            ))
+            course_id=mc.course_id,
+            assigned_by=data.assigned_by,
+            due_date=data.due_date,
+            expiry_duration=data.expiry_duration
+        ))
 
-    # Step 3: Assign all linked skills to the user
+    # Assign linked skills using existing logic
     module_skills = db.query(ModuleSkill).filter_by(module_id=data.module_id).all()
     for ms in module_skills:
-        exists = db.query(AssignedSkill).filter_by(
+        assign_skill(db, AssignedSkillCreate(
             user_id=data.user_id,
-            skill_id=ms.skill_id
-        ).first()
-        if not exists:
-            db.add(AssignedSkill(
-                user_id=data.user_id,
-                skill_id=ms.skill_id,
-                assigned_at=datetime.utcnow(),
-                status="assigned"
-            ))
+            skill_id=ms.skill_id,
+            assigned_by=data.assigned_by,
+            due_date=data.due_date,
+            expiry_duration=data.expiry_duration
+        ))
 
-    db.commit()
     return assigned
 
 
@@ -63,7 +61,7 @@ def get_user_modules(db: Session, user_id: int) -> list[AssignedModule]:
     return (
         db.query(AssignedModule)
         .filter(AssignedModule.user_id == user_id)
-        .options(joinedload(AssignedModule.module))  # ✅ Eager load module relationship
+        .options(joinedload(AssignedModule.module))
         .all()
     )
 
@@ -71,10 +69,8 @@ def get_user_modules(db: Session, user_id: int) -> list[AssignedModule]:
 def complete_module(db: Session, assigned_module_id: int) -> AssignedModule:
     assigned = db.query(AssignedModule).get(assigned_module_id)
     if assigned:
-        assigned.status = "completed"
-        assigned.completed_at = datetime.utcnow()
-        db.commit()
-        db.refresh(assigned)
+        # Optional: verify actual completion before marking complete
+        check_and_complete_modules(db, user_id=assigned.user_id, item_id=assigned.module_id, is_course=True)
     return assigned
 
 
@@ -84,7 +80,6 @@ def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_cours
     from models.learn.module_skill import ModuleSkill
     from models.learn.assigned_courses import AssignedCourse
     from models.learn.assigned_skill import AssignedSkill
-    from datetime import datetime
 
     module_ids = (
         db.query(ModuleCourse.module_id)
@@ -99,33 +94,56 @@ def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_cours
     for module_id in module_ids:
         assigned_module = (
             db.query(AssignedModule)
-            .filter_by(user_id=user_id, module_id=module_id, status="assigned")
+            .filter_by(user_id=user_id, module_id=module_id)
             .first()
         )
         if not assigned_module:
             continue
 
-        # Check if all module courses are completed
-        all_courses = db.query(ModuleCourse).filter_by(module_id=module_id).all()
-        all_course_ids = [c.course_id for c in all_courses]
-        completed_courses = db.query(AssignedCourse).filter(
+        # Check completion status
+        course_ids = [c.course_id for c in db.query(ModuleCourse).filter_by(module_id=module_id).all()]
+        skill_ids = [s.skill_id for s in db.query(ModuleSkill).filter_by(module_id=module_id).all()]
+
+        valid_courses = db.query(AssignedCourse).filter(
             AssignedCourse.user_id == user_id,
-            AssignedCourse.course_id.in_(all_course_ids),
+            AssignedCourse.course_id.in_(course_ids),
             AssignedCourse.status == "completed"
         ).count()
 
-        # Check if all module skills are completed
-        all_skills = db.query(ModuleSkill).filter_by(module_id=module_id).all()
-        all_skill_ids = [s.skill_id for s in all_skills]
-        completed_skills = db.query(AssignedSkill).filter(
+        valid_skills = db.query(AssignedSkill).filter(
             AssignedSkill.user_id == user_id,
-            AssignedSkill.skill_id.in_(all_skill_ids),
+            AssignedSkill.skill_id.in_(skill_ids),
             AssignedSkill.status == "completed"
         ).count()
 
-        if completed_courses == len(all_course_ids) and completed_skills == len(all_skill_ids):
+        if valid_courses == len(course_ids) and valid_skills == len(skill_ids):
             assigned_module.status = "completed"
             assigned_module.completed_at = datetime.utcnow()
+            db.commit()
+
+
+def reset_module_progress_if_needed(db: Session, user_id: int, module_id: UUID):
+    """Force a recheck of completion status for a module."""
+    course_ids = [c.course_id for c in db.query(ModuleCourse).filter_by(module_id=module_id).all()]
+    skill_ids = [s.skill_id for s in db.query(ModuleSkill).filter_by(module_id=module_id).all()]
+
+    valid_courses = db.query(AssignedCourse).filter(
+        AssignedCourse.user_id == user_id,
+        AssignedCourse.course_id.in_(course_ids),
+        AssignedCourse.status == "completed"
+    ).count()
+
+    valid_skills = db.query(AssignedSkill).filter(
+        AssignedSkill.user_id == user_id,
+        AssignedSkill.skill_id.in_(skill_ids),
+        AssignedSkill.status == "completed"
+    ).count()
+
+    if valid_courses != len(course_ids) or valid_skills != len(skill_ids):
+        assignment = db.query(AssignedModule).filter_by(user_id=user_id, module_id=module_id).first()
+        if assignment and assignment.status == "completed":
+            assignment.status = "assigned"
+            assignment.completed_at = None
             db.commit()
 
 

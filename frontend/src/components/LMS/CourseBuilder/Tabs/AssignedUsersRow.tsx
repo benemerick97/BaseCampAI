@@ -8,7 +8,7 @@ interface AssignedUser {
   assigned_at: string;
   completed_at?: string;
   due_date?: string;
-  status: "assigned" | "completed";
+  status: "assigned" | "completed" | "overdue"| "expired" ;
   user: {
     id: number;
     name: string;

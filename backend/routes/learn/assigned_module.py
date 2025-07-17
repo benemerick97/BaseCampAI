@@ -92,9 +92,11 @@ def update_assigned_module(payload: AssignedModuleUpdate, db: Session = Depends(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 @router.delete("/{user_id}/{module_id}", status_code=204)
 def delete_assigned_module(user_id: int, module_id: UUID, db: Session = Depends(get_db)):
     success = crud.delete_assigned_module(db, user_id, module_id)
     if not success:
         raise HTTPException(status_code=404, detail="Assigned module not found")
     return
+

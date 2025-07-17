@@ -7,6 +7,7 @@ import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
 import CourseRow from "../CourseBuilder/CourseRow";
 
+
 interface Course {
   id: string;
   name: string;
@@ -94,7 +95,11 @@ export default function MyCourses({ setMainPage }: MyCoursesProps) {
   };
 
   const filteredAssignments = assignments.filter((a) => {
-    const matchesStatus = statusFilter === "all" || a.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "assigned" && (a.status === "assigned" || a.status === "overdue")) ||
+      (statusFilter === "completed" && (a.status === "completed" || a.status === "expired"));
+
     const matchesSearch =
       !searchTerm ||
       a.course?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

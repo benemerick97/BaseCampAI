@@ -5,6 +5,7 @@ import api from "../../../utils/axiosInstance";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSelectedEntity } from "../../../contexts/SelectedEntityContext";
 import LearnListPage from "../LearnListPage";
+import StatusBadge from "../../Shared/StatusBadge";
 
 interface Skill {
   id: string;
@@ -22,7 +23,7 @@ interface AssignedSkill {
   assigned_at: string;
   completed_at?: string;
   evidence_file_url?: string;
-  status: "assigned" | "completed";
+  status: string;
   skill: Skill;
 }
 
@@ -86,12 +87,10 @@ export default function MySkills({ setMainPage }: { setMainPage: (p: string) => 
             : "—"}
         </td>
         <td className="px-4 py-3 border-r border-gray-100 text-center text-gray-700">
-          <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-gray-100">
-            {assignment.status}
-          </span>
+          <StatusBadge status={assignment.status as "assigned" | "completed" | "overdue" | "expired"} />
         </td>
         <td className="px-4 py-3 border-r border-gray-100 text-right">
-          {assignment.status === "completed" ? (
+          {assignment.status === "completed" || assignment.status === "expired" ? (
             <span className="text-sm text-gray-400">Done</span>
           ) : skill.evidence_required ? (
             <button
@@ -114,7 +113,11 @@ export default function MySkills({ setMainPage }: { setMainPage: (p: string) => 
   };
 
   const filteredAssignments = assignments.filter((a) => {
-    const matchesStatus = statusFilter === "all" || a.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "assigned" && (a.status === "assigned" || a.status === "overdue")) ||
+      (statusFilter === "completed" && (a.status === "completed" || a.status === "expired"));
+
     const matchesSearch =
       !searchTerm ||
       a.skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

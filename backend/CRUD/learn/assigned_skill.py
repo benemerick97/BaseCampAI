@@ -1,6 +1,7 @@
 # crud/learn/assigned_skill.py
 
 from uuid import UUID
+from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 from models.learn.assigned_skill import AssignedSkill, SkillAssignmentStatus
 from schemas.learn.assigned_skill import AssignedSkillCreate
@@ -10,11 +11,16 @@ from models.user import User
 
 
 def assign_skill(db: Session, payload: AssignedSkillCreate) -> AssignedSkill:
-    existing = db.query(AssignedSkill).filter_by(
-        user_id=payload.user_id, skill_id=payload.skill_id
-    ).first()
-    if existing:
-        return existing
+    latest = (
+        db.query(AssignedSkill)
+        .filter_by(user_id=payload.user_id, skill_id=payload.skill_id)
+        .order_by(desc(AssignedSkill.assigned_at))
+        .first()
+    )
+
+    # Only allow reassignment if the latest is expired
+    if latest and latest.status != SkillAssignmentStatus.expired:
+        return latest
 
     assignment = AssignedSkill(
         user_id=payload.user_id,
@@ -22,6 +28,8 @@ def assign_skill(db: Session, payload: AssignedSkillCreate) -> AssignedSkill:
         assigned_by=payload.assigned_by,
         status=SkillAssignmentStatus.assigned,
         assigned_at=datetime.utcnow(),
+        expiry_duration=payload.expiry_duration,
+        reassigned_at=datetime.utcnow() if latest else None,
     )
     db.add(assignment)
     db.commit()
@@ -89,7 +97,7 @@ def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_cours
     for module_id in module_ids:
         assigned_module = (
             db.query(AssignedModule)
-            .filter_by(user_id=user_id, module_id=module_id, status="assigned")
+            .filter_by(user_id=user_id, module_id=module_id)
             .first()
         )
         if not assigned_module:
@@ -119,6 +127,49 @@ def check_and_complete_modules(db: Session, user_id: int, item_id: str, is_cours
             db.commit()
 
 
+def reset_modules_due_to_expired_skill(db: Session, user_id: int, skill_id: UUID):
+    from models.learn.assigned_module import AssignedModule
+    from models.learn.module_course import ModuleCourse
+    from models.learn.module_skill import ModuleSkill
+    from models.learn.assigned_courses import AssignedCourse
+    from models.learn.assigned_skill import AssignedSkill
+
+    module_ids = db.query(ModuleSkill.module_id).filter(ModuleSkill.skill_id == skill_id).all()
+    module_ids = [m[0] for m in module_ids]
+
+    for module_id in module_ids:
+        assigned_module = (
+            db.query(AssignedModule)
+            .filter_by(user_id=user_id, module_id=module_id)
+            .first()
+        )
+        if not assigned_module or assigned_module.status != "completed":
+            continue
+
+        # Get all course/skill IDs in this module
+        course_ids = [c.course_id for c in db.query(ModuleCourse).filter_by(module_id=module_id).all()]
+        skill_ids = [s.skill_id for s in db.query(ModuleSkill).filter_by(module_id=module_id).all()]
+
+        # Count how many are still valid (status == completed)
+        valid_courses = db.query(AssignedCourse).filter(
+            AssignedCourse.user_id == user_id,
+            AssignedCourse.course_id.in_(course_ids),
+            AssignedCourse.status == "completed"
+        ).count()
+
+        valid_skills = db.query(AssignedSkill).filter(
+            AssignedSkill.user_id == user_id,
+            AssignedSkill.skill_id.in_(skill_ids),
+            AssignedSkill.status == "completed"
+        ).count()
+
+        if valid_courses != len(course_ids) or valid_skills != len(skill_ids):
+            assigned_module.status = "assigned"
+            assigned_module.completed_at = None
+            db.commit()
+
+
+
 def update_assigned_skill(db: Session, user_id: int, skill_id: UUID, updates: dict) -> AssignedSkill | None:
     assignment = db.query(AssignedSkill).filter_by(user_id=user_id, skill_id=skill_id).first()
     if not assignment:
@@ -131,3 +182,42 @@ def update_assigned_skill(db: Session, user_id: int, skill_id: UUID, updates: di
     db.commit()
     db.refresh(assignment)
     return assignment
+
+
+def expire_skills(db: Session):
+    now = datetime.utcnow()
+    completed = (
+        db.query(AssignedSkill)
+        .filter(
+            AssignedSkill.status == SkillAssignmentStatus.completed,
+            AssignedSkill.completed_at != None,
+            AssignedSkill.expiry_duration != None
+        )
+        .all()
+    )
+
+    for skill in completed:
+        expiry_time = skill.completed_at + skill.expiry_duration
+        if expiry_time < now:
+            skill.status = SkillAssignmentStatus.expired
+            db.commit()
+
+            reset_modules_due_to_expired_skill(db, skill.user_id, skill.skill_id)
+
+
+def mark_overdue_skills(db: Session):
+    now = datetime.utcnow()
+    overdue = (
+        db.query(AssignedSkill)
+        .filter(
+            AssignedSkill.status == SkillAssignmentStatus.assigned,
+            AssignedSkill.due_date != None,
+            AssignedSkill.due_date < now
+        )
+        .all()
+    )
+
+    for skill in overdue:
+        skill.status = SkillAssignmentStatus.overdue
+
+    db.commit()

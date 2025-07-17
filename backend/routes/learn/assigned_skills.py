@@ -137,3 +137,21 @@ def remove_assigned_skill(user_id: int, skill_id: UUID, db: Session = Depends(ge
     db.delete(assignment)
     db.commit()
     return
+
+
+@router.post("/assigned-skills/expire", summary="Manually expire skills based on expiry_duration")
+def expire_assigned_skills(db: Session = Depends(get_db)):
+    try:
+        crud.expire_skills(db)
+        return {"status": "success", "message": "Expired skills updated."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/assigned-skills/mark-overdue", summary="Manually mark overdue skills based on due_date")
+def mark_overdue_assigned_skills(db: Session = Depends(get_db)):
+    try:
+        crud.mark_overdue_skills(db)
+        return {"status": "success", "message": "Overdue skills updated."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

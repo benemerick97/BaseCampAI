@@ -1,6 +1,6 @@
 # models/learn/assigned_module.py
 
-from sqlalchemy import Column, ForeignKey, DateTime, Enum, Integer
+from sqlalchemy import Column, ForeignKey, DateTime, Enum, Integer, Interval
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from models.base import Base
@@ -11,6 +11,8 @@ import enum
 class ModuleStatus(enum.Enum):
     assigned = "assigned"
     completed = "completed"
+    overdue = "overdue"
+    expired = "expired"
 
 class AssignedModule(Base):
     __tablename__ = "assigned_modules"
@@ -20,7 +22,10 @@ class AssignedModule(Base):
     module_id = Column(UUID(as_uuid=True), ForeignKey("modules.id", ondelete="CASCADE"), nullable=False)
 
     assigned_at = Column(DateTime, default=datetime.utcnow)
+    reassigned_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
+    expiry_duration = Column(Interval, nullable=True)
+
     status = Column(Enum(ModuleStatus), default=ModuleStatus.assigned)
 
     module = relationship("Module")

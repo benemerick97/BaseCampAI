@@ -15,7 +15,7 @@ interface AssignedUser {
   assigned_at: string;
   completed_at?: string;
   due_date?: string;
-  status: "assigned" | "completed";
+  status: "assigned" | "completed" | "overdue"| "expired";
   user: {
     id: number;
     name: string;
@@ -101,11 +101,18 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
   });
 
   const filteredUsers = assignments.assigned.filter((u: AssignedUser) => {
-    const matchesSearch = u.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    const matchesSearch =
+      u.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
       u.user?.email?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filter === "all" || u.status === filter;
+
+    const matchesStatus =
+      filter === "all" ||
+      (filter === "assigned" && (u.status === "assigned" || u.status === "overdue")) ||
+      (filter === "completed" && (u.status === "completed" || u.status === "expired"));
+
     return matchesSearch && matchesStatus;
   });
+
 
   if (isLoading) return <div className="p-4 text-gray-600">Loading assignments...</div>;
 
@@ -120,7 +127,7 @@ export default function AssignedUsersTab({ id, type, setMainPage }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          {["all", "assigned", "completed"].map((f) => (
+          {["all", "assigned", "completed",].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f as any)}

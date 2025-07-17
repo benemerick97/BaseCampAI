@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from scheduler.tasks import register_scheduled_tasks
 
 from routes.chat import router as chat_router
 from routes.upload import router as upload_router
@@ -39,6 +40,8 @@ from databases.database import engine as db_engine
 Base.metadata.create_all(bind=db_engine)
 
 app = FastAPI(redirect_slashes=True)
+
+register_scheduled_tasks(app)
 
 app.add_middleware(
     CORSMiddleware,

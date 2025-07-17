@@ -97,3 +97,21 @@ def update_assigned_course(payload: AssignedCourseUpdate, db: Session = Depends(
         return assignment
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/assigned-courses/expire", summary="Manually expire courses based on expiry_duration")
+def expire_assigned_courses(db: Session = Depends(get_db)):
+    try:
+        crud.expire_courses(db)
+        return {"status": "success", "message": "Expired courses updated."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/assigned-courses/mark-overdue", summary="Manually mark overdue courses based on due_date")
+def mark_overdue_assigned_courses(db: Session = Depends(get_db)):
+    try:
+        crud.mark_overdue_courses(db)
+        return {"status": "success", "message": "Overdue courses updated."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

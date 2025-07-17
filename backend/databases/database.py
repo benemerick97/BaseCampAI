@@ -2,8 +2,10 @@
 
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
+
+
 
 # Load .env from project root
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
@@ -25,3 +27,6 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def get_db_session() -> Session:
+    return SessionLocal()

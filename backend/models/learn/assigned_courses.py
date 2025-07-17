@@ -1,6 +1,6 @@
 # models/assigned_course.py
 
-from sqlalchemy import Column, Integer, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, Integer, DateTime, Enum, ForeignKey, Interval
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -12,7 +12,8 @@ from models.base import Base
 class AssignmentStatus(str, enum.Enum):
     assigned = "assigned"
     completed = "completed"
-    skipped = "skipped"
+    overdue = "overdue"
+    expired = "expired"
 
 
 class AssignedCourse(Base):
@@ -25,8 +26,11 @@ class AssignedCourse(Base):
     assigned_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     assigned_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    reassigned_at = Column(DateTime, nullable=True)
     due_date = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
+    expiry_duration = Column(Interval, nullable=True)
+
     status = Column(Enum(AssignmentStatus), default=AssignmentStatus.assigned, nullable=False)
 
     # Relationships
